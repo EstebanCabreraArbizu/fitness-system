@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Instructores</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="url_for('static', filename='css/styles.css')">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">FitTrainer</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../clientes/index.html">Clientes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="index.html">Instructores</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../productos/index.html">Productos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../disciplinas/index.html">Disciplinas</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Gestión de Instructores</h1>
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#instructorModal">
+                <i class="bi bi-plus-lg"></i> Nuevo Instructor
+            </button>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="bi bi-search text-muted"></i>
+                            </span>
+                            <input type="text" id="searchInstructor" class="form-control border-start-0" placeholder="Buscar instructor...">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="filterDisciplina" class="form-select">
+                            <option value="">Todas las disciplinas</option>
+                            <!-- Se llenará con JavaScript -->
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="filterStatus" class="form-select">
+                            <option value="">Todos los estados</option>
+                            <option value="1">Activo</option>
+                            <option value="0">Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row" id="instructoresGrid">
+                    <!-- Se llenará con JavaScript -->
+                </div>
+                
+                <nav aria-label="Paginación de instructores">
+                    <ul class="pagination justify-content-center" id="instructoresPagination">
+                        <!-- Se llenará con JavaScript -->
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Crear/Editar Instructor -->
+    <div class="modal fade" id="instructorModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title" id="modalTitle">Nuevo Instructor</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="instructorForm">
+                        <input type="hidden" id="instructorId">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="nombres" class="form-label">Nombres</label>
+                                <input type="text" class="form-control" id="nombres" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="apellidos" class="form-label">Apellidos</label>
+                                <input type="text" class="form-control" id="apellidos" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="celular" class="form-label">Celular</label>
+                                <input type="number" class="form-control" id="celular" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="disciplina" class="form-label">Disciplina</label>
+                                <select class="form-select" id="disciplina" required>
+                                    <option value="">Seleccionar...</option>
+                                    <!-- Se llenará con JavaScript -->
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="status" class="form-label">Estado</label>
+                                <select class="form-select" id="status" required>
+                                    <option value="1">Activo</option>
+                                    <option value="0">Inactivo</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="imagen" class="form-label">Imagen</label>
+                            <input type="file" class="form-control" id="imagen">
+                            <div id="imagenPreview" class="mt-2 text-center" style="display: none;">
+                                <img src="" alt="Vista previa" class="img-thumbnail rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Productos Asignados</label>
+                            <div class="card">
+                                <div class="card-body" style="max-height: 200px; overflow-y: auto;">
+                                    <div id="productosInstructorList" class="row">
+                                        <!-- Se llenará con JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" id="saveInstructor">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Ver Detalles del Instructor -->
+    <div class="modal fade" id="viewInstructorModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title">Detalles del Instructor</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3">
+                            <img id="instructorImagen" src="../img/default-user.png" class="img-fluid rounded-circle shadow" style="width: 150px; height: 150px; object-fit: cover;">
+                        </div>
+                        <div class="col-md-8">
+                            <h3 id="instructorNombreCompleto" class="mb-2"></h3>
+                            <div class="mb-2">
+                                <span class="badge bg-primary" id="instructorDisciplina"></span>
+                                <span class="badge bg-success" id="instructorStatus"></span>
+                            </div>
+                            <div class="d-flex mt-3">
+                                <div class="me-4">
+                                    <i class="bi bi-envelope text-muted me-2"></i>
+                                    <span id="instructorEmail"></span>
+                                </div>
+                                <div>
+                                    <i class="bi bi-phone text-muted me-2"></i>
+                                    <span id="instructorCelular"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h5 class="mb-3"><i class="bi bi-people me-2"></i>Clientes Asignados</h5>
+                            <div class="card">
+                                <div class="card-body" style="max-height: 250px; overflow-y: auto;">
+                                    <div id="instructorClientes" class="row">
+                                        <!-- Se llenará con JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="mb-3"><i class="bi bi-box-seam me-2"></i>Productos Asignados</h5>
+                            <div class="card">
+                                <div class="card-body" style="max-height: 250px; overflow-y: auto;">
+                                    <div id="instructorProductos" class="row">
+                                        <!-- Se llenará con JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="url_for('static', filename = 'js/instructores.js')"></script>
+</body>
+</html> 

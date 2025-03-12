@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Disciplinas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="url_for('static', filename='css/styles.css')">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">FitTrainer</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../clientes/index.html">Clientes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../instructores/index.html">Instructores</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../productos/index.html">Productos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="index.html">Disciplinas</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Gestión de Disciplinas</h1>
+            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#disciplinaModal">
+                <i class="bi bi-plus-lg"></i> Nueva Disciplina
+            </button>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Filtros</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="searchDisciplina" class="form-label">Buscar</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="bi bi-search text-muted"></i>
+                                </span>
+                                <input type="text" id="searchDisciplina" class="form-control border-start-0" placeholder="Buscar disciplina...">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label d-block">Ordenar por</label>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="sortOrder" id="sortName" value="nombre" checked>
+                                <label class="form-check-label" for="sortName">Nombre</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="sortOrder" id="sortPopularity" value="popularidad">
+                                <label class="form-check-label" for="sortPopularity">Popularidad</label>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary w-100" id="applyFilters">
+                            <i class="bi bi-funnel"></i> Aplicar Filtros
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mt-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Estadísticas</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <h6>Total de Disciplinas</h6>
+                            <h2 id="totalDisciplinas" class="text-primary">0</h2>
+                        </div>
+                        <div class="mb-3">
+                            <h6>Disciplina más Popular</h6>
+                            <p id="disciplinaPopular" class="mb-0">-</p>
+                        </div>
+                        <div>
+                            <h6>Instructores por Disciplina</h6>
+                            <canvas id="disciplinasChart" width="100%" height="150"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="row" id="disciplinasGrid">
+                            <!-- Se llenará con JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Crear/Editar Disciplina -->
+    <div class="modal fade" id="disciplinaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title" id="modalTitle">Nueva Disciplina</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="disciplinaForm">
+                        <input type="hidden" id="disciplinaId">
+                        <div class="mb-3">
+                            <label for="nombre" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="nombre" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="descripcion" rows="4" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="icono" class="form-label">Ícono</label>
+                            <select class="form-select" id="icono">
+                                <option value="bi-activity">Actividad</option>
+                                <option value="bi-heart-pulse">Pulso</option>
+                                <option value="bi-bicycle">Bicicleta</option>
+                                <option value="bi-person-arms-up">Persona con brazos arriba</option>
+                                <option value="bi-wind">Viento</option>
+                                <option value="bi-droplet">Gota</option>
+                                <option value="bi-lightning">Rayo</option>
+                                <option value="bi-stars">Estrellas</option>
+                            </select>
+                            <div class="text-center mt-2">
+                                <i id="iconoPreview" class="bi bi-activity" style="font-size: 2rem;"></i>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="color" class="form-label">Color</label>
+                            <input type="color" class="form-control form-control-color w-100" id="color" value="#3498db">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="saveDisciplina">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Ver Detalles de Disciplina -->
+    <div class="modal fade" id="viewDisciplinaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title">Detalles de la Disciplina</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="disciplina-icon-container" id="disciplinaIconContainer">
+                                <i id="disciplinaIcono" class="bi bi-activity"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-9">
+                            <h3 id="disciplinaNombre"></h3>
+                            <p id="disciplinaDescripcion" class="text-muted"></p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h5 class="mb-3"><i class="bi bi-person-badge me-2"></i>Instructores</h5>
+                            <div class="card">
+                                <div class="card-body" style="max-height: 250px; overflow-y: auto;">
+                                    <div id="disciplinaInstructores" class="row">
+                                        <!-- Se llenará con JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="mb-3"><i class="bi bi-people me-2"></i>Clientes</h5>
+                            <div class="card">
+                                <div class="card-body" style="max-height: 250px; overflow-y: auto;">
+                                    <div id="disciplinaClientes" class="row">
+                                        <!-- Se llenará con JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="url_for('static', filename = 'js/disciplinas.js')"></script>
+</body>
+</html> 
