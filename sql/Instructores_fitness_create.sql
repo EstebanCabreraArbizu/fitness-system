@@ -142,5 +142,24 @@ ALTER TABLE Instructor_Products ADD CONSTRAINT Instructor_Products_Products FORE
 ALTER TABLE Product_images ADD CONSTRAINT Product_images_Products FOREIGN KEY Product_images_Products (Product_id)
     REFERENCES Product (id);
 
--- End of file.
+-- Insertar disciplinas básicas
+INSERT INTO Discipline (nombre, descripcion) VALUES 
+('Yoga', 'Práctica que conecta el cuerpo, la respiración y la mente.'),
+('Pilates', 'Sistema de entrenamiento físico y mental centrado en la postura y el control.'),
+('Crossfit', 'Programa de acondicionamiento físico basado en ejercicios funcionales.'),
+('Spinning', 'Entrenamiento de ciclismo indoor con música de alta energía.'),
+('Zumba', 'Programa de fitness que combina música latina con baile y ejercicio.');
 
+-- Insertar instructores de ejemplo
+INSERT INTO Instructor (nombres, celular, email, contrasenia, status, apellidos, imagen) VALUES
+('Juan', '5551234567', 'juan@fittrainer.com', 'password123', 1, 'González', 'instructor1.jpg'),
+('María', '5557654321', 'maria@fittrainer.com', 'password123', 1, 'Rodríguez', 'instructor2.jpg'),
+('Carlos', '5559876543', 'carlos@fittrainer.com', 'password123', 1, 'Sánchez', 'instructor3.jpg');
+
+-- Asociar instructores con disciplinas
+INSERT INTO Discipline_Instructor (Discipline_id, Instructor_id) VALUES
+(1, 1), -- Juan - Yoga
+(2, 2), -- María - Pilates
+(3, 3); -- Carlos - Crossfit
+
+-- End of file.
