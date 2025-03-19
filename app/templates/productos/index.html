@@ -50,24 +50,15 @@
 					<div class="col-md-4">
 						<input type="text" id="searchProducto" class="form-control" placeholder="Buscar producto...">
 					</div>
-					<div class="col-md-3">
-						<select id="filterInstructor" class="form-select">
-							<option value="">Todos los instructores</option>
-							<!-- Se llenará con JavaScript -->
-						</select>
-					</div>
-					<div class="col-md-3">
-						<select id="filterDisciplina" class="form-select">
-							<option value="">Todas las disciplinas</option>
-							<!-- Se llenará con JavaScript -->
-						</select>
-					</div>
 					<div class="col-md-2">
 						<select id="filterStatus" class="form-select">
 							<option value="">Todos</option>
 							<option value="1">Activo</option>
 							<option value="0">Inactivo</option>
 						</select>
+					</div>
+					<div class="col-md-2">
+						<button class="btn btn-sm btn-outline-secondary" onclick="clearAllFilters()">Limpiar filtros</button>
 					</div>
 				</div>
 
@@ -121,19 +112,19 @@
 						</div>
 						<div class="row mb-3">
 							<div class="col-md-3">
-								<label for="purchase_price" class="form-label">Precio de Compra</label>
+								<label for="purchase_price" class="form-label">Precio de Compra ($)</label>
 								<input type="number" step="0.01" class="form-control" id="purchase_price">
 							</div>
 							<div class="col-md-3">
-								<label for="price" class="form-label">Precio de Venta</label>
+								<label for="price" class="form-label">Precio de Venta ($)</label>
 								<input type="number" step="0.01" class="form-control" id="price">
 							</div>
 							<div class="col-md-3">
-								<label for="descuento" class="form-label">Descuento</label>
+								<label for="descuento" class="form-label">Descuento ($)</label>
 								<input type="number" step="0.01" class="form-control" id="descuento">
 							</div>
 							<div class="col-md-3">
-								<label for="previous_price" class="form-label">Precio Anterior</label>
+								<label for="previous_price" class="form-label">Precio Anterior ($)</label>
 								<input type="number" step="0.01" class="form-control" id="previous_price">
 							</div>
 						</div>
@@ -154,7 +145,7 @@
 								</select>
 							</div>
 						</div>
-						<div class="row mb-3">
+						<!-- <div class="row mb-3">
 							<div class="col-md-6">
 								<label for="profesor" class="form-label">Profesor</label>
 								<input type="text" class="form-control" id="profesor" required>
@@ -163,7 +154,7 @@
 								<label for="profesor_foto" class="form-label">Foto del Profesor</label>
 								<input type="file" class="form-control" id="profesor_foto">
 							</div>
-						</div>
+						</div> -->
 						<div class="row mb-3">
 							<div class="col-md-4">
 								<div class="form-check">
@@ -248,13 +239,13 @@
 					</div>
 					<hr>
 					<div class="row mt-3">
-						<div class="col-md-4 text-center">
+						<!-- <div class="col-md-4 text-center">
 							<img id="productoProfesorFoto"
 								src="{{ url_for('static', filename='img/producto-default.png') }}"
 								class="img-fluid rounded-circle" alt="Foto de profesor"
 								style="width: 100px; height: 100px; object-fit: cover;">
 							<p class="mt-2"><strong>Profesor:</strong> <span id="productoProfesor"></span></p>
-						</div>
+						</div> -->
 						<div class="col-md-8">
 							<h5>Instructores Asignados</h5>
 							<div id="productoInstructores" class="row">
@@ -309,7 +300,7 @@
 			// Asignar eventos a botones
 			document.getElementById('saveProducto').addEventListener('click', saveProducto);
 			document.getElementById('productImages').addEventListener('change', previewProductImages);
-			document.getElementById('profesor_foto').addEventListener('change', previewProfesorFoto);
+			// document.getElementById('profesor_foto').addEventListener('change', previewProfesorFoto);
 		})
 	</script>
 </body>

@@ -2,8 +2,11 @@ from flask import Blueprint, render_template, request, flash, redirect, jsonify
 from flask_login import current_user
 from werkzeug.utils import secure_filename
 from app.db import mysql
-
+import os
+import time
 products = Blueprint('product', __name__, template_folder='app/templates')
+
+
 @products.route('/')
 def index():
     cursor = None
@@ -16,18 +19,24 @@ def index():
                 product['fecha_inicio'] = product['fecha_inicio'].isoformat()
             if product['fecha_fin']:
                 product['fecha_fin'] = product['fecha_fin'].isoformat()
-            cursor.execute("SELECT image_name FROM Product_images WHERE Product_id = %s", (product['id'],))
-            product['images'] = [row['image_name'] for row in cursor.fetchall()]
-            
-            cursor.execute("SELECT Instructor_id FROM Instructor_Products WHERE Product_id = %s", (product['id'],))
-            product['instructores'] = [row['Instructor_id'] for row in cursor.fetchall()]
+            cursor.execute(
+                "SELECT image_name FROM Product_images WHERE Product_id = %s", (product['id'],))
+            product['images'] = [row['image_name']
+                for row in cursor.fetchall()]
+
+            cursor.execute(
+                "SELECT Instructor_id FROM Instructor_Products WHERE Product_id = %s", (product['id'],))
+            product['instructores'] = [row['Instructor_id']
+                for row in cursor.fetchall()]
         return render_template('productos/index.html', products=product_list)
     except Exception as e:
         print(f'Error al cargar productos: {str(e)}')
-        return render_template('productos/index.html', products=[],error="Error al cargar los productos")
+        return render_template('productos/index.html', products=[], error="Error al cargar los productos")
     finally:
         if cursor:
             cursor.close()
+
+
 @products.route('/product/<int:id>')
 def get_product(id):
     cursor = None
@@ -36,8 +45,8 @@ def get_product(id):
 
         # Obtener datos básicos del usuario
         cursor.execute("""
-            SELECT * 
-            FROM Product 
+            SELECT *
+            FROM Product
             WHERE id = %s
         """, (id,))
 
@@ -46,15 +55,21 @@ def get_product(id):
         if not product:
             return jsonify({'error': 'Publicación no encontrada'}), 404
         # Convertir a diccionario
-        
+
         # Consultar imágenes asociadas
-        cursor.execute("SELECT image_name FROM Product_images WHERE Product_id = %s", (id,))
+        cursor.execute(
+            "SELECT image_name FROM Product_images WHERE Product_id = %s", (id,))
         images = [row['image_name'] for row in cursor.fetchall()]
-        
+
         # Consultar instructores asignados
-        cursor.execute("SELECT Instructor_id FROM Instructor_Products WHERE Product_id = %s", (id,))
-        instructores = [row['Instructor_id'] for row in cursor.fetchall()]
-        
+        cursor.execute("""
+            SELECT DISTINCT i.id 
+            FROM Instructor i 
+            JOIN Instructor_Products ip ON i.id = ip.Instructor_id 
+            WHERE ip.Product_id = %s
+           """, (id,))
+        instructores = [row['id'] for row in cursor.fetchall()]
+
         product_dict = {
             'id': product['id'],
             'title': product['title'],
@@ -69,8 +84,6 @@ def get_product(id):
             'fecha_fin': product['fecha_fin'].isoformat() if product['fecha_fin'] else None,
             'status': product['status'],
             'palabras_claves': product['palabras_claves'],
-            'profesor': product['profesor'],
-            'profesor_foto': product['profesor_foto'],
             'relevant': product['relevant'],
             'outstanding': product['outstanding'],
             'images': images,
@@ -87,6 +100,7 @@ def get_product(id):
         if cursor:
             cursor.close()
 
+
 @products.route('/add_product', methods=['POST'])
 def add_product():
     cursor = None
@@ -94,23 +108,24 @@ def add_product():
         # Verificaciones detalladas para ayudar en la depuración
         print("Form data received:", request.form)
         print("Files received:", request.files)
-        
+
         # Validar campos obligatorios
-        required_fields = ['title', 'marca', 'palabras_claves', 'profesor']
-        missing_fields = [field for field in required_fields if field not in request.form or not request.form[field].strip()]
-        
+        required_fields = ['title', 'marca', 'palabras_claves']
+        missing_fields = [
+            field for field in required_fields if field not in request.form or not request.form[field].strip()]
+
         if missing_fields:
             return jsonify({
-                'success': False, 
+                'success': False,
                 'error': f'Campos obligatorios faltantes: {", ".join(missing_fields)}'
             }), 400
-        
+
         # Extraer datos del formulario (con validación)
         title = request.form['title'].strip()
         category = request.form.get('category', '').strip() or None
         description = request.form.get('description', '').strip() or None
         marca = request.form['marca'].strip()
-        
+
         # Convertir valores numéricos con manejo de errores
         try:
             purchase_price = float(request.form.get('purchase_price') or 0)
@@ -119,37 +134,40 @@ def add_product():
             previous_price = float(request.form.get('previous_price') or 0)
         except ValueError as e:
             return jsonify({'success': False, 'error': f'Error en valor numérico: {str(e)}'}), 400
-        
+
         # Otros campos
         fecha_inicio = request.form.get('fecha_inicio') or None
         fecha_fin = request.form.get('fecha_fin') or None
         status = int(request.form.get('status') or 1)
         palabras_claves = request.form['palabras_claves'].strip()
-        profesor = request.form['profesor'].strip()
-        
-        # Procesar foto del profesor
-        if 'profesor_foto' in request.files and request.files['profesor_foto'].filename:
-            foto = request.files['profesor_foto']
-            filename = secure_filename(foto.filename)
-            foto.save(f'app/static/img/{filename}')
-            profesor_foto = filename
-        else:
-            profesor_foto = 'default-user.png'
-        
+
         # Checkboxes
         relevant = int(request.form.get('relevant') == '1')
         outstanding = int(request.form.get('outstanding') == '1')
-        
+
         # Procesar imágenes del producto
         image_names = []
         if 'productImages' in request.files:
+            # Depuración para ver qué estamos recibiendo
+            print("Archivos recibidos:", request.files.getlist('productImages'))
+            print("Cantidad de archivos:", len(request.files.getlist('productImages')))
             imagenes = request.files.getlist('productImages')
-            for imagen in imagenes:
+            for i, imagen in enumerate(imagenes):
+                print(f"Procesando imagen {i+1}: {imagen.filename}")
                 if imagen.filename:
                     filename = secure_filename(imagen.filename)
+                    # Asegurarse de que el nombre de archivo sea único
+                    base, extension = os.path.splitext(filename)
+                    unique_filename = f"{base}_{int(time.time())}_{i}{extension}"
                     imagen.save(f'app/static/img/{filename}')
                     image_names.append(filename)
-        
+                    try:
+                        imagen.save(f'app/static/img/{unique_filename}')
+                        image_names.append(unique_filename)
+                        print(f"Imagen guardada: {unique_filename}")
+                    except Exception as e:
+                        print(f"Error al guardar imagen: {str(e)}")
+
         # Instructores
         instructores = []
         if 'instructores[]' in request.form:
@@ -163,15 +181,13 @@ def add_product():
             """
             INSERT INTO Product (
                 title, category, description, marca, purchase_price, price, descuento,
-                previous_price, fecha_inicio, fecha_fin, status, palabras_claves,
-                profesor, profesor_foto, relevant, outstanding, date
+                previous_price, fecha_inicio, fecha_fin, status, palabras_claves, relevant, outstanding, date
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
             """,
             (
                 title, category, description, marca, purchase_price, price, descuento,
-                previous_price, fecha_inicio, fecha_fin, status, palabras_claves,
-                profesor, profesor_foto, relevant, outstanding
+                previous_price, fecha_inicio, fecha_fin, status, palabras_claves, relevant, outstanding
             )
         )
         mysql.connection.commit()
@@ -297,7 +313,7 @@ def update_product(id):
             return jsonify({'success': False, 'error': 'Producto no encontrado'}), 404
         
         
-        required_fields = ['title', 'marca', 'palabras_claves', 'profesor']
+        required_fields = ['title', 'marca', 'palabras_claves']
         missing_fields = [field for field in required_fields if field not in request.form or not request.form[field].strip()]
         
         if missing_fields:
@@ -326,16 +342,6 @@ def update_product(id):
         fecha_fin = request.form.get('fecha_fin') or None
         status = int(request.form.get('status') or 1)
         palabras_claves = request.form['palabras_claves'].strip()
-        profesor = request.form['profesor'].strip()
-        
-        # Procesar foto del profesor (solo si se envía una nueva)
-        if 'profesor_foto' in request.files and request.files['profesor_foto'].filename:
-            foto = request.files['profesor_foto']
-            filename = secure_filename(foto.filename)
-            foto.save(f'app/static/img/{filename}')
-            profesor_foto = filename
-        else:
-            profesor_foto = existing_product['profesor_foto']  # Mantener la foto existente
         
         # Checkboxes
         relevant = int(request.form.get('relevant') == '1')
@@ -346,13 +352,12 @@ def update_product(id):
             UPDATE Product SET
                 title = %s, category = %s, description = %s, marca = %s,
                 purchase_price = %s, price = %s, descuento = %s, previous_price = %s,
-                fecha_inicio = %s, fecha_fin = %s, status = %s, palabras_claves = %s,
-                profesor = %s, profesor_foto = %s, relevant = %s, outstanding = %s
+                fecha_inicio = %s, fecha_fin = %s, status = %s, palabras_claves = %s, 
+                relevant = %s, outstanding = %s
             WHERE id = %s
         """, (
             title, category, description, marca, purchase_price, price, descuento,
-            previous_price, fecha_inicio, fecha_fin, status, palabras_claves,
-            profesor, profesor_foto, relevant, outstanding, id
+            previous_price, fecha_inicio, fecha_fin, status, palabras_claves, relevant, outstanding, id
         ))
         
         # Procesar imágenes del producto (solo si se envían nuevas)
