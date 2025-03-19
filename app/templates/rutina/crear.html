@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Nueva Rutina</h2>
+    <form method="POST">
+        <div class="row">
+            <!-- Información básica de la rutina -->
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="titulo" class="form-label">Título</label>
+                    <input type="text" class="form-control" id="titulo" name="titulo" required>
+                </div>
+                <div class="mb-3">
+                    <label for="descripcion" class="form-label">Descripción</label>
+                    <textarea class="form-control" id="descripcion" name="descripcion" rows="3"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="fecha_inicio" class="form-label">Fecha de Inicio</label>
+                    <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" required>
+                </div>
+                <div class="mb-3">
+                    <label for="fecha_fin" class="form-label">Fecha de Fin</label>
+                    <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" required>
+                </div>
+                <div class="mb-3">
+                    <label for="nivel" class="form-label">Nivel</label>
+                    <select class="form-control" id="nivel" name="nivel" required>
+                        <option value="principiante">Principiante</option>
+                        <option value="intermedio">Intermedio</option>
+                        <option value="avanzado">Avanzado</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="discipline_id" class="form-label">Disciplina</label>
+                    <select class="form-control" id="discipline_id" name="discipline_id" required>
+                        {% for discipline in disciplines %}
+                        <option value="{{ discipline.id }}">{{ discipline.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Ejercicios -->
+            <div class="col-md-6">
+                <h4>Ejercicios</h4>
+                <div id="ejercicios-container">
+                    <!-- Los ejercicios se agregarán aquí dinámicamente -->
+                </div>
+                <button type="button" class="btn btn-secondary mt-3" onclick="agregarEjercicio()">Agregar ejercicio</button>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">Crear Rutina</button>
+            <a href="{{ url_for('rutina.lista_rutinas', cliente_id=cliente_id) }}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<script>
+function agregarEjercicio() {
+    const container = document.getElementById('ejercicios-container');
+    const ejercicioHTML = `
+        <div class="ejercicio-grupo border p-3 mb-3">
+            <div class="mb-2">
+                <label class="form-label">Nombre del ejercicio</label>
+                <input type="text" class="form-control" name="nombres[]" required>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <label class="form-label">Series</label>
+                    <input type="number" class="form-control" name="series[]" required>
+                </div>
+                <div class="col">
+                    <label class="form-label">Repeticiones</label>
+                    <input type="number" class="form-control" name="repeticiones[]" required>
+                </div>
+                <div class="col">
+                    <label class="form-label">Descanso (seg)</label>
+                    <input type="number" class="form-control" name="descansos[]" required>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col">
+                    <label class="form-label">Día de la semana</label>
+                    <select class="form-control" name="dias[]" required>
+                        <option value="1">Lunes</option>
+                        <option value="2">Martes</option>
+                        <option value="3">Miércoles</option>
+                        <option value="4">Jueves</option>
+                        <option value="5">Viernes</option>
+                        <option value="6">Sábado</option>
+                        <option value="7">Domingo</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label class="form-label">Orden</label>
+                    <input type="number" class="form-control" name="ordenes[]" required>
+                </div>
+            </div>
+            <div class="mb-2 mt-2">
+                <label class="form-label">Notas</label>
+                <textarea class="form-control" name="notas[]"></textarea>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm mt-2" onclick="eliminarEjercicio(this)">Eliminar ejercicio</button>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', ejercicioHTML);
+}
+
+function eliminarEjercicio(button) {
+    button.closest('.ejercicio-grupo').remove();
+}
+
+// Agregar un ejercicio por defecto cuando se carga la página
+document.addEventListener('DOMContentLoaded', function() {
+    agregarEjercicio();
+});
+</script>
+{% endblock %} 

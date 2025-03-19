@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Editar Cliente</h2>
+    <form method="POST" enctype="multipart/form-data">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label>Nombres</label>
+                    <input type="text" name="nombres" class="form-control" value="{{ cliente.nombres }}" required>
+                </div>
+                <div class="form-group">
+                    <label>Apellidos</label>
+                    <input type="text" name="apellidos" class="form-control" value="{{ cliente.apellidos }}" required>
+                </div>
+                <div class="form-group">
+                    <label>Celular</label>
+                    <input type="number" name="celular" class="form-control" value="{{ cliente.celular }}" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" class="form-control" value="{{ cliente.email }}" required>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label>Dirección</label>
+                    <input type="text" name="direccion" class="form-control" value="{{ cliente.direccion }}" required>
+                </div>
+                <div class="form-group">
+                    <label>Tipo de Cliente</label>
+                    <select name="tipo_cliente" class="form-control" required>
+                        <option value="interno" {% if cliente.tipo_cliente == 'interno' %}selected{% endif %}>Interno (Alumno)</option>
+                        <option value="externo" {% if cliente.tipo_cliente == 'externo' %}selected{% endif %}>Externo (Temporal)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Imagen</label>
+                    <input type="file" name="imagen" class="form-control-file">
+                    {% if cliente.imagen %}
+                    <img src="{{ url_for('static', filename='uploads/' + cliente.imagen) }}" class="mt-2" style="max-width: 200px;">
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary mt-3">Actualizar</button>
+        <a href="{{ url_for('client.index') }}" class="btn btn-secondary mt-3">Cancelar</a>
+    </form>
+</div>
+{% endblock %} 

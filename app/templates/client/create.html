@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-white py-3">
+                <h3 class="h5 mb-0">
+                    <i class="fas fa-user-plus me-2"></i>
+                    {{ "Editar" if cliente else "Nuevo" }} Cliente
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <!-- Datos personales -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="border-bottom pb-2">Datos Personales</h5>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Nombres *</label>
+                                <input type="text" name="nombres" class="form-control" value="{{ cliente.nombres if cliente else '' }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Apellidos *</label>
+                                <input type="text" name="apellidos" class="form-control" value="{{ cliente.apellidos if cliente else '' }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Celular</label>
+                                <input type="text" name="celular" class="form-control" value="{{ cliente.celular if cliente else '' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Email *</label>
+                                <input type="email" name="email" class="form-control" value="{{ cliente.email if cliente else '' }}" required>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label">Dirección</label>
+                                <input type="text" name="direccion" class="form-control" value="{{ cliente.direccion if cliente else '' }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Disciplinas y servicios -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="border-bottom pb-2">Disciplinas y Servicios</h5>
+                        </div>
+                        <div class="col-12">
+                            <div class="row">
+                                {% for discipline in disciplines %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <div class="form-check">
+                                                <input class="form-check-input discipline-checkbox" 
+                                                       type="checkbox" 
+                                                       name="disciplines[]" 
+                                                       value="{{ discipline.id }}"
+                                                       id="discipline{{ discipline.id }}"
+                                                       onchange="toggleInstructors({{ discipline.id }})">
+                                                <label class="form-check-label fw-bold" for="discipline{{ discipline.id }}">
+                                                    {{ discipline.nombre }}
+                                                </label>
+                                            </div>
+                                            <p class="small text-muted mt-2">{{ discipline.descripcion }}</p>
+                                            
+                                            <!-- Instructores de esta disciplina -->
+                                            <div id="instructors-discipline-{{ discipline.id }}" class="mt-3" style="display: none;">
+                                                <label class="form-label">Seleccione Instructor:</label>
+                                                {% if discipline.id in instructors_by_discipline %}
+                                                    {% for instructor in instructors_by_discipline[discipline.id] %}
+                                                    <div class="d-flex align-items-center mb-2">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" 
+                                                                   type="checkbox" 
+                                                                   name="instructors[]" 
+                                                                   value="{{ instructor.id }}"
+                                                                   id="instructor{{ instructor.id }}-discipline{{ discipline.id }}">
+                                                            <label class="form-check-label" for="instructor{{ instructor.id }}-discipline{{ discipline.id }}">
+                                                                {% if instructor.imagen %}
+                                                                <img src="{{ url_for('static', filename='uploads/' + instructor.imagen) }}" 
+                                                                     class="rounded-circle me-2" 
+                                                                     style="width: 30px; height: 30px; object-fit: cover;">
+                                                                {% endif %}
+                                                                {{ instructor.nombres }} {{ instructor.apellidos }}
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                    {% endfor %}
+                                                {% else %}
+                                                    <p class="text-muted small">No hay instructores disponibles para esta disciplina.</p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tipo de cliente e imagen -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="border-bottom pb-2">Información Adicional</h5>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Tipo de Cliente *</label>
+                                <select name="tipo_cliente" class="form-select" required>
+                                    <option value="interno" {% if cliente and cliente.tipo_cliente == 'interno' %}selected{% endif %}>Interno (Alumno)</option>
+                                    <option value="externo" {% if cliente and cliente.tipo_cliente == 'externo' %}selected{% endif %}>Externo (Temporal)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Imagen de Perfil</label>
+                                <input type="file" name="imagen" class="form-control">
+                                {% if cliente and cliente.imagen %}
+                                <div class="mt-2">
+                                    <img src="{{ url_for('static', filename='uploads/' + cliente.imagen) }}" class="img-thumbnail" style="max-width: 200px;">
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{{ url_for('client.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> {{ "Actualizar" if cliente else "Guardar" }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript para manejar la visualización de instructores -->
+<script>
+function toggleInstructors(disciplineId) {
+    const checkbox = document.getElementById(`discipline${disciplineId}`);
+    const instructorsDiv = document.getElementById(`instructors-discipline-${disciplineId}`);
+    
+    if (checkbox.checked) {
+        instructorsDiv.style.display = 'block';
+    } else {
+        instructorsDiv.style.display = 'none';
+        // Desmarcar todos los instructores de esta disciplina
+        const instructorCheckboxes = instructorsDiv.querySelectorAll('input[type="checkbox"]');
+        instructorCheckboxes.forEach(cb => cb.checked = false);
+    }
+}
+
+// Inicializar Select2 para mejorar la selección múltiple
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof jQuery !== 'undefined' && typeof $.fn.select2 !== 'undefined') {
+        $('.form-select').select2({
+            theme: 'bootstrap-5'
+        });
+    }
+});
+</script>
+
+<!-- Agregar Select2 para mejorar la selección múltiple (opcional) -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+{% endblock %} 
