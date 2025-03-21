@@ -164,10 +164,23 @@ def historial(meta_id):
     # Obtener historial ordenado por fecha
     historial = HistorialMedida.query.filter_by(meta_id=meta_id).order_by(HistorialMedida.fecha.desc()).all()
     
+    # Calcular el progreso aquí
+    if historial:
+        ultima_medida = historial[0].medida
+    else:
+        ultima_medida = meta.medida_inicial
+        
+    if meta.medida_objetivo != meta.medida_inicial:
+        progreso_raw = ((ultima_medida - meta.medida_inicial) / (meta.medida_objetivo - meta.medida_inicial) * 100)
+        progreso = max(0, min(100, round(progreso_raw)))
+    else:
+        progreso = 0
+    
     return render_template('meta/historial.html',
                          meta=meta,
                          rutina=rutina,
-                         historial=historial)
+                         historial=historial,
+                         progreso=progreso)
 
 @meta_bp.route('/eliminar/<int:meta_id>')
 @login_required

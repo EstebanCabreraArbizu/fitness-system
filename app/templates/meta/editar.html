@@ -26,7 +26,14 @@
                                     {{ tipo }}
                                 </option>
                                 {% endfor %}
-                                <option value="Otro" {% if meta.tipo_medida not in [t[0] for t in tipos_medidas] %}selected{% endif %}>
+                                
+                                {% set es_tipo_personalizado = true %}
+                                {% for tipo, _ in tipos_medidas %}
+                                    {% if meta.tipo_medida == tipo %}
+                                        {% set es_tipo_personalizado = false %}
+                                    {% endif %}
+                                {% endfor %}
+                                <option value="Otro" {% if es_tipo_personalizado %}selected{% endif %}>
                                     Otro (personalizado)
                                 </option>
                             </select>
@@ -54,7 +61,7 @@
                         <div class="mb-3" id="unidad-personalizada" style="display: none;">
                             <label for="unidad_custom" class="form-label">Unidad de Medida</label>
                             <input type="text" class="form-control" id="unidad_custom" 
-                                   value="{{ meta.unidad if meta.tipo_medida not in [t[0] for t in tipos_medidas] else '' }}">
+                                   value="{{ meta.unidad if es_tipo_personalizado else '' }}">
                         </div>
                         
                         <div class="form-check mb-3">

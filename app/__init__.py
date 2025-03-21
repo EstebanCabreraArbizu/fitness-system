@@ -45,4 +45,8 @@ def create_app():
             return redirect(url_for('client.index'))
         return redirect(url_for('auth.login'))
 
+    # Agregar funciones auxiliares a Jinja2
+    app.jinja_env.filters['min'] = min
+    app.jinja_env.filters['max'] = max
+
     return app
