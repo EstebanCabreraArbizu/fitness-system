@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Dieta - NutriPlan</title>
+    <link rel="stylesheet" href="{{url_for(static, filename = 'css/styles.css')}}">
+    <link rel="stylesheet" href="{{utl_for(static, filename = 'css/crear-dieta.css')}}">
+    <!-- Iconos de Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts - Poppins y Montserrat -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="crear-dieta-page">
+    <header class="slim-header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i></a>
+                <h1><i class="fas fa-leaf"></i> NutriPlan</h1>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="page-title">
+            <h2 id="form-title">Nueva Dieta</h2>
+            <p>Crea tu plan personalizado de alimentación semanal</p>
+        </div>
+
+        <div class="form-container">
+            <form id="dieta-form">
+                <input type="hidden" id="dieta-id">
+                
+                <div class="form-section">
+                    <h3>Información Básica</h3>
+                    
+                    <div class="form-group">
+                        <label for="nombre-dieta">Nombre de la Dieta</label>
+                        <input type="text" id="nombre-dieta" placeholder="Ej: Dieta Mediterránea" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="objetivo-calorias">Objetivo de Calorías</label>
+                            <input type="number" id="objetivo-calorias" min="500" placeholder="Ej: 2000" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="meta">Meta a Lograr</label>
+                            <input type="text" id="meta" placeholder="Ej: Bajar 5kg en 2 meses" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <div class="section-header">
+                        <h3>Comidas por Semana</h3>
+                        <button type="button" id="agregar-comida" class="btn secondary icon-btn">
+                            <i class="fas fa-plus"></i> Agregar Comida
+                        </button>
+                    </div>
+                    
+                    <div id="comidas-container">
+                        <!-- Aquí se agregarán dinámicamente los campos de comidas -->
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <a href="index.html" class="btn">Cancelar</a>
+                    <button type="submit" class="btn primary">Guardar Dieta</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 NutriPlan - Planificador de Dietas</p>
+        </div>
+    </footer>
+
+    <script type="module">
+        import { DietaService } from '{{url_for(static, filename = 'js/dieta-service.js')}}';
+	        import { FormularioDieta } from '{{url_for(static, filename = 'js/formulario-dieta.js')}}';
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const dietaService = new DietaService();
+            const formulario = new FormularioDieta(dietaService);
+            
+            // Obtener el ID de la dieta de la URL si existe
+            const params = new URLSearchParams(window.location.search);
+            const dietaId = params.get('id');
+            
+            // Inicializar formulario
+            formulario.init();
+            
+            // Cargar datos si es edición
+            if (dietaId) {
+                formulario.cargarDieta(dietaId);
+            } else {
+                // Si es nuevo, agregar un campo de comida vacío
+                formulario.agregarCampoComida();
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -12,7 +12,7 @@ def index():
     cursor = None
     try:
         cursor = mysql.connection.cursor()
-        cursor.execute("SELECT * FROM Product")
+        cursor.execute("SELECT * FROM Product p WHERE p.id = %s", (current_user.id,))
         product_list = cursor.fetchall()
         for product in product_list:
             if product['fecha_inicio']:

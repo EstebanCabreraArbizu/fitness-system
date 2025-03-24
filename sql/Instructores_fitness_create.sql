@@ -1,12 +1,12 @@
 -- Created by Vertabelo (http://vertabelo.com)
--- Last modification date: 2025-03-12 16:19:42.285
+-- Last modification date: 2025-03-20 14:52:19.535
 
 -- tables
 -- Table: Cliente
 CREATE TABLE Cliente (
     id int  NOT NULL AUTO_INCREMENT,
     nombres varchar(100)  NOT NULL,
-    celular int  NOT NULL,
+    celular varchar(15)  NOT NULL,
     email varchar(150)  NOT NULL,
     contrasenia varchar(100)  NOT NULL,
     direccion varchar(150)  NOT NULL,
@@ -24,6 +24,51 @@ CREATE TABLE Cliente_Instructor (
     Cliente_id int  NOT NULL,
     Instructor_id int  NOT NULL,
     CONSTRAINT Cliente_Instructor_pk PRIMARY KEY (id)
+);
+
+-- Table: Comida
+CREATE TABLE Comida (
+    id int  NOT NULL AUTO_INCREMENT,
+    nombre varchar(100)  NOT NULL,
+    descripcion varchar(300)  NULL,
+    CONSTRAINT Comida_pk PRIMARY KEY (id)
+);
+
+-- Table: Dia_comida
+CREATE TABLE Dia_comida (
+    id int  NOT NULL AUTO_INCREMENT,
+    Dia_semanal_id int  NOT NULL,
+    Comida_id int  NOT NULL,
+    CONSTRAINT Dia_comida_pk PRIMARY KEY (id)
+);
+
+-- Table: Dia_semanal
+CREATE TABLE Dia_semanal (
+    id int  NOT NULL AUTO_INCREMENT,
+    nombre varchar(100)  NOT NULL,
+    Dieta_id int  NOT NULL,
+    CONSTRAINT Dia_semanal_pk PRIMARY KEY (id)
+);
+
+-- Table: Dieta
+CREATE TABLE Dieta (
+    id int  NOT NULL AUTO_INCREMENT,
+    nombre varchar(100)  NOT NULL,
+    descripcion varchar(300)  NOT NULL,
+	meta_calorias int NOT NULL,
+    fecha_inicio date  NOT NULL,
+    fecha_fin date  NOT NULL,
+    Cliente_id int  NOT NULL,
+    Instructor_id int  NOT NULL,
+    CONSTRAINT Dieta_pk PRIMARY KEY (id)
+);
+
+-- Table: Dieta_images
+CREATE TABLE Dieta_images (
+    id int  NOT NULL AUTO_INCREMENT,
+    image_name text  NOT NULL,
+    Dieta_id int  NOT NULL,
+    CONSTRAINT Dieta_images_pk PRIMARY KEY (id)
 );
 
 -- Table: Discipline
@@ -54,7 +99,7 @@ CREATE TABLE Discipline_Instructor (
 CREATE TABLE Instructor (
     id int  NOT NULL AUTO_INCREMENT,
     nombres varchar(100)  NOT NULL,
-    celular int  NOT NULL,
+    celular varchar(15)  NOT NULL,
     email varchar(150)  NOT NULL,
     contrasenia varchar(100)  NOT NULL,
     status int  NOT NULL,
@@ -91,8 +136,6 @@ CREATE TABLE Product (
     palabras_claves text  NOT NULL,
     fecha_inicio date  NULL,
     fecha_fin date  NULL,
-    profesor varchar(100)  NOT NULL,
-    profesor_foto varchar(100)  NOT NULL,
     CONSTRAINT Product_pk PRIMARY KEY (id)
 );
 
@@ -113,6 +156,30 @@ ALTER TABLE Cliente_Instructor ADD CONSTRAINT Cliente_Insturctor_Cliente FOREIGN
 -- Reference: Cliente_Insturctor_Instructor (table: Cliente_Instructor)
 ALTER TABLE Cliente_Instructor ADD CONSTRAINT Cliente_Insturctor_Instructor FOREIGN KEY Cliente_Insturctor_Instructor (Instructor_id)
     REFERENCES Instructor (id);
+
+-- Reference: Dia_comida_Comida (table: Dia_comida)
+ALTER TABLE Dia_comida ADD CONSTRAINT Dia_comida_Comida FOREIGN KEY Dia_comida_Comida (Comida_id)
+    REFERENCES Comida (id);
+
+-- Reference: Dia_comida_Dia_semanal (table: Dia_comida)
+ALTER TABLE Dia_comida ADD CONSTRAINT Dia_comida_Dia_semanal FOREIGN KEY Dia_comida_Dia_semanal (Dia_semanal_id)
+    REFERENCES Dia_semanal (id);
+
+-- Reference: Dia_semanal_Dieta (table: Dia_semanal)
+ALTER TABLE Dia_semanal ADD CONSTRAINT Dia_semanal_Dieta FOREIGN KEY Dia_semanal_Dieta (Dieta_id)
+    REFERENCES Dieta (id);
+
+-- Reference: Dieta_Cliente (table: Dieta)
+ALTER TABLE Dieta ADD CONSTRAINT Dieta_Cliente FOREIGN KEY Dieta_Cliente (Cliente_id)
+    REFERENCES Cliente (id);
+
+-- Reference: Dieta_Instructor (table: Dieta)
+ALTER TABLE Dieta ADD CONSTRAINT Dieta_Instructor FOREIGN KEY Dieta_Instructor (Instructor_id)
+    REFERENCES Instructor (id);
+
+-- Reference: Dieta_images_Dieta (table: Dieta_images)
+ALTER TABLE Dieta_images ADD CONSTRAINT Dieta_images_Dieta FOREIGN KEY Dieta_images_Dieta (Dieta_id)
+    REFERENCES Dieta (id);
 
 -- Reference: Discipline_Cliente_Cliente (table: Discipline_Cliente)
 ALTER TABLE Discipline_Cliente ADD CONSTRAINT Discipline_Cliente_Cliente FOREIGN KEY Discipline_Cliente_Cliente (Cliente_id)
@@ -142,24 +209,5 @@ ALTER TABLE Instructor_Products ADD CONSTRAINT Instructor_Products_Products FORE
 ALTER TABLE Product_images ADD CONSTRAINT Product_images_Products FOREIGN KEY Product_images_Products (Product_id)
     REFERENCES Product (id);
 
--- Insertar disciplinas básicas
-INSERT INTO Discipline (nombre, descripcion) VALUES 
-('Yoga', 'Práctica que conecta el cuerpo, la respiración y la mente.'),
-('Pilates', 'Sistema de entrenamiento físico y mental centrado en la postura y el control.'),
-('Crossfit', 'Programa de acondicionamiento físico basado en ejercicios funcionales.'),
-('Spinning', 'Entrenamiento de ciclismo indoor con música de alta energía.'),
-('Zumba', 'Programa de fitness que combina música latina con baile y ejercicio.');
-
--- Insertar instructores de ejemplo
-INSERT INTO Instructor (nombres, celular, email, contrasenia, status, apellidos, imagen) VALUES
-('Juan', '5551234567', 'juan@fittrainer.com', 'password123', 1, 'González', 'instructor1.jpg'),
-('María', '5557654321', 'maria@fittrainer.com', 'password123', 1, 'Rodríguez', 'instructor2.jpg'),
-('Carlos', '5559876543', 'carlos@fittrainer.com', 'password123', 1, 'Sánchez', 'instructor3.jpg');
-
--- Asociar instructores con disciplinas
-INSERT INTO Discipline_Instructor (Discipline_id, Instructor_id) VALUES
-(1, 1), -- Juan - Yoga
-(2, 2), -- María - Pilates
-(3, 3); -- Carlos - Crossfit
-
 -- End of file.
+
