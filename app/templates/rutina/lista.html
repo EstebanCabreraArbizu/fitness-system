@@ -81,7 +81,7 @@
                             <i class="fas fa-bullseye"></i> Metas
                         </a>
                         {% if not rutina.dieta %}
-                        <a href="{{ url_for('dieta.crear', rutina_id=rutina.id) }}" class="btn btn-sm btn-outline-success">
+                        <a href="{{ url_for('dieta.crear', cliente_id=cliente.id, rutina_id=rutina.id) }}" class="btn btn-sm btn-outline-success">
                             <i class="fas fa-utensils"></i> Agregar Dieta
                         </a>
                         {% else %}

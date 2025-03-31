@@ -15,28 +15,36 @@ def lista_dietas(cliente_id):
     dietas = Dieta.query.filter_by(cliente_id=cliente_id).order_by(Dieta.fecha_inicio.desc()).all()
     return render_template('dieta/lista.html', cliente=cliente, dietas=dietas)
 
+@dieta_bp.route('/crear', methods=['GET', 'POST'])
 @dieta_bp.route('/crear/<int:cliente_id>', methods=['GET', 'POST'])
 @login_required
-def crear(cliente_id):
-    cliente = Cliente.query.get_or_404(cliente_id)
+def crear(cliente_id=None):
     rutina_id = request.args.get('rutina_id', type=int)
-    rutina = None
+    
     if rutina_id:
         rutina = Rutina.query.get_or_404(rutina_id)
-        if rutina.cliente_id != cliente_id:
-            flash('La rutina no pertenece a este cliente', 'danger')
-            return redirect(url_for('rutina.lista_rutinas', cliente_id=cliente_id))
+        cliente = rutina.cliente
+        cliente_id = cliente.id
+    elif cliente_id:
+        cliente = Cliente.query.get_or_404(cliente_id)
+        rutina = None
+    else:
+        flash('Se requiere un cliente o una rutina para crear una dieta', 'danger')
+        return redirect(url_for('client.index'))
     
     if request.method == 'POST':
         try:
             nueva_dieta = Dieta(
                 cliente_id=cliente_id,
                 instructor_id=current_user.id,
-                titulo=request.form['titulo'],
+                nombre=request.form['nombre'],
                 descripcion=request.form['descripcion'],
                 fecha_inicio=datetime.strptime(request.form['fecha_inicio'], '%Y-%m-%d').date(),
                 fecha_fin=datetime.strptime(request.form['fecha_fin'], '%Y-%m-%d').date(),
-                calorias_diarias=request.form.get('calorias_diarias', type=int)
+                calorias_diarias=request.form.get('calorias_diarias', type=int),
+                proteinas=request.form.get('proteinas', type=float),
+                carbohidratos=request.form.get('carbohidratos', type=float),
+                grasas=request.form.get('grasas', type=float)
             )
             
             db.session.add(nueva_dieta)
