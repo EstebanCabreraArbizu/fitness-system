@@ -37,6 +37,13 @@ class ComidaDieta(db.Model):
     proteinas = db.Column(db.Float)  # en gramos
     carbohidratos = db.Column(db.Float)  # en gramos
     grasas = db.Column(db.Float)  # en gramos
+    lunes = db.Column(db.Boolean, default=True)
+    martes = db.Column(db.Boolean, default=True)
+    miercoles = db.Column(db.Boolean, default=True)
+    jueves = db.Column(db.Boolean, default=True)
+    viernes = db.Column(db.Boolean, default=True)
+    sabado = db.Column(db.Boolean, default=True)
+    domingo = db.Column(db.Boolean, default=True)
     
     # Relación
     dieta = db.relationship('Dieta', back_populates='detalles_comidas') 

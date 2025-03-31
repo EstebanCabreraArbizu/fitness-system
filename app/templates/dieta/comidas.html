@@ -6,13 +6,32 @@
         <div class="col">
             <h2 class="h4">
                 <i class="fas fa-utensils me-2"></i>
-                Comidas de la Dieta: {{ dieta.titulo }}
+                Comidas de la Dieta: {{ dieta.nombre }}
             </h2>
             <p class="text-muted">
                 Cliente: {{ dieta.cliente.nombres }} {{ dieta.cliente.apellidos }} |
                 Período: {{ dieta.fecha_inicio.strftime('%d/%m/%Y') }} - 
                         {{ dieta.fecha_fin.strftime('%d/%m/%Y') }}
             </p>
+            {% if dieta.calorias_diarias %}
+            <div class="alert alert-info">
+                <h6 class="mb-2">Objetivo Diario:</h6>
+                <div class="row">
+                    <div class="col-md-3">
+                        <strong>Calorías:</strong> {{ dieta.calorias_diarias }} kcal
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Proteínas:</strong> {{ dieta.proteinas }}g
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Carbohidratos:</strong> {{ dieta.carbohidratos }}g
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Grasas:</strong> {{ dieta.grasas }}g
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -43,6 +62,54 @@
                         </div>
                         
                         <div class="mb-3">
+                            <label class="form-label">Días de la Semana</label>
+                            <div class="row g-2">
+                                <div class="col">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="lunes" id="lunes" checked>
+                                        <label class="form-check-label" for="lunes">Lun</label>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="martes" id="martes" checked>
+                                        <label class="form-check-label" for="martes">Mar</label>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="miercoles" id="miercoles" checked>
+                                        <label class="form-check-label" for="miercoles">Mié</label>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="jueves" id="jueves" checked>
+                                        <label class="form-check-label" for="jueves">Jue</label>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="viernes" id="viernes" checked>
+                                        <label class="form-check-label" for="viernes">Vie</label>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="sabado" id="sabado" checked>
+                                        <label class="form-check-label" for="sabado">Sáb</label>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="domingo" id="domingo" checked>
+                                        <label class="form-check-label" for="domingo">Dom</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
                             <label for="descripcion" class="form-label">Descripción</label>
                             <textarea class="form-control" id="descripcion" name="descripcion" 
                                       rows="3" required></textarea>
@@ -51,12 +118,12 @@
                         <div class="row mb-3">
                             <div class="col-6">
                                 <label for="calorias" class="form-label">Calorías (kcal)</label>
-                                <input type="number" class="form-control" id="calorias" name="calorias">
+                                <input type="number" class="form-control" id="calorias" name="calorias" required>
                             </div>
                             <div class="col-6">
                                 <label for="proteinas" class="form-label">Proteínas (g)</label>
                                 <input type="number" step="0.1" class="form-control" id="proteinas" 
-                                       name="proteinas">
+                                       name="proteinas" required>
                             </div>
                         </div>
                         
@@ -64,12 +131,12 @@
                             <div class="col-6">
                                 <label for="carbohidratos" class="form-label">Carbohidratos (g)</label>
                                 <input type="number" step="0.1" class="form-control" id="carbohidratos" 
-                                       name="carbohidratos">
+                                       name="carbohidratos" required>
                             </div>
                             <div class="col-6">
                                 <label for="grasas" class="form-label">Grasas (g)</label>
                                 <input type="number" step="0.1" class="form-control" id="grasas" 
-                                       name="grasas">
+                                       name="grasas" required>
                             </div>
                         </div>
                         
@@ -87,7 +154,7 @@
                     <h5 class="mb-0">Comidas Programadas</h5>
                 </div>
                 <div class="card-body">
-                    {% if dieta.comidas %}
+                    {% if dieta.detalles_comidas %}
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
@@ -95,27 +162,35 @@
                                     <th>Hora</th>
                                     <th>Tipo</th>
                                     <th>Descripción</th>
+                                    <th>Días</th>
                                     <th>Nutrientes</th>
                                     <th></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for comida in dieta.comidas|sort(attribute='hora') %}
+                                {% for comida in dieta.detalles_comidas|sort(attribute='hora') %}
                                 <tr>
                                     <td>{{ comida.hora.strftime('%H:%M') }}</td>
                                     <td>{{ comida.tipo_comida }}</td>
                                     <td>{{ comida.descripcion }}</td>
                                     <td>
-                                        {% if comida.calorias %}
+                                        <small>
+                                            {% if comida.lunes %}L{% endif %}
+                                            {% if comida.martes %}M{% endif %}
+                                            {% if comida.miercoles %}X{% endif %}
+                                            {% if comida.jueves %}J{% endif %}
+                                            {% if comida.viernes %}V{% endif %}
+                                            {% if comida.sabado %}S{% endif %}
+                                            {% if comida.domingo %}D{% endif %}
+                                        </small>
+                                    </td>
+                                    <td>
                                         <small>
                                             {{ comida.calorias }} kcal<br>
                                             P: {{ comida.proteinas }}g |
                                             C: {{ comida.carbohidratos }}g |
                                             G: {{ comida.grasas }}g
                                         </small>
-                                        {% else %}
-                                        <small class="text-muted">No especificado</small>
-                                        {% endif %}
                                     </td>
                                     <td>
                                         <a href="{{ url_for('dieta.eliminar_comida', comida_id=comida.id) }}"
@@ -132,22 +207,79 @@
                     
                     {% if dieta.calorias_diarias %}
                     <div class="alert alert-info mt-3">
-                        <div class="row align-items-center">
-                            <div class="col">
-                                <h6 class="mb-0">Resumen Nutricional</h6>
-                                {% set total_calorias = namespace(value=0) %}
-                                {% for comida in dieta.comidas %}
-                                    {% set total_calorias.value = total_calorias.value + (comida.calorias or 0) %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="mb-2">Resumen Diario</h6>
+                                {% set totales = namespace(calorias=0, proteinas=0, carbos=0, grasas=0) %}
+                                {% for comida in dieta.detalles_comidas %}
+                                    {% set totales.calorias = totales.calorias + comida.calorias %}
+                                    {% set totales.proteinas = totales.proteinas + comida.proteinas %}
+                                    {% set totales.carbos = totales.carbos + comida.carbohidratos %}
+                                    {% set totales.grasas = totales.grasas + comida.grasas %}
                                 {% endfor %}
-                                <p class="mb-0">
-                                    Total: {{ total_calorias.value }} / {{ dieta.calorias_diarias }} kcal
-                                    ({{ ((total_calorias.value / dieta.calorias_diarias) * 100)|round }}%)
-                                </p>
+                                
+                                <div class="mb-2">
+                                    <strong>Calorías:</strong> 
+                                    {{ totales.calorias }} / {{ dieta.calorias_diarias }} kcal
+                                    ({{ ((totales.calorias / dieta.calorias_diarias) * 100)|round }}%)
+                                    <div class="progress" style="height: 5px;">
+                                        <div class="progress-bar" role="progressbar"
+                                             style="width: {{ (totales.calorias / dieta.calorias_diarias * 100)|round }}%">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-2">
+                                    <strong>Proteínas:</strong> 
+                                    {{ totales.proteinas }} / {{ dieta.proteinas }}g
+                                    ({{ ((totales.proteinas / dieta.proteinas) * 100)|round }}%)
+                                    <div class="progress" style="height: 5px;">
+                                        <div class="progress-bar bg-success" role="progressbar"
+                                             style="width: {{ (totales.proteinas / dieta.proteinas * 100)|round }}%">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-2">
+                                    <strong>Carbohidratos:</strong> 
+                                    {{ totales.carbos }} / {{ dieta.carbohidratos }}g
+                                    ({{ ((totales.carbos / dieta.carbohidratos) * 100)|round }}%)
+                                    <div class="progress" style="height: 5px;">
+                                        <div class="progress-bar bg-warning" role="progressbar"
+                                             style="width: {{ (totales.carbos / dieta.carbohidratos * 100)|round }}%">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-2">
+                                    <strong>Grasas:</strong> 
+                                    {{ totales.grasas }} / {{ dieta.grasas }}g
+                                    ({{ ((totales.grasas / dieta.grasas) * 100)|round }}%)
+                                    <div class="progress" style="height: 5px;">
+                                        <div class="progress-bar bg-danger" role="progressbar"
+                                             style="width: {{ (totales.grasas / dieta.grasas * 100)|round }}%">
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col">
-                                <div class="progress">
-                                    <div class="progress-bar" role="progressbar"
-                                         style="width: {{ (total_calorias.value / dieta.calorias_diarias * 100)|round }}%">
+                            
+                            <div class="col-md-6">
+                                <h6 class="mb-2">Distribución de Macronutrientes</h6>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar bg-success" role="progressbar"
+                                         style="width: {{ (totales.proteinas * 4 / totales.calorias * 100)|round }}%"
+                                         title="Proteínas">
+                                        {{ (totales.proteinas * 4 / totales.calorias * 100)|round }}%
+                                    </div>
+                                    <div class="progress-bar bg-warning" role="progressbar"
+                                         style="width: {{ (totales.carbos * 4 / totales.calorias * 100)|round }}%"
+                                         title="Carbohidratos">
+                                        {{ (totales.carbos * 4 / totales.calorias * 100)|round }}%
+                                    </div>
+                                    <div class="progress-bar bg-danger" role="progressbar"
+                                         style="width: {{ (totales.grasas * 9 / totales.calorias * 100)|round }}%"
+                                         title="Grasas">
+                                        {{ (totales.grasas * 9 / totales.calorias * 100)|round }}%
                                     </div>
                                 </div>
                             </div>

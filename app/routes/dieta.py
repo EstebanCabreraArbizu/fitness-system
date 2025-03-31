@@ -42,9 +42,9 @@ def crear(cliente_id=None):
                 fecha_inicio=datetime.strptime(request.form['fecha_inicio'], '%Y-%m-%d').date(),
                 fecha_fin=datetime.strptime(request.form['fecha_fin'], '%Y-%m-%d').date(),
                 calorias_diarias=request.form.get('calorias_diarias', type=int),
-                proteinas=request.form.get('proteinas', type=float),
-                carbohidratos=request.form.get('carbohidratos', type=float),
-                grasas=request.form.get('grasas', type=float)
+                proteinas=request.form.get('proteinas', type=float, default=0),
+                carbohidratos=request.form.get('carbohidratos', type=float, default=0),
+                grasas=request.form.get('grasas', type=float, default=0)
             )
             
             db.session.add(nueva_dieta)
@@ -77,12 +77,15 @@ def editar(dieta_id):
     
     if request.method == 'POST':
         try:
-            dieta.titulo = request.form['titulo']
+            dieta.nombre = request.form['nombre']
             dieta.descripcion = request.form['descripcion']
             dieta.fecha_inicio = datetime.strptime(request.form['fecha_inicio'], '%Y-%m-%d').date()
             dieta.fecha_fin = datetime.strptime(request.form['fecha_fin'], '%Y-%m-%d').date()
             dieta.calorias_diarias = request.form.get('calorias_diarias', type=int)
-            dieta.activa = 'activa' in request.form
+            dieta.proteinas = request.form.get('proteinas', type=float)
+            dieta.carbohidratos = request.form.get('carbohidratos', type=float)
+            dieta.grasas = request.form.get('grasas', type=float)
+            dieta.notas = request.form.get('notas')
             
             db.session.commit()
             flash('Dieta actualizada exitosamente', 'success')
@@ -117,7 +120,14 @@ def editar_comidas(dieta_id):
                 calorias=request.form.get('calorias', type=int),
                 proteinas=request.form.get('proteinas', type=float),
                 carbohidratos=request.form.get('carbohidratos', type=float),
-                grasas=request.form.get('grasas', type=float)
+                grasas=request.form.get('grasas', type=float),
+                lunes='lunes' in request.form,
+                martes='martes' in request.form,
+                miercoles='miercoles' in request.form,
+                jueves='jueves' in request.form,
+                viernes='viernes' in request.form,
+                sabado='sabado' in request.form,
+                domingo='domingo' in request.form
             )
             
             db.session.add(comida)
