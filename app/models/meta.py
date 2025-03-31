@@ -22,7 +22,7 @@ class Meta(db.Model):
     historial = db.relationship('HistorialMedida', backref='meta', cascade='all, delete-orphan')
 
 class HistorialMedida(db.Model):
-    __tablename__ = 'historial_medidas'
+    __tablename__ = 'historial_medidas_metas'  # Cambiado para evitar conflictos
     
     id = db.Column(db.Integer, primary_key=True)
     meta_id = db.Column(db.Integer, db.ForeignKey('metas.id', ondelete='CASCADE'), nullable=False)

@@ -1,5 +1,6 @@
 from app.extensions import db
 from datetime import datetime
+from app.models.dieta import Dieta  # Agregamos la importación
 
 class Rutina(db.Model):
     __tablename__ = 'rutinas'
@@ -14,10 +15,12 @@ class Rutina(db.Model):
     fecha_fin = db.Column(db.Date, nullable=False)
     nivel = db.Column(db.String(20), nullable=False)  # principiante, intermedio, avanzado
     status = db.Column(db.Integer, default=1, nullable=False)
+    dieta_id = db.Column(db.Integer, db.ForeignKey('dietas.id'), nullable=True)  # Nueva relación con dieta
     
     # Relaciones simplificadas
     discipline = db.relationship('Discipline')
     cliente = db.relationship('Cliente', backref='rutinas')
+    dieta = db.relationship('Dieta', backref='rutina', uselist=False)  # Modificamos la relación
     
     ejercicios = db.relationship('EjercicioRutina', cascade='all, delete-orphan')
 

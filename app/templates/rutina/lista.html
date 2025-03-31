@@ -33,6 +33,10 @@
                         <i class="fas fa-running me-1"></i> Disciplina: {{ rutina.discipline.nombre }}
                         <br>
                         <i class="fas fa-calendar me-1"></i> {{ rutina.fecha_inicio.strftime('%d/%m/%Y') }} - {{ rutina.fecha_fin.strftime('%d/%m/%Y') }}
+                        {% if rutina.dieta %}
+                        <br>
+                        <i class="fas fa-utensils me-1"></i> Dieta: {{ rutina.dieta.nombre }}
+                        {% endif %}
                     </p>
                     
                     <h6>Ejercicios por día:</h6>
@@ -54,6 +58,19 @@
                         </div>
                         {% endif %}
                     {% endfor %}
+
+                    {% if rutina.dieta %}
+                    <h6 class="mt-3">Información de Dieta:</h6>
+                    <div class="small">
+                        <p class="mb-1">Calorías diarias: {{ rutina.dieta.calorias_diarias }} kcal</p>
+                        <p class="mb-1">Macronutrientes:</p>
+                        <ul class="list-unstyled ms-3">
+                            <li>Proteínas: {{ rutina.dieta.proteinas }}g</li>
+                            <li>Carbohidratos: {{ rutina.dieta.carbohidratos }}g</li>
+                            <li>Grasas: {{ rutina.dieta.grasas }}g</li>
+                        </ul>
+                    </div>
+                    {% endif %}
                 </div>
                 <div class="card-footer">
                     <div class="btn-group">
@@ -63,6 +80,15 @@
                         <a href="{{ url_for('meta.lista_metas', rutina_id=rutina.id) }}" class="btn btn-sm btn-outline-info">
                             <i class="fas fa-bullseye"></i> Metas
                         </a>
+                        {% if not rutina.dieta %}
+                        <a href="{{ url_for('dieta.crear', rutina_id=rutina.id) }}" class="btn btn-sm btn-outline-success">
+                            <i class="fas fa-utensils"></i> Agregar Dieta
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('dieta.editar', dieta_id=rutina.dieta.id) }}" class="btn btn-sm btn-outline-success">
+                            <i class="fas fa-utensils"></i> Ver Dieta
+                        </a>
+                        {% endif %}
                         <button type="button" class="btn btn-sm btn-outline-danger" 
                                 onclick="confirmarEliminacionRutina({{ rutina.id }})">
                             <i class="fas fa-trash"></i> Eliminar

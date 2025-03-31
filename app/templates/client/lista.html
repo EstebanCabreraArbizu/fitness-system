@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <!-- ... código existente ... -->
+    
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Nombres</th>
+                    <th>Apellidos</th>
+                    <th>Email</th>
+                    <th>Celular</th>
+                    <th>Tipo Cliente</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cliente in clientes %}
+                <tr>
+                    <td>{{ cliente.nombres }}</td>
+                    <td>{{ cliente.apellidos }}</td>
+                    <td>{{ cliente.email }}</td>
+                    <td>{{ cliente.celular }}</td>
+                    <td>{{ cliente.tipo_cliente }}</td>
+                    <td>
+                        <span class="badge {% if cliente.status == 1 %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ "Activo" if cliente.status == 1 else "Inactivo" }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="btn-group">
+                            <!-- Botón de Rutinas existente -->
+                            <a href="{{ url_for('rutina.lista_rutinas', cliente_id=cliente.id) }}" 
+                               class="btn btn-sm btn-outline-primary" 
+                               title="Asignar Rutina">
+                                <i class="fas fa-dumbbell"></i>
+                            </a>
+                            
+                            <!-- Nuevo botón de Dietas -->
+                            <a href="{{ url_for('dieta.lista_dietas', cliente_id=cliente.id) }}" 
+                               class="btn btn-sm btn-outline-success" 
+                               title="Asignar Dieta">
+                                <i class="fas fa-utensils"></i>
+                            </a>
+                            
+                            <!-- Botón de Editar -->
+                            <a href="{{ url_for('client.edit', id=cliente.id) }}" 
+                               class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            
+                            <!-- Botón de Eliminar -->
+                            <button type="button" 
+                                    class="btn btn-sm btn-outline-danger" 
+                                    onclick="confirmarEliminacion({{ cliente.id }})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal de confirmación existente -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <!-- ... código del modal ... -->
+</div>
+
+<!-- Agregar un tooltip para los botones -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar tooltips de Bootstrap
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+});
+
+// Función de confirmación existente
+function confirmarEliminacion(clienteId) {
+    // ... código existente ...
+}
+</script>
+{% endblock %} 

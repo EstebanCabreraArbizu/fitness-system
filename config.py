@@ -9,7 +9,7 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'una_clave_secreta_muy_segura')
     
     # Configuración de la base de datos
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:marte@localhost/personal_trainer_db2'
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:marte@localhost/fitness_trainer3'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Configuración para subida de archivos

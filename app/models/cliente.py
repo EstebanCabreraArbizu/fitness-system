@@ -20,3 +20,6 @@ class Cliente(db.Model):
     instructors = db.relationship('Instructor', secondary='cliente_instructor',
                                viewonly=True)
     # No es necesario definir 'rutinas' aquí ya que está como backref en el modelo Rutina
+    
+    # Relación con dietas
+    dietas = db.relationship('Dieta', back_populates='cliente', cascade='all, delete-orphan')
