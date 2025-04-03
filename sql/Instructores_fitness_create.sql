@@ -1,20 +1,23 @@
 -- Created by Vertabelo (http://vertabelo.com)
--- Last modification date: 2025-03-20 14:52:19.535
-
+-- Last modification date: 2025-03-31 18:05:29.273
+USE fitness_system;
 -- tables
 -- Table: Cliente
 CREATE TABLE Cliente (
     id int  NOT NULL AUTO_INCREMENT,
     nombres varchar(100)  NOT NULL,
+    apellidos varchar(100)  NOT NULL,
     celular varchar(15)  NOT NULL,
     email varchar(150)  NOT NULL,
     contrasenia varchar(100)  NOT NULL,
     direccion varchar(150)  NOT NULL,
     tipo_cliente varchar(100)  NOT NULL,
     status int  NOT NULL,
-    apellidos varchar(100)  NOT NULL,
     imagen varchar(255)  NOT NULL,
     fecha_pago date  NULL,
+    peso float  NOT NULL,
+    altura float  NOT NULL,
+    fecha_registro datetime  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT Cliente_pk PRIMARY KEY (id)
 );
 
@@ -29,37 +32,42 @@ CREATE TABLE Cliente_Instructor (
 -- Table: Comida
 CREATE TABLE Comida (
     id int  NOT NULL AUTO_INCREMENT,
+    tipo_comida varchar(100)  NOT NULL,
+    dia_dieta varchar(100)  NOT NULL,
+    hora varchar(100)  NOT NULL,
     nombre varchar(100)  NOT NULL,
-    descripcion varchar(300)  NULL,
-    CONSTRAINT Comida_pk PRIMARY KEY (id)
-);
-
--- Table: Dia_comida
-CREATE TABLE Dia_comida (
-    id int  NOT NULL AUTO_INCREMENT,
-    Dia_semanal_id int  NOT NULL,
-    Comida_id int  NOT NULL,
-    CONSTRAINT Dia_comida_pk PRIMARY KEY (id)
-);
-
--- Table: Dia_semanal
-CREATE TABLE Dia_semanal (
-    id int  NOT NULL AUTO_INCREMENT,
-    nombre varchar(100)  NOT NULL,
+    descripcion text  NULL,
+    calorias int  NOT NULL,
+    proteinas float  NOT NULL,
+    carbohidratos float  NOT NULL,
+    grasas float  NOT NULL,
+    recomendacion varchar(100)  NOT NULL,
+    image_name varchar(100)  NOT NULL,
+    status int  NOT NULL,
     Dieta_id int  NOT NULL,
-    CONSTRAINT Dia_semanal_pk PRIMARY KEY (id)
+    CONSTRAINT Comida_pk PRIMARY KEY (id)
 );
 
 -- Table: Dieta
 CREATE TABLE Dieta (
     id int  NOT NULL AUTO_INCREMENT,
+    tipo_dieta varchar(100)  NOT NULL,
     nombre varchar(100)  NOT NULL,
     descripcion varchar(300)  NOT NULL,
-	meta_calorias int NOT NULL,
     fecha_inicio date  NOT NULL,
     fecha_fin date  NOT NULL,
+    duracion_dieta varchar(100)  NOT NULL,
+    fecha_registro datetime  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    edad varchar(100)  NOT NULL,
+    alergias varchar(100)  NOT NULL,
+    enfermedad_cronica varchar(100)  NOT NULL,
+    alergia_medicamento varchar(100)  NOT NULL,
+    dias_semana varchar(100)  NOT NULL,
+    meta_calorias int(100)  NOT NULL,
+    status int  NOT NULL,
     Cliente_id int  NOT NULL,
     Instructor_id int  NOT NULL,
+    Discipline_id int  NOT NULL,
     CONSTRAINT Dieta_pk PRIMARY KEY (id)
 );
 
@@ -95,16 +103,48 @@ CREATE TABLE Discipline_Instructor (
     CONSTRAINT Discipline_Instructor_pk PRIMARY KEY (id)
 );
 
+-- Table: Ejercicio
+CREATE TABLE Ejercicio (
+    id int  NOT NULL AUTO_INCREMENT,
+    nombre varchar(100)  NOT NULL,
+    descripcion text  NOT NULL,
+    series int  NOT NULL,
+    repeticiones int  NOT NULL,
+    tiempo_descanso int  NOT NULL,
+    CONSTRAINT Ejercicio_pk PRIMARY KEY (id)
+);
+
+-- Table: Ejercicio_Rutina
+CREATE TABLE Ejercicio_Rutina (
+    id int  NOT NULL AUTO_INCREMENT,
+    orden int  NOT NULL,
+    Ejercicio_id int  NOT NULL,
+    Rutina_id int  NOT NULL,
+    CONSTRAINT Ejercicio_Rutina_pk PRIMARY KEY (id)
+);
+
+-- Table: Historial_Medidas
+CREATE TABLE Historial_Medidas (
+    id int  NOT NULL AUTO_INCREMENT,
+    peso float  NOT NULL,
+    altura float  NOT NULL,
+    imc float  NOT NULL,
+    fecha_medicion datetime  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    Cliente_id int  NOT NULL,
+    CONSTRAINT Historial_Medidas_pk PRIMARY KEY (id)
+);
+
 -- Table: Instructor
 CREATE TABLE Instructor (
     id int  NOT NULL AUTO_INCREMENT,
     nombres varchar(100)  NOT NULL,
+    apellidos varchar(100)  NOT NULL,
     celular varchar(15)  NOT NULL,
     email varchar(150)  NOT NULL,
     contrasenia varchar(100)  NOT NULL,
     status int  NOT NULL,
-    apellidos varchar(100)  NOT NULL,
     imagen varchar(255)  NOT NULL,
+    fecha_registro datetime  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT Instructor_pk PRIMARY KEY (id)
 );
 
@@ -114,6 +154,17 @@ CREATE TABLE Instructor_Products (
     Instructor_id int  NOT NULL,
     Product_id int  NOT NULL,
     CONSTRAINT Instructor_Products_pk PRIMARY KEY (id)
+);
+
+-- Table: Meta
+CREATE TABLE Meta (
+    id int  NOT NULL AUTO_INCREMENT,
+    descripcion text  NOT NULL,
+    fecha_inicio date  NOT NULL,
+    fecha_fin date  NOT NULL,
+    estado varchar(50)  NOT NULL,
+    Cliente_id int  NOT NULL,
+    CONSTRAINT Meta_pk PRIMARY KEY (id)
 );
 
 -- Table: Product
@@ -148,6 +199,16 @@ CREATE TABLE Product_images (
     CONSTRAINT Product_images_pk PRIMARY KEY (id)
 );
 
+-- Table: Rutina
+CREATE TABLE Rutina (
+    id int  NOT NULL AUTO_INCREMENT,
+    nombre varchar(100)  NOT NULL,
+    descripcion text  NOT NULL,
+    fecha_creacion datetime  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    Cliente_id int  NOT NULL,
+    CONSTRAINT Rutina_pk PRIMARY KEY (id)
+);
+
 -- foreign keys
 -- Reference: Cliente_Insturctor_Cliente (table: Cliente_Instructor)
 ALTER TABLE Cliente_Instructor ADD CONSTRAINT Cliente_Insturctor_Cliente FOREIGN KEY Cliente_Insturctor_Cliente (Cliente_id)
@@ -157,21 +218,17 @@ ALTER TABLE Cliente_Instructor ADD CONSTRAINT Cliente_Insturctor_Cliente FOREIGN
 ALTER TABLE Cliente_Instructor ADD CONSTRAINT Cliente_Insturctor_Instructor FOREIGN KEY Cliente_Insturctor_Instructor (Instructor_id)
     REFERENCES Instructor (id);
 
--- Reference: Dia_comida_Comida (table: Dia_comida)
-ALTER TABLE Dia_comida ADD CONSTRAINT Dia_comida_Comida FOREIGN KEY Dia_comida_Comida (Comida_id)
-    REFERENCES Comida (id);
-
--- Reference: Dia_comida_Dia_semanal (table: Dia_comida)
-ALTER TABLE Dia_comida ADD CONSTRAINT Dia_comida_Dia_semanal FOREIGN KEY Dia_comida_Dia_semanal (Dia_semanal_id)
-    REFERENCES Dia_semanal (id);
-
--- Reference: Dia_semanal_Dieta (table: Dia_semanal)
-ALTER TABLE Dia_semanal ADD CONSTRAINT Dia_semanal_Dieta FOREIGN KEY Dia_semanal_Dieta (Dieta_id)
+-- Reference: Comida_Dieta (table: Comida)
+ALTER TABLE Comida ADD CONSTRAINT Comida_Dieta FOREIGN KEY Comida_Dieta (Dieta_id)
     REFERENCES Dieta (id);
 
 -- Reference: Dieta_Cliente (table: Dieta)
 ALTER TABLE Dieta ADD CONSTRAINT Dieta_Cliente FOREIGN KEY Dieta_Cliente (Cliente_id)
     REFERENCES Cliente (id);
+
+-- Reference: Dieta_Discipline (table: Dieta)
+ALTER TABLE Dieta ADD CONSTRAINT Dieta_Discipline FOREIGN KEY Dieta_Discipline (Discipline_id)
+    REFERENCES Discipline (id);
 
 -- Reference: Dieta_Instructor (table: Dieta)
 ALTER TABLE Dieta ADD CONSTRAINT Dieta_Instructor FOREIGN KEY Dieta_Instructor (Instructor_id)
@@ -197,6 +254,18 @@ ALTER TABLE Discipline_Instructor ADD CONSTRAINT Discipline_Instructor_Disciplin
 ALTER TABLE Discipline_Instructor ADD CONSTRAINT Discipline_Instructor_Instructor FOREIGN KEY Discipline_Instructor_Instructor (Instructor_id)
     REFERENCES Instructor (id);
 
+-- Reference: Ejercicio_Rutina_Ejercicio (table: Ejercicio_Rutina)
+ALTER TABLE Ejercicio_Rutina ADD CONSTRAINT Ejercicio_Rutina_Ejercicio FOREIGN KEY Ejercicio_Rutina_Ejercicio (Ejercicio_id)
+    REFERENCES Ejercicio (id);
+
+-- Reference: Ejercicio_Rutina_Rutina (table: Ejercicio_Rutina)
+ALTER TABLE Ejercicio_Rutina ADD CONSTRAINT Ejercicio_Rutina_Rutina FOREIGN KEY Ejercicio_Rutina_Rutina (Rutina_id)
+    REFERENCES Rutina (id);
+
+-- Reference: Historial_Medidas_Cliente (table: Historial_Medidas)
+ALTER TABLE Historial_Medidas ADD CONSTRAINT Historial_Medidas_Cliente FOREIGN KEY Historial_Medidas_Cliente (Cliente_id)
+    REFERENCES Cliente (id);
+
 -- Reference: Instructor_Products_Instructor (table: Instructor_Products)
 ALTER TABLE Instructor_Products ADD CONSTRAINT Instructor_Products_Instructor FOREIGN KEY Instructor_Products_Instructor (Instructor_id)
     REFERENCES Instructor (id);
@@ -205,9 +274,17 @@ ALTER TABLE Instructor_Products ADD CONSTRAINT Instructor_Products_Instructor FO
 ALTER TABLE Instructor_Products ADD CONSTRAINT Instructor_Products_Products FOREIGN KEY Instructor_Products_Products (Product_id)
     REFERENCES Product (id);
 
+-- Reference: Meta_Cliente (table: Meta)
+ALTER TABLE Meta ADD CONSTRAINT Meta_Cliente FOREIGN KEY Meta_Cliente (Cliente_id)
+    REFERENCES Cliente (id);
+
 -- Reference: Product_images_Products (table: Product_images)
 ALTER TABLE Product_images ADD CONSTRAINT Product_images_Products FOREIGN KEY Product_images_Products (Product_id)
     REFERENCES Product (id);
+
+-- Reference: Rutina_Cliente (table: Rutina)
+ALTER TABLE Rutina ADD CONSTRAINT Rutina_Cliente FOREIGN KEY Rutina_Cliente (Cliente_id)
+    REFERENCES Cliente (id);
 
 -- End of file.
 

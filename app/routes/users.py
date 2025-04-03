@@ -1,7 +1,7 @@
 import time
 from datetime import timedelta
 from urllib.parse import urlparse
-from flask import Blueprint, request, render_template, redirect, url_for, flash
+from flask import Blueprint, request, render_template, redirect, url_for, flash, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from app.db import mysql
@@ -100,57 +100,189 @@ def login():
 def add_user():
     if request.method == 'POST':
         try:
-            nombre = request.form['nombre']
-            correo = request.form['correo']
-            contrasenia = request.form['contrasenia']
-            doc_identidad = request.form['docIdentidad']
-            telefono = request.form['telefono']
-            direccion = request.form['direccion']
-            fecha_ingreso = time.strftime('%Y-%m-%d %H:%M:%S')
-            preferencias = ' '
-            imagen_file = request.files.get('imagen')
-            if imagen_file:
-                filename = secure_filename(imagen_file.filename)
-                imagen_file.save(f'app/static/img/{filename}')
-                imagen_url = f'/static/img/{filename}'
-            else:
-                imagen_url = '/static/img/default.png'
+            # Datos básicos
+            nombres = request.form.get('nombre', '').strip()
+            apellidos = request.form.get('apellidos', '').strip()
+            email = request.form.get('correo', '').strip().lower()
+            contrasenia = request.form.get('contrasenia', '')
+            confirmacion = request.form.get('confirmContrasenia', '')
             
-            tipo_usuario = request.form['tipoUsuario']
-            tipo_usuario_id = 2 if tipo_usuario == 'Cliente' else 3
-            print(imagen_url)
-            cur = mysql.connection.cursor()
-            # Verificar si el correo ya existe
-            cur.execute(
-                'SELECT correo FROM Usuario WHERE correo = %s', (correo,))
-            if cur.fetchone():
-                flash('El correo ya está registrado', 'danger')
+            # Datos personales
+            celular = request.form.get('telefono', '').strip()
+            direccion = request.form.get('direccion', '').strip()
+            peso = request.form.get('peso', 0)
+            altura = request.form.get('altura', 0)
+            
+            # Tipo de usuario
+            tipo_usuario = request.form.get('tipoUsuario', '')
+            tipo_cliente = request.form.get('tipo_cliente', 'regular')
+            
+            # Validaciones básicas
+            if not nombres or not email or not contrasenia or not celular or not tipo_usuario:
+                flash('Todos los campos marcados con * son obligatorios', 'warning')
                 return redirect(url_for('users.add_user'))
-            print('*************************')
-            cur.execute(
-                "INSERT INTO Usuario (nombre,correo,contrasenia,doc_identidad, telefono, direccion, fecha_ingreso, preferencias, imagen_url, Tipo_usuario_id_tipo_u) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",
-                (nombre, correo, contrasenia, doc_identidad, telefono, direccion,
-                 fecha_ingreso, preferencias, imagen_url, tipo_usuario_id)
-            )
-            mysql.connection.commit()
-            new_user_id = cur.lastrowid
-            cur.close()
-            print('======================')
-            # Crear objeto usuario y hacer login
-            user = User(new_user_id, nombre, correo, tipo_usuario, imagen_url)
+                
+            if contrasenia != confirmacion:
+                flash('Las contraseñas no coinciden', 'danger')
+                return redirect(url_for('users.add_user'))
+                
+            is_valid, password_msg = is_strong_password(contrasenia)
+            if not is_valid:
+                flash(password_msg, 'warning')
+                return redirect(url_for('users.add_user'))
+                
+            # Validar email
+            email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+            if not re.match(email_regex, email):
+                flash('Por favor ingrese un correo electrónico válido', 'warning')
+                return redirect(url_for('users.add_user'))
+                
+            # Validar teléfono
+            if not celular.isdigit():
+                flash('El número de teléfono solo debe contener dígitos', 'warning')
+                return redirect(url_for('users.add_user'))
+                
+            # Hashear contraseña
+            hashed_password = hash_password(contrasenia)
+            
+            # Imagen de perfil
+            imagen_file = request.files.get('imagen')
+            if imagen_file and imagen_file.filename:
+                filename = secure_filename(imagen_file.filename)
+                # Añadir timestamp para evitar colisiones
+                name_parts = os.path.splitext(filename)
+                filename = f"{name_parts[0]}_{int(time.time())}{name_parts[1]}"
+                
+                # Verificar tipo de archivo
+                allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+                if '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions:
+                    img_path = os.path.join('app/static/img', filename)
+                    imagen_file.save(img_path)
+                    
+                    # Optimizar imagen
+                    try:
+                        from PIL import Image
+                        img = Image.open(img_path)
+                        # Redimensionar si es demasiado grande
+                        if img.width > 800 or img.height > 800:
+                            img.thumbnail((800, 800), Image.LANCZOS)
+                        # Guardar con compresión
+                        img.save(img_path, optimize=True, quality=85)
+                    except ImportError:
+                        pass  # PIL no está disponible, mantener imagen original
+                    
+                    imagen = filename
+                else:
+                    flash('Formato de imagen no permitido. Use: png, jpg, jpeg, gif, webp', 'warning')
+                    return redirect(url_for('users.add_user'))
+            else:
+                imagen = 'default-user.png'
+            
+            # Verificar si el correo ya existe
+            conn = get_db(current_app)
+            cursor = conn.cursor()
+            
+            cursor.execute("SELECT email FROM Cliente WHERE email = %s", (email,))
+            if cursor.fetchone():
+                flash('El correo ya está registrado como Cliente', 'danger')
+                return redirect(url_for('users.add_user'))
+                
+            cursor.execute("SELECT email FROM Instructor WHERE email = %s", (email,))
+            if cursor.fetchone():
+                flash('El correo ya está registrado como Instructor', 'danger')
+                return redirect(url_for('users.add_user'))
+                
+            # Crear el usuario según el tipo seleccionado
+            if tipo_usuario == 'Cliente':
+                status = 1  # Por defecto activo
+                
+                # Convertir peso y altura a valores numéricos
+                try:
+                    peso = float(peso) if peso else 0
+                    altura = float(altura) if altura else 0
+                except ValueError:
+                    peso = 0
+                    altura = 0
+                
+                # Insertar en la tabla Cliente
+                cursor.execute("""
+                    INSERT INTO Cliente (nombres, apellidos, celular, email, contrasenia, 
+                                         direccion, tipo_cliente, status, imagen, peso, altura) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (nombres, apellidos, celular, email, hashed_password, 
+                      direccion, tipo_cliente, status, imagen, peso, altura))
+                
+                conn.commit()
+                new_user_id = cursor.lastrowid
+                
+                # Crear el objeto Cliente para login
+                user = Client(
+                    id=new_user_id,
+                    nombres=nombres,
+                    apellidos=apellidos,
+                    celular=celular,
+                    email=email,
+                    contrasenia=hashed_password,
+                    direccion=direccion,
+                    tipo_cliente=tipo_cliente,
+                    status=status,
+                    imagen=imagen
+                )
+                
+            elif tipo_usuario == 'Instructor':
+                status = 1  # Por defecto activo
+                
+                # Insertar en la tabla Instructor
+                cursor.execute("""
+                    INSERT INTO Instructor (nombres, apellidos, celular, email, contrasenia, 
+                                           status, imagen) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """, (nombres, apellidos, celular, email, hashed_password, 
+                      status, imagen))
+                
+                conn.commit()
+                new_user_id = cursor.lastrowid
+                
+                # Crear el objeto Instructor para login
+                user = Instructor(
+                    id=new_user_id,
+                    nombres=nombres,
+                    apellidos=apellidos,
+                    celular=celular,
+                    email=email,
+                    contrasenia=hashed_password,
+                    status=status,
+                    imagen=imagen
+                )
+            else:
+                flash('Tipo de usuario no válido', 'danger')
+                return redirect(url_for('users.add_user'))
+            
+            # Iniciar sesión con el usuario creado
             login_user(user)
-
-            flash('Usuario registrado exitosamente', 'success')
-            return redirect(url_for('users.login'))
+            
+            flash(f'¡Bienvenido a FitSystem, {nombres}! Tu cuenta ha sido creada exitosamente.', 'success')
+            
+            # Redirigir según el tipo de usuario
+            if tipo_usuario == 'Cliente':
+                return redirect(url_for('client.dashboard'))
+            else:
+                return redirect(url_for('instructor.dashboard'))
+            
         except Exception as e:
-            mysql.connection.rollback()
-            # Agrega este print para debug
-            print(f"Error al registrar usuario: {str(e)}")
-            flash(f'Error al registrar usuario: {str(e)}', 'danger')
+            if 'conn' in locals() and conn:
+                conn.rollback()
+            import traceback
+            error_details = traceback.format_exc()
+            current_app.logger.error(f"Error al registrar usuario: {str(e)}\n{error_details}")
+            flash('Error al registrar usuario. Por favor intente nuevamente.', 'danger')
             return redirect(url_for('users.add_user'))
         finally:
-            if 'cur' in locals():
-                cur.close()
+            if 'cursor' in locals() and cursor:
+                cursor.close()
+            if 'conn' in locals() and conn:
+                conn.close()
+                
     return render_template('users/create_account.html')
 
 @users.route('/profile/<int:id_usuario>', methods=['GET', 'POST'])
