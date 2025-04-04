@@ -1,7 +1,9 @@
-from flask import Blueprint, render_template, request, flash, redirect, jsonify
+from flask import Blueprint, render_template, request, flash, redirect, jsonify, current_app
 from flask_login import current_user
 from werkzeug.utils import secure_filename
-from app.db import mysql
+from app.db import get_db
+from app.models.client import Client
+from app.models.instructor import Instructor
 import os
 import time
 products = Blueprint('product', __name__, template_folder='app/templates')
@@ -9,28 +11,48 @@ products = Blueprint('product', __name__, template_folder='app/templates')
 
 @products.route('/')
 def index():
+    conn = None
     cursor = None
     try:
-        cursor = mysql.connection.cursor()
-        cursor.execute("SELECT * FROM Product p WHERE p.id = %s", (current_user.id,))
+        conn = get_db(current_app)
+        cursor = conn.cursor()
+        
+        # Verifica si el usuario está autenticado antes de acceder a current_user.id
+        if current_user.is_authenticated:
+            # Para un instructor, muestra solo sus productos asociados
+            if isinstance(current_user, Instructor):
+                cursor.execute("""
+                    SELECT p.* FROM Product p 
+                    JOIN Instructor_Products ip ON p.id = ip.Product_id
+                    WHERE ip.Instructor_id = %s
+                """, (current_user.id,))
+            else:
+                # Para clientes o administradores, muestra todos los productos
+                cursor.execute("SELECT * FROM Product WHERE status = 1")
+        else:
+            # Para usuarios no autenticados, muestra productos activos
+            cursor.execute("SELECT * FROM Product WHERE status = 1")
+            
         product_list = cursor.fetchall()
+        
+        # Procesar la lista de productos
         for product in product_list:
             if product['fecha_inicio']:
                 product['fecha_inicio'] = product['fecha_inicio'].isoformat()
             if product['fecha_fin']:
                 product['fecha_fin'] = product['fecha_fin'].isoformat()
+                
             cursor.execute(
                 "SELECT image_name FROM Product_images WHERE Product_id = %s", (product['id'],))
-            product['images'] = [row['image_name']
-                for row in cursor.fetchall()]
+            product['images'] = [row['image_name'] for row in cursor.fetchall()]
 
             cursor.execute(
                 "SELECT Instructor_id FROM Instructor_Products WHERE Product_id = %s", (product['id'],))
-            product['instructores'] = [row['Instructor_id']
-                for row in cursor.fetchall()]
+            product['instructores'] = [row['Instructor_id'] for row in cursor.fetchall()]
+            
         return render_template('productos/index.html', products=product_list)
     except Exception as e:
-        print(f'Error al cargar productos: {str(e)}')
+        current_app.logger.error(f'Error al cargar productos: {str(e)}')
         return render_template('productos/index.html', products=[], error="Error al cargar los productos")
     finally:
         if cursor:
@@ -41,8 +63,8 @@ def index():
 def get_product(id):
     cursor = None
     try:
-        cursor = mysql.connection.cursor()
-
+        conn = get_db(current_app)
+        cursor = conn.cursor()
         # Obtener datos básicos del usuario
         cursor.execute("""
             SELECT *
@@ -98,6 +120,8 @@ def get_product(id):
 
     finally:
         if cursor:
+            cursor.close()
+        if conn:
             cursor.close()
 
 
@@ -174,8 +198,8 @@ def add_product():
             instructores = [int(i) for i in request.form.getlist('instructores[]') if i and i.isdigit()]
         
         # Operaciones en la base de datos
-        cursor = mysql.connection.cursor()
-        
+        conn = get_db(current_app)
+        cursor = conn.cursor()
         # Insertar producto
         cursor.execute(
             """
@@ -190,7 +214,7 @@ def add_product():
                 previous_price, fecha_inicio, fecha_fin, status, palabras_claves, relevant, outstanding
             )
         )
-        mysql.connection.commit()
+        conn.commit()
         
         # Obtener ID insertado
         cursor.execute("SELECT LAST_INSERT_ID() as id")
@@ -210,7 +234,7 @@ def add_product():
                 (instructor_id, product_id)
             )
         
-        mysql.connection.commit()
+        conn.commit()
         
         # Consultar el producto recién creado
         cursor.execute("SELECT * FROM Product WHERE id = %s", (product_id,))
@@ -232,8 +256,8 @@ def add_product():
         return jsonify({'success': True, 'product_id': product_id, 'product': new_product})
     
     except Exception as e:
-        if mysql.connection:
-            mysql.connection.rollback()
+        if conn:
+            conn.rollback()
         import traceback
         print(f"Error al crear producto: {str(e)}")
         print(traceback.format_exc())
@@ -242,12 +266,15 @@ def add_product():
     finally:
         if cursor:
             cursor.close()
+        if conn:
+            conn.close()
 
 @products.route('/instructores')
 def get_instructores():
     cursor = None
     try:
-        cursor = mysql.connection.cursor()
+        conn = get_db(current_app)
+        cursor = conn.cursor()
         cursor.execute("""
             SELECT 
                 i.id, i.nombres, i.apellidos, i.imagen, 
@@ -274,25 +301,27 @@ def get_instructores():
     finally:
         if cursor:
             cursor.close()
+        if conn:
+            conn.close()
 
 @products.route('/delete_product/<int:id>', methods=['POST'])
 def delete_product(id):
     cursor = None
     try:
-        cursor = mysql.connection.cursor()
-        
+        conn = get_db(current_app)
+        cursor = conn.cursor()
         # Primero eliminar registros relacionados
         cursor.execute("DELETE FROM Product_images WHERE Product_id = %s", (id,))
         cursor.execute("DELETE FROM Instructor_Products WHERE Product_id = %s", (id,))
         
         # Luego eliminar el producto
         cursor.execute("DELETE FROM Product WHERE id = %s", (id,))
-        mysql.connection.commit()
+        conn.commit()
         
         return jsonify({'success': True})
     
     except Exception as e:
-        mysql.connection.rollback()
+        conn.rollback()
         print(f"Error al eliminar producto: {str(e)}")
         return jsonify({'success': False, 'error': str(e)})
     
@@ -305,7 +334,8 @@ def update_product(id):
     cursor = None
     try:
         # Verificar si el producto existe
-        cursor = mysql.connection.cursor()
+        conn = get_db(current_app)
+        cursor = conn.cursor()
         cursor.execute("SELECT * FROM Product WHERE id = %s", (id,))
         existing_product = cursor.fetchone()
         
@@ -385,7 +415,7 @@ def update_product(id):
                     (instructor_id, id)
                 )
         
-        mysql.connection.commit()
+        conn.commit()
         
         # Obtener el producto actualizado
         cursor.execute("SELECT * FROM Product WHERE id = %s", (id,))
@@ -407,8 +437,8 @@ def update_product(id):
         return jsonify({'success': True, 'product': updated_product})
     
     except Exception as e:
-        if mysql.connection:
-            mysql.connection.rollback()
+        if conn:
+            conn.rollback()
         import traceback
         print(f"Error al actualizar producto: {str(e)}")
         print(traceback.format_exc())
@@ -417,3 +447,5 @@ def update_product(id):
     finally:
         if cursor:
             cursor.close()
+        if conn:
+            conn.close()

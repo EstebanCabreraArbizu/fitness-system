@@ -1,10 +1,11 @@
 from flask_login import UserMixin
 from app import login_manager
-from app.db import mysql
+from app.db import get_db
+from flask import current_app
 
 class Instructor(UserMixin):
-    def __init__(self, id_usuario, nombres, celular, email, contrasenia, status,apellidos, imagen):
-        self.id = id_usuario
+    def __init__(self, id, nombres, celular, email, contrasenia, status,apellidos, imagen):
+        self.id = id
         self.nombres = nombres
         self.celular = celular
         self.email = email
@@ -20,12 +21,23 @@ class Instructor(UserMixin):
         return str(self.id)
     def set_nombre(self, nombre):
         self.nombres = nombre
+    def get_nombre(self):
+        return self.nombres
     def set_imagen_url(self, image_url):
         self.imagen = image_url
+    # Corregir el método get_by_id
+
     @staticmethod
     def get_by_id(user_id):
-        cur = mysql.connection.cursor()
         try:
+            # Convertir el user_id a entero si es un string
+            if isinstance(user_id, str):
+                if user_id.isdigit():
+                    user_id = int(user_id)
+                else:
+                    return None
+                    
+            cur = get_db(current_app).cursor()
             cur.execute("""
             SELECT
                 u.id,
@@ -40,9 +52,11 @@ class Instructor(UserMixin):
             WHERE u.id = %s
             """, (user_id,))
             user = cur.fetchone()
+            cur.close()
+            
             if user:
                 return Instructor(
-                    id_usuario=user['id'],
+                    id=user['id'],
                     nombres=user['nombres'],
                     celular=user['celular'],
                     email=user['email'],
@@ -52,12 +66,13 @@ class Instructor(UserMixin):
                     imagen=user['imagen']
                 )
             return None
-        finally:
-            cur.close()
+        except Exception as e:
+            current_app.logger.error(f"Error en Instructor.get_by_id: {str(e)}")
+            return None
 
     @staticmethod
     def get_by_email(email):
-        cur = mysql.connection.cursor()
+        cur = get_db(current_app).cursor()
         try:
             cur.execute("""
             SELECT
@@ -75,7 +90,7 @@ class Instructor(UserMixin):
             user = cur.fetchone()
             if user:
                 return Instructor(
-                    id_usuario=user['id'],
+                    id=user['id'],
                     nombres=user['nombres'],
                     celular=user['celular'],
                     email=user['email'],

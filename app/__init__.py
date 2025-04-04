@@ -2,7 +2,7 @@
 from flask import Flask
 from flask_login import LoginManager
 from datetime import timedelta
-from app.db import mysql, init_db  # This should be fine now that db.py doesn't import app
+from app.db import init_db  # This should be fine now that db.py doesn't import app
 from dotenv import load_dotenv
 import os
 
@@ -39,12 +39,25 @@ login_manager.login_message_category = 'info'
 
 @login_manager.user_loader
 def load_user(user_id):
-    if isinstance(user_id, str) and user_id.startswith('C'):
-        client_id = user_id[1:]
-        return Client.get_id(client_id)
-    elif isinstance(user_id, str) and user_id.startswith('I'):
-        instructor_id = user_id[1:]
-        return Instructor.get_id(instructor_id)
+    # Si el ID no es un string, convertirlo
+    if not isinstance(user_id, str):
+        user_id = str(user_id)
+        
+    try:
+        # Primero intentar cargar como Cliente
+        user = Client.get_by_id(user_id)
+        if user:
+            return user
+            
+        # Luego intentar cargar como Instructor
+        user = Instructor.get_by_id(user_id)
+        if user:
+            return user
+            
+        return None
+    except Exception as e:
+        app.logger.error(f"Error en load_user: {str(e)}")
+        return None
 
 # Import routes after app initialization
 from app.routes.users import users

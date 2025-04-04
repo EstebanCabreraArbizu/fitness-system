@@ -1,10 +1,11 @@
 from flask_login import UserMixin
+from flask import current_app
 from app import login_manager
-from app.db import mysql
+from app.db import get_db
 
 class Client(UserMixin):
-    def __init__(self, id_usuario, nombres, celular, email, contrasenia, direccion, tipo_cliente, status,apellidos, imagen):
-        self.id = id_usuario
+    def __init__(self, id, nombres, celular, email, contrasenia, direccion, tipo_cliente, status,apellidos, imagen):
+        self.id = id
         self.nombres = nombres
         self.celular = celular
         self.email = email
@@ -22,12 +23,21 @@ class Client(UserMixin):
         return str(self.id)
     def set_nombre(self, nombres):
         self.nombres = nombres
+    def get_nombre(self):
+        return self.nombres
     def set_imagen_url(self, image_url):
         self.imagen = image_url
     @staticmethod
     def get_by_id(user_id):
-        cur = mysql.connection.cursor()
         try:
+            # Convertir el user_id a entero si es un string
+            if isinstance(user_id, str):
+                if user_id.isdigit():
+                    user_id = int(user_id)
+                else:
+                    return None
+                    
+            cur = get_db(current_app).cursor()
             cur.execute("""
             SELECT
                 u.id,
@@ -44,9 +54,11 @@ class Client(UserMixin):
             WHERE u.id = %s
             """, (user_id,))
             user = cur.fetchone()
+            cur.close()
+            
             if user:
                 return Client(
-                    id_usuario=user['id'],
+                    id=user['id'],
                     nombres=user['nombres'],
                     celular=user['celular'],
                     email=user['email'],
@@ -58,12 +70,13 @@ class Client(UserMixin):
                     imagen=user['imagen']
                 )
             return None
-        finally:
-            cur.close()
+        except Exception as e:
+            current_app.logger.error(f"Error en Client.get_by_id: {str(e)}")
+            return None
 
     @staticmethod
     def get_by_email(email):
-        cur = mysql.connection.cursor()
+        cur = get_db(current_app).cursor()
         try:
             cur.execute("""
             SELECT
@@ -83,7 +96,7 @@ class Client(UserMixin):
             user = cur.fetchone()
             if user:
                 return Client(
-                    id_usuario=user['id'],
+                    id=user['id'],
                     nombres=user['nombres'],
                     celular=user['celular'],
                     email=user['email'],
