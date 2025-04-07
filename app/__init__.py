@@ -62,7 +62,8 @@ def load_user(user_id):
 # Import routes after app initialization
 from app.routes.users import users
 from app.routes.products import products
-
+from app.routes.dieta import dieta
 # Register blueprints
 app.register_blueprint(users)
 app.register_blueprint(products, url_prefix='/products')
+app.register_blueprint(dieta, url_prefix='/dietas')

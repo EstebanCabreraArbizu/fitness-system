@@ -1,0 +1,165 @@
+{% extends "layout.html" %}
+
+{% block title %}Perfil de Usuario{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="flash-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <img src="{{ url_for('static', filename='img/' + user.imagen) }}" class="rounded-circle img-fluid" style="width: 150px; height: 150px; object-fit: cover;">
+                    <h5 class="my-3">{{ user.nombres }} {{ user.apellidos }}</h5>
+                    <p class="text-muted mb-1">{{ user_type }}</p>
+                    <p class="text-muted mb-4">{{ user.email }}</p>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                        Cambiar Contraseña
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('users.profile', user_id=user.id) }}" enctype="multipart/form-data">
+                        <div class="row mb-3">
+                            <div class="col-sm-3">
+                                <h6 class="mb-0">Nombre</h6>
+                            </div>
+                            <div class="col-sm-9 text-secondary">
+                                <input type="text" class="form-control" name="nombre" value="{{ user.nombres }}" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-3">
+                                <h6 class="mb-0">Apellidos</h6>
+                            </div>
+                            <div class="col-sm-9 text-secondary">
+                                <input type="text" class="form-control" name="apellidos" value="{{ user.apellidos }}">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-3">
+                                <h6 class="mb-0">Correo</h6>
+                            </div>
+                            <div class="col-sm-9 text-secondary">
+                                <input type="email" class="form-control" value="{{ user.email }}" disabled>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-3">
+                                <h6 class="mb-0">Teléfono</h6>
+                            </div>
+                            <div class="col-sm-9 text-secondary">
+                                <input type="text" class="form-control" name="telefono" value="{{ user.celular }}">
+                            </div>
+                        </div>
+                        
+                        {% if user_type == 'Cliente' %}
+                        <div class="row mb-3">
+                            <div class="col-sm-3">
+                                <h6 class="mb-0">Dirección</h6>
+                            </div>
+                            <div class="col-sm-9 text-secondary">
+                                <input type="text" class="form-control" name="direccion" value="{{ user.direccion }}">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-3">
+                                <h6 class="mb-0">Peso (kg)</h6>
+                            </div>
+                            <div class="col-sm-9 text-secondary">
+                                <input type="number" step="0.1" class="form-control" name="peso" value="{{ user.peso }}">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-3">
+                                <h6 class="mb-0">Altura (cm)</h6>
+                            </div>
+                            <div class="col-sm-9 text-secondary">
+                                <input type="number" step="0.1" class="form-control" name="altura" value="{{ user.altura }}">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-3">
+                                <h6 class="mb-0">Tipo de Cliente</h6>
+                            </div>
+                            <div class="col-sm-9 text-secondary">
+                                <select class="form-select" name="tipo_cliente">
+                                    <option value="regular" {% if user.tipo_cliente == 'regular' %}selected{% endif %}>Regular</option>
+                                    <option value="premium" {% if user.tipo_cliente == 'premium' %}selected{% endif %}>Premium</option>
+                                </select>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-sm-3">
+                                <h6 class="mb-0">Foto de Perfil</h6>
+                            </div>
+                            <div class="col-sm-9 text-secondary">
+                                <input type="file" class="form-control" name="imagen" accept="image/*">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-sm-3"></div>
+                            <div class="col-sm-9 text-secondary">
+                                <button type="submit" class="btn btn-primary px-4">Guardar Cambios</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para cambio de contraseña -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('users.change_password', user_id=user.id) }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="changePasswordModalLabel">Cambiar Contraseña</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">Contraseña Actual</label>
+                        <input type="password" class="form-control" id="current_password" name="current_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">Nueva Contraseña</label>
+                        <input type="password" class="form-control" id="new_password" name="new_password" required>
+                        <div class="form-text">
+                            La contraseña debe tener al menos 8 caracteres, incluyendo una mayúscula, una minúscula, un número y un carácter especial.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirmar Nueva Contraseña</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Actualizar Contraseña</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

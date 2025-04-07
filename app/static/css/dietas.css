@@ -1,0 +1,99 @@
+/* app/static/css/dietas.css */
+/* Estilos para las tarjetas de dieta */
+.dietas-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.dieta-card {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    padding: 20px;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.dieta-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+}
+
+.dieta-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.dieta-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.dieta-meta {
+    color: #666;
+    font-size: 0.85rem;
+    margin-bottom: 0;
+}
+
+.dieta-stats {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.dieta-stats span {
+    background-color: #f1f5f9;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: #555;
+}
+
+.dieta-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+/* Estilos para la página detalle */
+.comida-item {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-left: 4px solid #4CAF50;
+}
+
+.comida-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.comida-nombre {
+    font-weight: 600;
+    color: #333;
+}
+
+.comida-hora {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.comida-stats {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.comida-stat {
+    background-color: #e9f5e9;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    color: #43a047;
+}

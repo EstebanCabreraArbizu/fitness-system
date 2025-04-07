@@ -1,0 +1,118 @@
+{% extends "dietas/base_dietas.html" %}
+
+{% block title %}Dietas - FitSystem{% endblock %}
+
+{% block dieta_content %}
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-0">Mis Dietas</h1>
+            <p class="text-muted">Gestiona tus planes de alimentación</p>
+        </div>
+        <div class="col-md-4 text-end">
+            {% if current_user.__class__.__name__ == 'Instructor' %}
+            <a href="{{ url_for('dieta.nueva_dieta') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i> Nueva Dieta
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body py-4">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <h3 class="fw-bold text-primary mb-0">{{ dietas|length }}</h3>
+                            <p class="text-muted">Dietas</p>
+                        </div>
+                        {% if current_user.__class__.__name__ == 'Instructor' %}
+                        <div class="col-md-4">
+                            <h3 class="fw-bold text-success mb-0">{{ dietas|selectattr('status', 'equalto', 1)|list|length }}</h3>
+                            <p class="text-muted">Activas</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h3 class="fw-bold text-info mb-0">{{ dietas|map(attribute='Cliente_id')|unique|list|length }}</h3>
+                            <p class="text-muted">Clientes</p>
+                        </div>
+                        {% else %}
+                        <div class="col-md-4">
+                            <h3 class="fw-bold text-success mb-0">{{ dietas|selectattr('status', 'equalto', 1)|list|length }}</h3>
+                            <p class="text-muted">Activas</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h3 class="fw-bold text-warning mb-0">
+                                {% set comidas_count = namespace(total=0) %}
+                                {% for dieta in dietas %}
+                                    {% set comidas_count.total = comidas_count.total + (dieta.comidas|default([])|length) %}
+                                {% endfor %}
+                                {{ comidas_count.total }}
+                            </h3>
+                            <p class="text-muted">Comidas</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if dietas %}
+        <div class="dietas-container">
+            {% for dieta in dietas %}
+                <div class="dieta-card">
+                    <div class="dieta-header">
+                        <div>
+                            <h3 class="dieta-title">{{ dieta.nombre }}</h3>
+                            <p class="dieta-meta">{{ dieta.fecha_registro.strftime('%d/%m/%Y') }}</p>
+                        </div>
+                        <span class="badge {{ 'bg-success' if dieta.status == 1 else 'bg-secondary' }}">
+                            {{ 'Activa' if dieta.status == 1 else 'Inactiva' }}
+                        </span>
+                    </div>
+                    
+                    <div class="dieta-stats">
+                        <span><i class="fas fa-calendar-alt me-1"></i> {{ dieta.duracion_dieta }}</span>
+                        <span><i class="fas fa-fire-alt me-1"></i> {{ dieta.meta_calorias }} cal</span>
+                    </div>
+                    
+                    {% if current_user.__class__.__name__ == 'Instructor' %}
+                    <p><strong>Cliente:</strong> {{ dieta.cliente_nombre }} {{ dieta.cliente_apellidos }}</p>
+                    {% else %}
+                    <p><strong>Instructor:</strong> {{ dieta.instructor_nombre }} {{ dieta.instructor_apellidos }}</p>
+                    {% endif %}
+                    
+                    <p><strong>Disciplina:</strong> {{ dieta.discipline_nombre }}</p>
+                    
+                    <div class="dieta-actions">
+                        <a href="{{ url_for('dieta.detalle', dieta_id=dieta.id) }}" class="btn btn-primary">
+                            <i class="fas fa-eye me-1"></i> Ver
+                        </a>
+                        {% if current_user.__class__.__name__ == 'Instructor' %}
+                        <a href="{{ url_for('dieta.agregar_comida', dieta_id=dieta.id) }}" class="btn btn-success">
+                            <i class="fas fa-utensils me-1"></i> Agregar Comida
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-clipboard-list fa-4x text-muted mb-3"></i>
+            <h3>No hay dietas disponibles</h3>
+            <p class="text-muted">
+                {% if current_user.__class__.__name__ == 'Instructor' %}
+                Comienza creando una nueva dieta para tus clientes.
+                <div class="mt-4">
+                    <a href="{{ url_for('dieta.nueva_dieta') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i> Nueva Dieta
+                    </a>
+                </div>
+                {% else %}
+                Aún no tienes dietas asignadas. Contacta a tu instructor.
+                {% endif %}
+            </p>
+        </div>
+    {% endif %}
+{% endblock %}

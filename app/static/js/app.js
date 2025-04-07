@@ -1,6 +1,6 @@
 // Importar módulos
-import { DietaService } from 'static/js/dieta-service.js';
-import { UI } from 'static/js/ui.js';
+import { DietaService } from './dieta-service.js';
+import { UI } from './ui.js';
 
 // Inicializar la aplicación cuando el DOM esté cargado
 document.addEventListener('DOMContentLoaded', () => {
@@ -16,4 +16,4 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Actualizar el resumen
     ui.actualizarResumen();
-}); 
+});

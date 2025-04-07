@@ -86,7 +86,7 @@ def nueva_dieta():
             
             cursor.close()
             
-            return render_template('dietas/nueva.html', clientes=clientes, disciplinas=disciplinas)
+            return render_template('dietas/crear-dieta.html', clientes=clientes, disciplinas=disciplinas)
             
         except Exception as e:
             current_app.logger.error(f"Error al preparar nueva dieta: {str(e)}")
@@ -140,16 +140,18 @@ def nueva_dieta():
         
         # Procesar imágenes de la dieta si existen
         if 'imagenes' in request.files:
-            imagenes = request.files.getlist('imagenes')
-            for imagen in imagenes:
-                if imagen and imagen.filename:
-                    filename = secure_filename(imagen.filename)
-                    name_parts = os.path.splitext(filename)
-                    unique_filename = f"dieta_{dieta_id}_{name_parts[0]}_{int(time.time())}{name_parts[1]}"
+            files = request.files.getlist('imagenes')
+            for file in files:
+                if file and file.filename.strip():
+                    filename = secure_filename(file.filename)
+                    # Generar nombre único con timestamp
+                    name, ext = os.path.splitext(filename)
+                    unique_filename = f"{name}_{int(time.time())}{ext}"
                     
-                    # Guardar imagen
-                    imagen_path = os.path.join('app/static/img/dietas', unique_filename)
-                    imagen.save(imagen_path)
+                    # Guardar archivo
+                    file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'dietas', unique_filename)
+                    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                    file.save(file_path)
                     
                     # Registrar en base de datos
                     cursor.execute(
@@ -189,16 +191,16 @@ def detalle(dieta_id):
             WHERE d.id = %s
         """, (dieta_id,))
         
-        dieta = cursor.fetchone()
+        dietas = cursor.fetchone()
         
-        if not dieta:
+        if not dietas:
             flash('Dieta no encontrada', 'warning')
             return redirect(url_for('dieta.index'))
         
         # Verificar permisos (solo el instructor que la creó o el cliente asignado pueden verla)
         if not (
-            (isinstance(current_user, Instructor) and current_user.id == dieta['Instructor_id']) or
-            (isinstance(current_user, Client) and current_user.id == dieta['Cliente_id'])
+            (isinstance(current_user, Instructor) and current_user.id == dietas['Instructor_id']) or
+            (isinstance(current_user, Client) and current_user.id == dietas['Cliente_id'])
         ):
             flash('No tienes permiso para ver esta dieta', 'danger')
             return redirect(url_for('dieta.index'))
@@ -246,10 +248,10 @@ def agregar_comida(dieta_id):
             "SELECT * FROM Dieta WHERE id = %s AND Instructor_id = %s",
             (dieta_id, current_user.id)
         )
-        dieta = cursor.fetchone()
+        dietas = cursor.fetchone()
         cursor.close()
         
-        if not dieta:
+        if not dietas:
             flash('No tienes permiso para modificar esta dieta', 'danger')
             return redirect(url_for('dieta.index'))
             
@@ -282,17 +284,26 @@ def agregar_comida(dieta_id):
         
         # Procesar imagen de la comida si existe
         image_name = 'default-food.png'  # Imagen por defecto
-        if 'imagen' in request.files and request.files['imagen'].filename:
-            imagen = request.files['imagen']
-            filename = secure_filename(imagen.filename)
-            name_parts = os.path.splitext(filename)
-            unique_filename = f"comida_{name_parts[0]}_{int(time.time())}{name_parts[1]}"
+        if 'imagenes' in request.files:
+            files = request.files.getlist('imagenes')
+            for file in files:
+                if file and file.filename.strip():
+                    filename = secure_filename(file.filename)
+                    # Generar nombre único con timestamp
+                    name, ext = os.path.splitext(filename)
+                    unique_filename = f"{name}_{int(time.time())}{ext}"
+                    
+                    # Guardar archivo
+                    file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'dietas', unique_filename)
+                    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                    file.save(file_path)
+                    
+                    # Registrar en base de datos
+                    cursor.execute(
+                        "INSERT INTO Dieta_images (image_name, Dieta_id) VALUES (%s, %s)",
+                        (unique_filename, dieta_id)
+                    )
             
-            # Guardar imagen
-            imagen_path = os.path.join('app/static/img/comidas', unique_filename)
-            imagen.save(imagen_path)
-            image_name = unique_filename
-        
         # Crear la comida en la base de datos
         conn = get_db(current_app)
         cursor = conn.cursor()

@@ -110,7 +110,3 @@ class Client(UserMixin):
             return None
         finally:
             cur.close()
-
-@login_manager.user_loader
-def load_user(user_id):
-    return Client.get_by_id(user_id)

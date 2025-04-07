@@ -1,0 +1,171 @@
+{% extends "dietas/base_dietas.html" %}
+
+{% block title %}Nueva Dieta - FitSystem{% endblock %}
+
+{% block dieta_content %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{{ url_for('dieta.index') }}" class="btn btn-outline-primary mb-3">
+                <i class="fas fa-arrow-left me-2"></i> Volver a Dietas
+            </a>
+            <h1>Nueva Dieta</h1>
+            <p class="text-muted">Crea un plan de alimentación personalizado para tu cliente</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('dieta.nueva_dieta') }}" enctype="multipart/form-data">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h3>Información Básica</h3>
+                                <div class="mb-3">
+                                    <label for="cliente_id" class="form-label">Cliente *</label>
+                                    <select class="form-select" id="cliente_id" name="cliente_id" required>
+                                        <option value="">Selecciona un cliente</option>
+                                        {% for cliente in clientes %}
+                                        <option value="{{ cliente.id }}">{{ cliente.nombres }} {{ cliente.apellidos }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="discipline_id" class="form-label">Disciplina *</label>
+                                    <select class="form-select" id="discipline_id" name="discipline_id" required>
+                                        <option value="">Selecciona una disciplina</option>
+                                        {% for disciplina in disciplinas %}
+                                        <option value="{{ disciplina.id }}">{{ disciplina.nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="nombre" class="form-label">Nombre de la Dieta *</label>
+                                    <input type="text" class="form-control" id="nombre" name="nombre" required placeholder="Ej: Plan de alimentación para pérdida de peso">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="tipo_dieta" class="form-label">Tipo de Dieta *</label>
+                                    <select class="form-select" id="tipo_dieta" name="tipo_dieta" required>
+                                        <option value="Equilibrada">Equilibrada</option>
+                                        <option value="Hipocalórica">Hipocalórica</option>
+                                        <option value="Hipercalórica">Hipercalórica</option>
+                                        <option value="Vegetariana">Vegetariana</option>
+                                        <option value="Vegana">Vegana</option>
+                                        <option value="Cetogénica">Cetogénica</option>
+                                        <option value="Personalizada">Personalizada</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="descripcion" class="form-label">Descripción</label>
+                                    <textarea class="form-control" id="descripcion" name="descripcion" rows="3" placeholder="Breve descripción del plan y sus objetivos"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <h3>Detalles del Plan</h3>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="fecha_inicio" class="form-label">Fecha de Inicio *</label>
+                                        <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="fecha_fin" class="form-label">Fecha de Fin *</label>
+                                        <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="duracion_dieta" class="form-label">Duración *</label>
+                                    <select class="form-select" id="duracion_dieta" name="duracion_dieta" required>
+                                        <option value="1 semana">1 semana</option>
+                                        <option value="2 semanas">2 semanas</option>
+                                        <option value="3 semanas">3 semanas</option>
+                                        <option value="1 mes">1 mes</option>
+                                        <option value="2 meses">2 meses</option>
+                                        <option value="3 meses">3 meses</option>
+                                        <option value="Permanente">Permanente</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="dias_semana" class="form-label">Días de la Semana</label>
+                                    <input type="text" class="form-control" id="dias_semana" name="dias_semana" placeholder="Ej: Lunes-Viernes">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="meta_calorias" class="form-label">Meta Calórica (kcal/día)</label>
+                                    <input type="number" class="form-control" id="meta_calorias" name="meta_calorias" placeholder="Ej: 2000">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h3>Información del Cliente</h3>
+                                <div class="row">
+                                    <div class="col-md-3 mb-3">
+                                        <label for="edad" class="form-label">Edad</label>
+                                        <input type="text" class="form-control" id="edad" name="edad" placeholder="Ej: 25 años">
+                                    </div>
+                                    <div class="col-md-9 mb-3">
+                                        <label for="alergias" class="form-label">Alergias</label>
+                                        <input type="text" class="form-control" id="alergias" name="alergias" placeholder="Ej: Lácteos, frutos secos">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="enfermedad_cronica" class="form-label">Enfermedades Crónicas</label>
+                                        <input type="text" class="form-control" id="enfermedad_cronica" name="enfermedad_cronica" placeholder="Ej: Diabetes, Hipertensión">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="alergia_medicamento" class="form-label">Alergias a Medicamentos</label>
+                                        <input type="text" class="form-control" id="alergia_medicamento" name="alergia_medicamento" placeholder="Ej: Penicilina">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h3>Imágenes de Referencia</h3>
+                                <div class="mb-3">
+                                    <input class="form-control" type="file" id="imagenes" name="imagenes" multiple accept="image/*">
+                                    <small class="text-muted">Puedes adjuntar imágenes de ejemplo para la dieta</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <a href="{{ url_for('dieta.index') }}" class="btn btn-outline-secondary me-2">Cancelar</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i> Guardar Dieta
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Establecer fecha de hoy como mínimo para fecha de inicio
+        const fechaInicio = document.getElementById('fecha_inicio');
+        const fechaHoy = new Date().toISOString().split('T')[0];
+        fechaInicio.setAttribute('min', fechaHoy);
+        fechaInicio.value = fechaHoy;
+        
+        // Establecer fecha de inicio + 1 semana como valor predeterminado para fecha fin
+        const fechaFin = document.getElementById('fecha_fin');
+        fechaInicio.addEventListener('change', function() {
+            const inicio = new Date(this.value);
+            inicio.setDate(inicio.getDate() + 7); // Añadir 1 semana
+            fechaFin.setAttribute('min', this.value);
+            fechaFin.value = inicio.toISOString().split('T')[0];
+        });
+        
+        // Disparar el evento change para establecer valores iniciales
+        const event = new Event('change');
+        fechaInicio.dispatchEvent(event);
+    });
+</script>
+{% endblock %}

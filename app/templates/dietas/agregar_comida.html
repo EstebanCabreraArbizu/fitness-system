@@ -1,0 +1,171 @@
+{% extends "dietas/base_dietas.html" %}
+
+{% block title %}Agregar Comida - FitSystem{% endblock %}
+
+{% block dieta_content %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{{ url_for('dieta.detalle', dieta_id=dieta_id) }}" class="btn btn-outline-primary mb-3">
+                <i class="fas fa-arrow-left me-2"></i> Volver a Detalles de Dieta
+            </a>
+            <h1>Agregar Comida</h1>
+            <p class="text-muted">Añade una comida al plan de alimentación</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('dieta.agregar_comida', dieta_id=dieta_id) }}" enctype="multipart/form-data">
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="dia_dieta" class="form-label">Día de la Semana *</label>
+                                    <select class="form-select" id="dia_dieta" name="dia_dieta" required>
+                                        <option value="Lunes">Lunes</option>
+                                        <option value="Martes">Martes</option>
+                                        <option value="Miércoles">Miércoles</option>
+                                        <option value="Jueves">Jueves</option>
+                                        <option value="Viernes">Viernes</option>
+                                        <option value="Sábado">Sábado</option>
+                                        <option value="Domingo">Domingo</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="hora" class="form-label">Hora *</label>
+                                    <input type="time" class="form-control" id="hora" name="hora" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="tipo_comida" class="form-label">Tipo de Comida *</label>
+                                    <select class="form-select" id="tipo_comida" name="tipo_comida" required>
+                                        <option value="Desayuno">Desayuno</option>
+                                        <option value="Media mañana">Media mañana</option>
+                                        <option value="Almuerzo">Almuerzo</option>
+                                        <option value="Merienda">Merienda</option>
+                                        <option value="Cena">Cena</option>
+                                        <option value="Post-entrenamiento">Post-entrenamiento</option>
+                                        <option value="Pre-entrenamiento">Pre-entrenamiento</option>
+                                        <option value="Snack">Snack</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="nombre" class="form-label">Nombre de la Comida *</label>
+                                    <input type="text" class="form-control" id="nombre" name="nombre" required placeholder="Ej: Ensalada de pollo con quinoa">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="descripcion" class="form-label">Descripción</label>
+                                    <textarea class="form-control" id="descripcion" name="descripcion" rows="3" placeholder="Detalla los ingredientes y la preparación"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="calorias" class="form-label">Calorías (kcal) *</label>
+                                    <input type="number" class="form-control" id="calorias" name="calorias" required min="0">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="proteinas" class="form-label">Proteínas (g) *</label>
+                                    <input type="number" class="form-control" id="proteinas" name="proteinas" required step="0.1" min="0">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="carbohidratos" class="form-label">Carbohidratos (g) *</label>
+                                    <input type="number" class="form-control" id="carbohidratos" name="carbohidratos" required step="0.1" min="0">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="grasas" class="form-label">Grasas (g) *</label>
+                                    <input type="number" class="form-control" id="grasas" name="grasas" required step="0.1" min="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="recomendacion" class="form-label">Recomendación</label>
+                                    <input type="text" class="form-control" id="recomendacion" name="recomendacion" placeholder="Ej: Consumir después del entrenamiento">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="imagen" class="form-label">Imagen de la Comida</label>
+                                    <input class="form-control" type="file" id="imagen" name="imagen" accept="image/*">
+                                    <small class="text-muted">Opcional: Sube una imagen de referencia</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <a href="{{ url_for('dieta.detalle', dieta_id=dieta_id) }}" class="btn btn-outline-secondary me-2">Cancelar</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i> Guardar Comida
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Establecer valores predeterminados según el tipo de comida
+        document.getElementById('tipo_comida').addEventListener('change', function() {
+            const tipoComida = this.value;
+            const horaInput = document.getElementById('hora');
+            
+            // Establecer horas predeterminadas según el tipo de comida
+            switch (tipoComida) {
+                case 'Desayuno':
+                    horaInput.value = '07:00';
+                    break;
+                case 'Media mañana':
+                    horaInput.value = '10:30';
+                    break;
+                case 'Almuerzo':
+                    horaInput.value = '13:00';
+                    break;
+                case 'Merienda':
+                    horaInput.value = '16:30';
+                    break;
+                case 'Cena':
+                    horaInput.value = '20:00';
+                    break;
+                case 'Pre-entrenamiento':
+                    horaInput.value = '17:00';
+                    break;
+                case 'Post-entrenamiento':
+                    horaInput.value = '19:00';
+                    break;
+                case 'Snack':
+                    horaInput.value = '22:00';
+                    break;
+            }
+        });
+        
+        // Disparar el evento change para establecer valores iniciales
+        document.getElementById('tipo_comida').dispatchEvent(new Event('change'));
+    });
+</script>
+{% endblock %}

@@ -5,10 +5,10 @@
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
             {% endfor %}
         {% endif %}
     {% endwith %}
@@ -31,11 +31,11 @@
         <!-- Paso 1: Datos Básicos -->
         <div id="step1" class="step active">
             <div class="social-buttons mb-4">
-                <button type="button" class="btn-social btn-google">
-                    <i class="fab fa-google me-2"></i>Registrarse con Google
+                <button type="button" class="btn btn-google w-100 mb-2">
+                    <i class="fab fa-google me-2"></i> Continuar con Google
                 </button>
-                <button type="button" class="btn-social btn-facebook">
-                    <i class="fab fa-facebook-f me-2"></i>Registrarse con Facebook
+                <button type="button" class="btn btn-facebook w-100">
+                    <i class="fab fa-facebook-f me-2"></i> Continuar con Facebook
                 </button>
             </div>
 
@@ -44,45 +44,41 @@
             </div>
 
             <div class="form-floating mb-3">
-                <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Nombre" maxlength="50"
-                    required>
-                <label for="nombre"><i class="fas fa-user me-2"></i>Nombre</label>
+                <input type="text" class="form-control" id="nombre" name="nombres" placeholder="Nombre" required>
+                <label for="nombre">Nombre</label>
             </div>
 
             <div class="form-floating mb-3">
-                <input type="text" class="form-control" id="apellidos" name="apellidos" placeholder="Apellidos" maxlength="50">
-                <label for="apellidos"><i class="fas fa-user me-2"></i>Apellidos</label>
+                <input type="text" class="form-control" id="apellidos" name="apellidos" placeholder="Apellidos" required>
+                <label for="apellidos">Apellidos</label>
             </div>
 
             <div class="form-floating mb-3">
-                <input type="email" class="form-control" id="correo" name="correo" placeholder="Correo" maxlength="100"
-                    required>
-                <label for="correo"><i class="fas fa-envelope me-2"></i>Correo electrónico</label>
-                <div id="emailFeedback" class="invalid-feedback">
+                <input type="email" class="form-control" id="correo" name="correo" placeholder="nombre@ejemplo.com" required>
+                <label for="correo">Correo electrónico</label>
+                <div class="invalid-feedback">
                     Por favor ingresa un correo electrónico válido.
                 </div>
             </div>
 
             <div class="form-floating mb-3">
-                <input type="password" class="form-control" id="contrasenia" name="contrasenia" placeholder="Contraseña"
-                    maxlength="50" required>
-                <label for="contrasenia"><i class="fas fa-lock me-2"></i>Contraseña</label>
-                <div class="password-feedback mt-2">
-                    <ul id="passwordCriteria">
+                <input type="password" class="form-control" id="contrasenia" name="contrasenia" placeholder="Contraseña" required>
+                <label for="contrasenia">Contraseña</label>
+                <div class="password-feedback">
+                    <ul>
                         <li id="length">Al menos 8 caracteres</li>
-                        <li id="uppercase">Una letra mayúscula</li>
-                        <li id="lowercase">Una letra minúscula</li>
-                        <li id="number">Un número</li>
-                        <li id="special">Un carácter especial</li>
+                        <li id="uppercase">Al menos una letra mayúscula</li>
+                        <li id="lowercase">Al menos una letra minúscula</li>
+                        <li id="number">Al menos un número</li>
+                        <li id="special">Al menos un carácter especial</li>
                     </ul>
                 </div>
             </div>
 
             <div class="form-floating mb-4">
-                <input type="password" class="form-control" id="confirmContrasenia" name="confirmContrasenia"
-                    placeholder="Confirmar Contraseña" maxlength="50" required>
-                <label for="confirmContrasenia"><i class="fas fa-lock me-2"></i>Confirmar Contraseña</label>
-                <div id="passwordMatchFeedback" class="invalid-feedback">
+                <input type="password" class="form-control" id="confirmContrasenia" name="confirmar_contrasenia" placeholder="Confirmar contraseña" required>
+                <label for="confirmContrasenia">Confirmar contraseña</label>
+                <div class="invalid-feedback" id="passwordMatchFeedback" style="display: none;">
                     Las contraseñas no coinciden.
                 </div>
             </div>
@@ -95,26 +91,23 @@
         <!-- Paso 2: Datos Personales -->
         <div id="step2" class="step">
             <div class="form-floating mb-3">
-                <input type="tel" class="form-control" id="telefono" name="telefono" placeholder="Teléfono"
-                    maxlength="15" required>
-                <label for="telefono"><i class="fas fa-phone me-2"></i>Teléfono</label>
+                <input type="tel" class="form-control" id="telefono" name="celular" placeholder="Teléfono" required>
+                <label for="telefono">Teléfono / Celular</label>
             </div>
 
             <div class="form-floating mb-3">
-                <input type="text" class="form-control" id="direccion" name="direccion" placeholder="Dirección"
-                    maxlength="100">
-                <label for="direccion"><i class="fas fa-home me-2"></i>Dirección</label>
+                <input type="text" class="form-control" id="direccion" name="direccion" placeholder="Dirección" required>
+                <label for="direccion">Dirección</label>
             </div>
 
             <div class="fitness-stats">
                 <div class="form-floating">
-                    <input type="number" class="form-control" id="peso" name="peso" placeholder="Peso (kg)" min="30" max="250">
-                    <label for="peso"><i class="fas fa-weight me-2"></i>Peso (kg)</label>
+                    <input type="number" class="form-control" id="peso" name="peso" placeholder="Peso (kg)" step="0.01" min="20" max="200">
+                    <label for="peso">Peso (kg)</label>
                 </div>
-                
                 <div class="form-floating">
-                    <input type="number" class="form-control" id="altura" name="altura" placeholder="Altura (cm)" min="100" max="250">
-                    <label for="altura"><i class="fas fa-ruler-vertical me-2"></i>Altura (cm)</label>
+                    <input type="number" class="form-control" id="altura" name="altura" placeholder="Altura (cm)" step="0.01" min="100" max="250">
+                    <label for="altura">Altura (cm)</label>
                 </div>
             </div>
 
@@ -131,38 +124,36 @@
         <!-- Paso 3: Imagen y Tipo de Usuario -->
         <div id="step3" class="step">
             <div class="text-center mb-4">
-                <img src="{{ url_for('static', filename='img/default-user.png') }}" alt="Vista previa" id="avatarPreview">
+                <img id="avatarPreview" src="{{ url_for('static', filename='img/default-user.png') }}" alt="Vista previa del avatar">
                 <div class="upload-btn-wrapper mt-2">
-                    <button class="btn btn-outline-primary" type="button">
-                        <i class="fas fa-camera me-2"></i>Subir foto de perfil
-                    </button>
-                    <input type="file" id="imagen" name="imagen" accept="image/*">
+                    <button class="btn btn-outline-primary">Subir foto de perfil</button>
+                    <input type="file" name="imagen" id="imagen" accept="image/*">
                 </div>
-                <div class="form-text mt-1">Opcional: Puedes subir una foto de perfil.</div>
+                <small class="text-muted d-block mt-1">JPG, PNG o GIF. Máx. 5MB.</small>
             </div>
 
             <div class="form-floating mb-4">
-                <select class="form-select" id="tipoUsuario" name="tipoUsuario" required>
-                    <option value="">Seleccione una opción</option>
-                    <option value="Cliente">Cliente</option>
-                    <option value="Instructor">Instructor</option>
+                <select class="form-select" id="tipoUsuario" name="tipo_usuario" required>
+                    <option value="" selected disabled>Seleccionar...</option>
+                    <option value="cliente">Cliente</option>
+                    <option value="instructor">Instructor</option>
                 </select>
-                <label for="tipoUsuario"><i class="fas fa-users me-2"></i>Tipo de Usuario</label>
+                <label for="tipoUsuario">Tipo de usuario</label>
             </div>
 
             <div id="clienteOptions" class="mb-4" style="display: none;">
-                <div class="form-floating">
-                    <select class="form-select" id="tipo_cliente" name="tipo_cliente">
-                        <option value="regular" selected>Regular</option>
-                        <option value="premium">Premium</option>
-                        <option value="elite">Elite</option>
+                <div class="form-floating mb-3">
+                    <select class="form-select" id="tipoCliente" name="tipo_cliente">
+                        <option value="" selected disabled>Seleccionar...</option>
+                        <option value="interno">Interno (Alumno)</option>
+                        <option value="externo">Externo (Temporal)</option>
                     </select>
-                    <label for="tipo_cliente"><i class="fas fa-star me-2"></i>Tipo de Cliente</label>
+                    <label for="tipoCliente">Tipo de cliente</label>
                 </div>
             </div>
 
             <div class="form-check mb-4">
-                <input class="form-check-input" type="checkbox" id="terminos" required>
+                <input class="form-check-input" type="checkbox" id="terminos" name="terminos" required>
                 <label class="form-check-label" for="terminos">
                     Acepto los <a href="#" data-bs-toggle="modal" data-bs-target="#terminosModal">términos y condiciones</a> y la <a href="#" data-bs-toggle="modal" data-bs-target="#privacidadModal">política de privacidad</a>
                 </label>
@@ -173,7 +164,7 @@
                     <i class="fas fa-arrow-left me-2"></i> Anterior
                 </button>
                 <button type="submit" class="btn btn-next w-50" id="submitBtn">
-                    <i class="fas fa-check me-2"></i> Crear Cuenta
+                    Crear Cuenta <i class="fas fa-check ms-2"></i> 
                 </button>
             </div>
             
@@ -193,20 +184,20 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <h6>1. Aceptación de los términos</h6>
-                <p>Al utilizar FitSystem, aceptas estos términos y condiciones en su totalidad. Si no estás de acuerdo con alguno de ellos, deberás abstenerte de utilizar nuestros servicios.</p>
+                <h6>1. Aceptación de los Términos</h6>
+                <p>Al registrarte y utilizar FitSystem, aceptas cumplir con estos términos y condiciones.</p>
                 
-                <h6>2. Descripción del servicio</h6>
-                <p>FitSystem proporciona una plataforma para la gestión de entrenamientos, dietas y rutinas de fitness personalizadas.</p>
+                <h6>2. Uso del Servicio</h6>
+                <p>Nos reservamos el derecho de suspender cuentas que violen estos términos o realicen actividades fraudulentas.</p>
                 
-                <h6>3. Registro y cuenta</h6>
-                <p>Para utilizar FitSystem, debes crear una cuenta proporcionando información precisa y actualizada. Eres responsable de mantener la confidencialidad de tu contraseña y de toda actividad que ocurra bajo tu cuenta.</p>
+                <h6>3. Privacidad</h6>
+                <p>Tu información personal será tratada según nuestra política de privacidad.</p>
                 
-                <h6>4. Responsabilidades del usuario</h6>
-                <p>Debes consultar con un profesional de la salud antes de comenzar cualquier programa de ejercicio o dieta. FitSystem no se responsabiliza por lesiones o problemas de salud resultantes del uso de nuestros servicios.</p>
+                <h6>4. Responsabilidades del Usuario</h6>
+                <p>Como usuario, eres responsable de mantener la confidencialidad de tu cuenta y contraseña.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Entendido</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
@@ -221,20 +212,20 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <h6>1. Información que recopilamos</h6>
-                <p>Recopilamos información personal como tu nombre, correo electrónico, peso, altura y otros datos relacionados con tu salud y fitness para proporcionarte un servicio personalizado.</p>
+                <h6>1. Información que Recopilamos</h6>
+                <p>Recopilamos información personal como nombre, correo electrónico y datos relacionados con tu estado físico.</p>
                 
-                <h6>2. Uso de la información</h6>
-                <p>Utilizamos tu información para: personalizar tu experiencia, mejorar nuestro servicio, comunicarnos contigo y enviarte actualizaciones sobre nuestros servicios.</p>
+                <h6>2. Uso de la Información</h6>
+                <p>Utilizamos tu información para proporcionar y mejorar nuestros servicios, así como para comunicarnos contigo.</p>
                 
-                <h6>3. Protección de datos</h6>
-                <p>Implementamos medidas de seguridad para proteger tu información personal y cumplir con las regulaciones de protección de datos aplicables.</p>
+                <h6>3. Seguridad</h6>
+                <p>Implementamos medidas de seguridad para proteger tu información personal.</p>
                 
-                <h6>4. Compartir información</h6>
-                <p>No compartimos tu información personal con terceros sin tu consentimiento, excepto cuando sea necesario para proporcionar nuestros servicios o cumplir con requisitos legales.</p>
+                <h6>4. Cookies</h6>
+                <p>Utilizamos cookies para mejorar tu experiencia de usuario.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Entendido</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
@@ -248,10 +239,12 @@
         // Mostrar/ocultar opciones de cliente según el tipo de usuario
         document.getElementById('tipoUsuario').addEventListener('change', function() {
             const clienteOptions = document.getElementById('clienteOptions');
-            if (this.value === 'Cliente') {
+            if (this.value === 'cliente') {
                 clienteOptions.style.display = 'block';
+                document.getElementById('tipoCliente').required = true;
             } else {
                 clienteOptions.style.display = 'none';
+                document.getElementById('tipoCliente').required = false;
             }
         });
 
