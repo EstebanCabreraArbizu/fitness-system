@@ -14,7 +14,25 @@ rutina_bp = Blueprint('rutina', __name__, url_prefix='/rutinas')
 def lista_rutinas(cliente_id):
     cliente = Cliente.query.get_or_404(cliente_id)
     rutinas = Rutina.query.filter_by(cliente_id=cliente_id).all()
-    return render_template('rutina/lista.html', rutinas=rutinas, cliente=cliente)
+    
+    # Precarga los ejercicios para cada rutina
+    for rutina in rutinas:
+        # Cargar ejercicios ordenados por día y orden
+        ejercicios = EjercicioRutina.query.filter_by(rutina_id=rutina.id)\
+            .order_by(EjercicioRutina.dia_semana, EjercicioRutina.orden).all()
+        
+        # Agrupar ejercicios por día
+        ejercicios_por_dia = {}
+        for ejercicio in ejercicios:
+            if ejercicio.dia_semana not in ejercicios_por_dia:
+                ejercicios_por_dia[ejercicio.dia_semana] = []
+            ejercicios_por_dia[ejercicio.dia_semana].append(ejercicio)
+        
+        rutina.ejercicios_por_dia = ejercicios_por_dia
+    
+    return render_template('rutina/lista.html', 
+                         rutinas=rutinas, 
+                         cliente=cliente)
 
 @rutina_bp.route('/crear/<int:cliente_id>', methods=['GET', 'POST'])
 @login_required
@@ -43,22 +61,29 @@ def crear(cliente_id):
             series = request.form.getlist('series[]')
             repeticiones = request.form.getlist('repeticiones[]')
             descansos = request.form.getlist('descansos[]')
-            dias = request.form.getlist('dias[]')
             ordenes = request.form.getlist('ordenes[]')
             notas = request.form.getlist('notas[]')
 
             for i in range(len(nombres)):
-                ejercicio = EjercicioRutina(
-                    rutina_id=nueva_rutina.id,
-                    nombre=nombres[i],
-                    series=series[i],
-                    repeticiones=repeticiones[i],
-                    descanso=descansos[i],
-                    dia_semana=dias[i],
-                    orden=ordenes[i],
-                    notas=notas[i]
-                )
-                db.session.add(ejercicio)
+                # Obtener los días seleccionados para este ejercicio
+                dias = []
+                for dia in range(1, 8):
+                    if request.form.get(f'dias[{i}][{dia}]'):
+                        dias.append(dia)
+                
+                # Crear un ejercicio por cada día seleccionado
+                for dia in dias:
+                    ejercicio = EjercicioRutina(
+                        rutina_id=nueva_rutina.id,
+                        nombre=nombres[i],
+                        series=series[i],
+                        repeticiones=repeticiones[i],
+                        descanso=descansos[i],
+                        dia_semana=dia,
+                        orden=ordenes[i],
+                        notas=notas[i]
+                    )
+                    db.session.add(ejercicio)
 
             db.session.commit()
             flash('Rutina creada exitosamente', 'success')
@@ -76,7 +101,22 @@ def crear(cliente_id):
 @login_required
 def editar(rutina_id):
     rutina = Rutina.query.get_or_404(rutina_id)
-    ejercicios = EjercicioRutina.query.filter_by(rutina_id=rutina_id).order_by(EjercicioRutina.dia_semana, EjercicioRutina.orden).all()
+    cliente = Cliente.query.get_or_404(rutina.cliente_id)
+    # Agrupamos los ejercicios por nombre para manejar los días múltiples
+    ejercicios_agrupados = {}
+    for ejercicio in EjercicioRutina.query.filter_by(rutina_id=rutina_id).order_by(EjercicioRutina.orden).all():
+        if ejercicio.nombre not in ejercicios_agrupados:
+            ejercicios_agrupados[ejercicio.nombre] = {
+                'nombre': ejercicio.nombre,
+                'series': ejercicio.series,
+                'repeticiones': ejercicio.repeticiones,
+                'descanso': ejercicio.descanso,
+                'orden': ejercicio.orden,
+                'notas': ejercicio.notas,
+                'dias': []
+            }
+        ejercicios_agrupados[ejercicio.nombre]['dias'].append(ejercicio.dia_semana)
+    
     disciplines = Discipline.query.all()
 
     if request.method == 'POST':
@@ -91,23 +131,33 @@ def editar(rutina_id):
         EjercicioRutina.query.filter_by(rutina_id=rutina.id).delete()
         
         # Agregar nuevos ejercicios
-        ejercicios = request.form.getlist('ejercicio_nombre[]')
-        series = request.form.getlist('ejercicio_series[]')
-        repeticiones = request.form.getlist('ejercicio_repeticiones[]')
-        descansos = request.form.getlist('ejercicio_descanso[]')
-        dias = request.form.getlist('ejercicio_dia[]')
+        nombres = request.form.getlist('nombres[]')
+        series = request.form.getlist('series[]')
+        repeticiones = request.form.getlist('repeticiones[]')
+        descansos = request.form.getlist('descansos[]')
+        ordenes = request.form.getlist('ordenes[]')
+        notas = request.form.getlist('notas[]')
         
-        for i in range(len(ejercicios)):
-            ejercicio = EjercicioRutina(
-                rutina_id=rutina.id,
-                nombre=ejercicios[i],
-                series=series[i],
-                repeticiones=repeticiones[i],
-                descanso=descansos[i],
-                dia_semana=dias[i],
-                orden=i+1
-            )
-            db.session.add(ejercicio)
+        for i in range(len(nombres)):
+            # Obtener los días seleccionados para este ejercicio
+            dias = []
+            for dia in range(1, 8):
+                if request.form.get(f'dias[{i}][{dia}]'):
+                    dias.append(dia)
+            
+            # Crear un ejercicio por cada día seleccionado
+            for dia in dias:
+                ejercicio = EjercicioRutina(
+                    rutina_id=rutina.id,
+                    nombre=nombres[i],
+                    series=series[i],
+                    repeticiones=repeticiones[i],
+                    descanso=descansos[i],
+                    dia_semana=dia,
+                    orden=ordenes[i],
+                    notas=notas[i]
+                )
+                db.session.add(ejercicio)
         
         db.session.commit()
         flash('Rutina actualizada exitosamente', 'success')
@@ -115,8 +165,9 @@ def editar(rutina_id):
     
     return render_template('rutina/editar.html',
                          rutina=rutina,
-                         ejercicios=ejercicios,
-                         disciplines=disciplines)
+                         ejercicios=list(ejercicios_agrupados.values()),
+                         disciplines=disciplines,
+                         cliente=cliente)
 
 @rutina_bp.route('/eliminar/<int:rutina_id>')
 def eliminar(rutina_id):

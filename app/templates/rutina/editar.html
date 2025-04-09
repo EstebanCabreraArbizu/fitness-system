@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Editar Rutina</h2>
+    <form method="POST">
+        <div class="row">
+            <!-- Información básica de la rutina -->
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="titulo" class="form-label">Título</label>
+                    <input type="text" class="form-control" id="titulo" name="titulo" value="{{ rutina.titulo }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="descripcion" class="form-label">Descripción</label>
+                    <textarea class="form-control" id="descripcion" name="descripcion" rows="3">{{ rutina.descripcion }}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="fecha_inicio" class="form-label">Fecha de Inicio</label>
+                    <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" 
+                           value="{{ rutina.fecha_inicio.strftime('%Y-%m-%d') }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="fecha_fin" class="form-label">Fecha de Fin</label>
+                    <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" 
+                           value="{{ rutina.fecha_fin.strftime('%Y-%m-%d') }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="nivel" class="form-label">Nivel</label>
+                    <select class="form-control" id="nivel" name="nivel" required>
+                        <option value="principiante" {% if rutina.nivel == 'principiante' %}selected{% endif %}>Principiante</option>
+                        <option value="intermedio" {% if rutina.nivel == 'intermedio' %}selected{% endif %}>Intermedio</option>
+                        <option value="avanzado" {% if rutina.nivel == 'avanzado' %}selected{% endif %}>Avanzado</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="discipline_id" class="form-label">Disciplina</label>
+                    <select class="form-control" id="discipline_id" name="discipline_id" required>
+                        {% for discipline in disciplines %}
+                        <option value="{{ discipline.id }}" {% if rutina.discipline_id == discipline.id %}selected{% endif %}>
+                            {{ discipline.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Ejercicios -->
+            <div class="col-md-6">
+                <h4>Ejercicios</h4>
+                <div id="ejercicios-container">
+                    {% for ejercicio in ejercicios %}
+                    <div class="ejercicio-grupo border p-3 mb-3">
+                        <div class="mb-2">
+                            <label class="form-label">Nombre del ejercicio</label>
+                            <input type="text" class="form-control" name="nombres[]" value="{{ ejercicio.nombre }}" required>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <label class="form-label">Series</label>
+                                <input type="number" class="form-control" name="series[]" value="{{ ejercicio.series }}" required>
+                            </div>
+                            <div class="col">
+                                <label class="form-label">Repeticiones</label>
+                                <input type="number" class="form-control" name="repeticiones[]" value="{{ ejercicio.repeticiones }}" required>
+                            </div>
+                            <div class="col">
+                                <label class="form-label">Descanso (seg)</label>
+                                <input type="number" class="form-control" name="descansos[]" value="{{ ejercicio.descanso }}" required>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col">
+                                <label class="form-label">Días de la semana</label>
+                                <div class="dias-semana">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" name="dias[{{ loop.index0 }}][1]" value="1" 
+                                               {% if 1 in ejercicio.dias %}checked{% endif %}>
+                                        <label class="form-check-label">Lunes</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" name="dias[{{ loop.index0 }}][2]" value="2"
+                                               {% if 2 in ejercicio.dias %}checked{% endif %}>
+                                        <label class="form-check-label">Martes</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" name="dias[{{ loop.index0 }}][3]" value="3"
+                                               {% if 3 in ejercicio.dias %}checked{% endif %}>
+                                        <label class="form-check-label">Miércoles</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" name="dias[{{ loop.index0 }}][4]" value="4"
+                                               {% if 4 in ejercicio.dias %}checked{% endif %}>
+                                        <label class="form-check-label">Jueves</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" name="dias[{{ loop.index0 }}][5]" value="5"
+                                               {% if 5 in ejercicio.dias %}checked{% endif %}>
+                                        <label class="form-check-label">Viernes</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" name="dias[{{ loop.index0 }}][6]" value="6"
+                                               {% if 6 in ejercicio.dias %}checked{% endif %}>
+                                        <label class="form-check-label">Sábado</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" name="dias[{{ loop.index0 }}][7]" value="7"
+                                               {% if 7 in ejercicio.dias %}checked{% endif %}>
+                                        <label class="form-check-label">Domingo</label>
+                                    </div>
+                                </div>
+                                <div class="invalid-feedback">Selecciona al menos un día</div>
+                            </div>
+                            <div class="col">
+                                <label class="form-label">Orden</label>
+                                <input type="number" class="form-control" name="ordenes[]" value="{{ ejercicio.orden }}" required>
+                            </div>
+                        </div>
+                        <div class="mb-2 mt-2">
+                            <label class="form-label">Notas</label>
+                            <textarea class="form-control" name="notas[]">{{ ejercicio.notas }}</textarea>
+                        </div>
+                        <button type="button" class="btn btn-danger btn-sm mt-2" onclick="eliminarEjercicio(this)">Eliminar ejercicio</button>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button type="button" class="btn btn-secondary mt-3" onclick="agregarEjercicio()">Agregar ejercicio</button>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+            <a href="{{ url_for('rutina.lista_rutinas', cliente_id=cliente.id) }}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<script>
+function agregarEjercicio() {
+    const container = document.getElementById('ejercicios-container');
+    const ejercicioHTML = `
+        <div class="ejercicio-grupo border p-3 mb-3">
+            <div class="mb-2">
+                <label class="form-label">Nombre del ejercicio</label>
+                <input type="text" class="form-control" name="nombres[]" required>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <label class="form-label">Series</label>
+                    <input type="number" class="form-control" name="series[]" required>
+                </div>
+                <div class="col">
+                    <label class="form-label">Repeticiones</label>
+                    <input type="number" class="form-control" name="repeticiones[]" required>
+                </div>
+                <div class="col">
+                    <label class="form-label">Descanso (seg)</label>
+                    <input type="number" class="form-control" name="descansos[]" required>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col">
+                    <label class="form-label">Días de la semana</label>
+                    <div class="dias-semana">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="dias[0][1]" value="1">
+                            <label class="form-check-label">Lunes</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="dias[0][2]" value="2">
+                            <label class="form-check-label">Martes</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="dias[0][3]" value="3">
+                            <label class="form-check-label">Miércoles</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="dias[0][4]" value="4">
+                            <label class="form-check-label">Jueves</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="dias[0][5]" value="5">
+                            <label class="form-check-label">Viernes</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="dias[0][6]" value="6">
+                            <label class="form-check-label">Sábado</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="dias[0][7]" value="7">
+                            <label class="form-check-label">Domingo</label>
+                        </div>
+                    </div>
+                    <div class="invalid-feedback">Selecciona al menos un día</div>
+                </div>
+                <div class="col">
+                    <label class="form-label">Orden</label>
+                    <input type="number" class="form-control" name="ordenes[]" required>
+                </div>
+            </div>
+            <div class="mb-2 mt-2">
+                <label class="form-label">Notas</label>
+                <textarea class="form-control" name="notas[]"></textarea>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm mt-2" onclick="eliminarEjercicio(this)">Eliminar ejercicio</button>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', ejercicioHTML);
+}
+
+function eliminarEjercicio(button) {
+    button.closest('.ejercicio-grupo').remove();
+}
+
+// Validación del formulario antes de enviar
+document.querySelector('form').addEventListener('submit', function(e) {
+    let isValid = true;
+    const ejercicios = document.querySelectorAll('.ejercicio-grupo');
+    
+    ejercicios.forEach(ejercicio => {
+        const diasSeleccionados = ejercicio.querySelectorAll('input[type="checkbox"]:checked');
+        if (diasSeleccionados.length === 0) {
+            isValid = false;
+            ejercicio.querySelector('.invalid-feedback').style.display = 'block';
+        } else {
+            ejercicio.querySelector('.invalid-feedback').style.display = 'none';
+        }
+    });
+    
+    if (!isValid) {
+        e.preventDefault();
+        alert('Por favor, selecciona al menos un día para cada ejercicio.');
+    }
+});
+
+// Validación de fechas
+document.addEventListener('DOMContentLoaded', function() {
+    // Establecer fecha mínima como hoy
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('fecha_inicio').min = today;
+    document.getElementById('fecha_fin').min = today;
+    
+    // Validar que fecha fin sea después de fecha inicio
+    document.getElementById('fecha_inicio').addEventListener('change', function(e) {
+        document.getElementById('fecha_fin').min = e.target.value;
+    });
+});
+</script>
+{% endblock %} 

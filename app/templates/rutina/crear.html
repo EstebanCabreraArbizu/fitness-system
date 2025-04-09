@@ -83,16 +83,38 @@ function agregarEjercicio() {
             </div>
             <div class="row mt-2">
                 <div class="col">
-                    <label class="form-label">Día de la semana</label>
-                    <select class="form-control" name="dias[]" required>
-                        <option value="1">Lunes</option>
-                        <option value="2">Martes</option>
-                        <option value="3">Miércoles</option>
-                        <option value="4">Jueves</option>
-                        <option value="5">Viernes</option>
-                        <option value="6">Sábado</option>
-                        <option value="7">Domingo</option>
-                    </select>
+                    <label class="form-label">Días de la semana</label>
+                    <div class="dias-semana">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="dias[{{ i }}][1]" value="1">
+                            <label class="form-check-label">Lunes</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="dias[{{ i }}][2]" value="2">
+                            <label class="form-check-label">Martes</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="dias[{{ i }}][3]" value="3">
+                            <label class="form-check-label">Miércoles</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="dias[{{ i }}][4]" value="4">
+                            <label class="form-check-label">Jueves</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="dias[{{ i }}][5]" value="5">
+                            <label class="form-check-label">Viernes</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="dias[{{ i }}][6]" value="6">
+                            <label class="form-check-label">Sábado</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="dias[{{ i }}][7]" value="7">
+                            <label class="form-check-label">Domingo</label>
+                        </div>
+                    </div>
+                    <div class="invalid-feedback">Selecciona al menos un día</div>
                 </div>
                 <div class="col">
                     <label class="form-label">Orden</label>
@@ -113,9 +135,40 @@ function eliminarEjercicio(button) {
     button.closest('.ejercicio-grupo').remove();
 }
 
+// Validación del formulario antes de enviar
+document.querySelector('form').addEventListener('submit', function(e) {
+    let isValid = true;
+    const ejercicios = document.querySelectorAll('.ejercicio-grupo');
+    
+    ejercicios.forEach(ejercicio => {
+        const diasSeleccionados = ejercicio.querySelectorAll('input[type="checkbox"]:checked');
+        if (diasSeleccionados.length === 0) {
+            isValid = false;
+            ejercicio.querySelector('.invalid-feedback').style.display = 'block';
+        } else {
+            ejercicio.querySelector('.invalid-feedback').style.display = 'none';
+        }
+    });
+    
+    if (!isValid) {
+        e.preventDefault();
+        alert('Por favor, selecciona al menos un día para cada ejercicio.');
+    }
+});
+
 // Agregar un ejercicio por defecto cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
     agregarEjercicio();
+    
+    // Establecer fecha mínima como hoy
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('fecha_inicio').min = today;
+    document.getElementById('fecha_fin').min = today;
+    
+    // Validar que fecha fin sea después de fecha inicio
+    document.getElementById('fecha_inicio').addEventListener('change', function(e) {
+        document.getElementById('fecha_fin').min = e.target.value;
+    });
 });
 </script>
 {% endblock %} 

@@ -1,6 +1,6 @@
 from app.extensions import db
 from datetime import datetime
-from app.models.dieta import Dieta  # Agregamos la importación
+from app.models.dieta import Dieta
 
 class Rutina(db.Model):
     __tablename__ = 'rutinas'
@@ -20,9 +20,14 @@ class Rutina(db.Model):
     # Relaciones simplificadas
     discipline = db.relationship('Discipline')
     cliente = db.relationship('Cliente', backref='rutinas')
-    dieta = db.relationship('Dieta', backref='rutina', uselist=False)  # Modificamos la relación
+    instructor = db.relationship('Instructor')
+    dieta = db.relationship('Dieta', backref='rutina', uselist=False)
     
-    ejercicios = db.relationship('EjercicioRutina', cascade='all, delete-orphan')
+    ejercicios = db.relationship('EjercicioRutina', 
+                               backref='rutina',
+                               lazy='dynamic',
+                               cascade='all, delete-orphan',
+                               order_by='EjercicioRutina.dia_semana, EjercicioRutina.orden')
 
 class EjercicioRutina(db.Model):
     __tablename__ = 'ejercicios_rutina'

@@ -13,11 +13,11 @@ class Instructor(UserMixin, db.Model):
     activo = db.Column(db.Boolean, default=True)
     fecha_registro = db.Column(db.DateTime, default=db.func.current_timestamp())
     
-    # Solo mantén las relaciones esenciales - evita back_populates/backref
+    # Relaciones simplificadas
     disciplines = db.relationship('Discipline', secondary='discipline_instructor')
     clientes = db.relationship('Cliente', secondary='cliente_instructor', viewonly=True)
-    rutinas = db.relationship('Rutina', backref='instructor', foreign_keys='Rutina.instructor_id')
-    dietas = db.relationship('Dieta', backref='instructor', foreign_keys='Dieta.instructor_id')
+    rutinas = db.relationship('Rutina', backref='instructor_ref', foreign_keys='Rutina.instructor_id')
+    dietas = db.relationship('Dieta', foreign_keys='Dieta.instructor_id')
 
     def get_id(self):
         return str(self.id)

@@ -42,16 +42,18 @@
                     <h6>Ejercicios por día:</h6>
                     {% set dias = {1:'Lunes', 2:'Martes', 3:'Miércoles', 4:'Jueves', 5:'Viernes', 6:'Sábado', 7:'Domingo'} %}
                     {% for dia in range(1,8) %}
-                        {% set ejercicios_dia = rutina.ejercicios|selectattr('dia_semana', 'equalto', dia)|list %}
-                        {% if ejercicios_dia %}
+                        {% if dia in rutina.ejercicios_por_dia %}
                         <div class="mb-2">
                             <strong>{{ dias[dia] }}:</strong>
                             <ul class="list-unstyled ms-3 small">
-                                {% for ejercicio in ejercicios_dia %}
+                                {% for ejercicio in rutina.ejercicios_por_dia[dia] %}
                                 <li>
                                     {{ ejercicio.nombre }} - 
                                     {{ ejercicio.series }}x{{ ejercicio.repeticiones }}
                                     ({{ ejercicio.descanso }}s descanso)
+                                    {% if ejercicio.notas %}
+                                    <br><small class="text-muted">{{ ejercicio.notas }}</small>
+                                    {% endif %}
                                 </li>
                                 {% endfor %}
                             </ul>
