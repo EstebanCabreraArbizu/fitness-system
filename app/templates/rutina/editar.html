@@ -138,6 +138,7 @@
 <script>
 function agregarEjercicio() {
     const container = document.getElementById('ejercicios-container');
+    const ejercicioIndex = container.children.length;
     const ejercicioHTML = `
         <div class="ejercicio-grupo border p-3 mb-3">
             <div class="mb-2">
@@ -163,31 +164,31 @@ function agregarEjercicio() {
                     <label class="form-label">Días de la semana</label>
                     <div class="dias-semana">
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="checkbox" name="dias[0][1]" value="1">
+                            <input class="form-check-input" type="checkbox" name="dias[${ejercicioIndex}][1]" value="1">
                             <label class="form-check-label">Lunes</label>
                         </div>
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="checkbox" name="dias[0][2]" value="2">
+                            <input class="form-check-input" type="checkbox" name="dias[${ejercicioIndex}][2]" value="2">
                             <label class="form-check-label">Martes</label>
                         </div>
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="checkbox" name="dias[0][3]" value="3">
+                            <input class="form-check-input" type="checkbox" name="dias[${ejercicioIndex}][3]" value="3">
                             <label class="form-check-label">Miércoles</label>
                         </div>
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="checkbox" name="dias[0][4]" value="4">
+                            <input class="form-check-input" type="checkbox" name="dias[${ejercicioIndex}][4]" value="4">
                             <label class="form-check-label">Jueves</label>
                         </div>
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="checkbox" name="dias[0][5]" value="5">
+                            <input class="form-check-input" type="checkbox" name="dias[${ejercicioIndex}][5]" value="5">
                             <label class="form-check-label">Viernes</label>
                         </div>
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="checkbox" name="dias[0][6]" value="6">
+                            <input class="form-check-input" type="checkbox" name="dias[${ejercicioIndex}][6]" value="6">
                             <label class="form-check-label">Sábado</label>
                         </div>
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="checkbox" name="dias[0][7]" value="7">
+                            <input class="form-check-input" type="checkbox" name="dias[${ejercicioIndex}][7]" value="7">
                             <label class="form-check-label">Domingo</label>
                         </div>
                     </div>
