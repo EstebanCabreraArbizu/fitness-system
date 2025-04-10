@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Información Personal</h5>
+                    <p><strong>Nombre:</strong> {{ cliente.nombres }} {{ cliente.apellidos }}</p>
+                    <p><strong>Email:</strong> {{ cliente.email }}</p>
+                    <p><strong>Teléfono:</strong> {{ cliente.telefono or 'No especificado' }}</p>
+                    <p><strong>Fecha de Nacimiento:</strong> {{ cliente.fecha_nacimiento.strftime('%d/%m/%Y') if cliente.fecha_nacimiento else 'No especificada' }}</p>
+                    <p><strong>Género:</strong> {{ cliente.genero or 'No especificado' }}</p>
+                    <p><strong>Altura:</strong> {{ cliente.altura or 'No especificada' }} cm</p>
+                    <a href="{{ url_for('cliente.editar_perfil') }}" class="btn btn-primary">Editar Perfil</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Últimas Mediciones</h5>
+                    {% if cliente.mediciones %}
+                        {% set ultima_medicion = cliente.mediciones|sort(attribute='fecha')|last %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Peso:</strong> {{ ultima_medicion.peso }} kg</p>
+                                <p><strong>Masa Muscular:</strong> {{ ultima_medicion.masa_muscular }} kg</p>
+                                <p><strong>Masa Grasa:</strong> {{ ultima_medicion.masa_grasa }} kg</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Porcentaje de Grasa:</strong> {{ ultima_medicion.porcentaje_grasa }}%</p>
+                                <p><strong>Cintura:</strong> {{ ultima_medicion.circunferencia_cintura }} cm</p>
+                                <p><strong>Cadera:</strong> {{ ultima_medicion.circunferencia_cadera }} cm</p>
+                            </div>
+                        </div>
+                        <p class="text-muted">Fecha: {{ ultima_medicion.fecha.strftime('%d/%m/%Y') }}</p>
+                    {% else %}
+                        <p>No hay mediciones registradas</p>
+                    {% endif %}
+                    <a href="{{ url_for('cliente.agregar_medicion') }}" class="btn btn-success">Agregar Medición</a>
+                    <a href="{{ url_for('cliente.lista_mediciones') }}" class="btn btn-info">Ver Historial</a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Metas Activas</h5>
+                    {% if cliente.metas %}
+                        <div class="list-group">
+                            {% for meta in cliente.metas if not meta.completada %}
+                            <div class="list-group-item">
+                                <h6 class="mb-1">{{ meta.tipo|title }}</h6>
+                                <p class="mb-1">Objetivo: {{ meta.valor_objetivo }}</p>
+                                <small class="text-muted">Fecha objetivo: {{ meta.fecha_objetivo.strftime('%d/%m/%Y') }}</small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p>No hay metas activas</p>
+                    {% endif %}
+                    <a href="{{ url_for('cliente.agregar_meta') }}" class="btn btn-success mt-3">Agregar Meta</a>
+                    <a href="{{ url_for('cliente.lista_metas') }}" class="btn btn-info mt-3">Ver Todas las Metas</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

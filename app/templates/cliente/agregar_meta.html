@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title">Agregar Meta</h2>
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="tipo" class="form-label">Tipo de Medida</label>
+                            <select class="form-select" id="tipo" name="tipo" required onchange="actualizarUnidad()">
+                                <option value="">Seleccionar...</option>
+                                {% for tipo, unidad in tipos_medidas %}
+                                <option value="{{ tipo }}" data-unidad="{{ unidad }}">{{ tipo }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="valor_actual" class="form-label">Valor Actual</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="valor_actual" name="valor_actual" step="0.1" required>
+                                <span class="input-group-text unidad">-</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="valor_objetivo" class="form-label">Valor Objetivo</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="valor_objetivo" name="valor_objetivo" step="0.1" required>
+                                <span class="input-group-text unidad">-</span>
+                            </div>
+                        </div>
+                        
+                        <input type="hidden" id="unidad" name="unidad" value="">
+                        
+                        <div class="mb-3">
+                            <label for="notas" class="form-label">Notas</label>
+                            <textarea class="form-control" id="notas" name="notas" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">Guardar Meta</button>
+                            <a href="{{ url_for('cliente.lista_metas') }}" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function actualizarUnidad() {
+    const select = document.getElementById('tipo');
+    const unidad = select.options[select.selectedIndex].dataset.unidad || '-';
+    document.querySelectorAll('.unidad').forEach(span => span.textContent = unidad);
+    document.getElementById('unidad').value = unidad;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    actualizarUnidad();
+});
+</script>
+{% endblock %} 

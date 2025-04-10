@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Historial de Mediciones</h2>
+                <a href="{{ url_for('cliente.agregar_medicion') }}" class="btn btn-primary">Agregar Medición</a>
+            </div>
+            
+            {% if mediciones %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Peso (kg)</th>
+                            <th>Masa Muscular (kg)</th>
+                            <th>Masa Grasa (kg)</th>
+                            <th>% Grasa</th>
+                            <th>Cintura (cm)</th>
+                            <th>Cadera (cm)</th>
+                            <th>Notas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for medicion in mediciones %}
+                        <tr>
+                            <td>{{ medicion.fecha.strftime('%d/%m/%Y') }}</td>
+                            <td>{{ medicion.peso }}</td>
+                            <td>{{ medicion.masa_muscular }}</td>
+                            <td>{{ medicion.masa_grasa }}</td>
+                            <td>{{ medicion.porcentaje_grasa }}</td>
+                            <td>{{ medicion.circunferencia_cintura }}</td>
+                            <td>{{ medicion.circunferencia_cadera }}</td>
+                            <td>{{ medicion.notas or '' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                No hay mediciones registradas.
+            </div>
+            {% endif %}
+            
+            <div class="mt-4">
+                <a href="{{ url_for('cliente.perfil') }}" class="btn btn-secondary">Volver al Perfil</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

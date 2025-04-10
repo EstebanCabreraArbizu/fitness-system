@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title">Agregar Medición</h2>
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="fecha" class="form-label">Fecha</label>
+                            <input type="date" class="form-control" id="fecha" name="fecha" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="peso" class="form-label">Peso (kg)</label>
+                                    <input type="number" class="form-control" id="peso" name="peso" step="0.1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="masa_muscular" class="form-label">Masa Muscular (kg)</label>
+                                    <input type="number" class="form-control" id="masa_muscular" name="masa_muscular" step="0.1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="masa_grasa" class="form-label">Masa Grasa (kg)</label>
+                                    <input type="number" class="form-control" id="masa_grasa" name="masa_grasa" step="0.1" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="porcentaje_grasa" class="form-label">Porcentaje de Grasa (%)</label>
+                                    <input type="number" class="form-control" id="porcentaje_grasa" name="porcentaje_grasa" step="0.1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="circunferencia_cintura" class="form-label">Circunferencia de Cintura (cm)</label>
+                                    <input type="number" class="form-control" id="circunferencia_cintura" name="circunferencia_cintura" step="0.1" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="circunferencia_cadera" class="form-label">Circunferencia de Cadera (cm)</label>
+                                    <input type="number" class="form-control" id="circunferencia_cadera" name="circunferencia_cadera" step="0.1" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="notas" class="form-label">Notas</label>
+                            <textarea class="form-control" id="notas" name="notas" rows="3"></textarea>
+                        </div>
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">Guardar Medición</button>
+                            <a href="{{ url_for('cliente.lista_mediciones') }}" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Establecer la fecha actual como valor predeterminado
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('fecha').value = today;
+});
+</script>
+{% endblock %} 

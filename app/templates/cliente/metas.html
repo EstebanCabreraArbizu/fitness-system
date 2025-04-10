@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Metas</h2>
+                <a href="{{ url_for('cliente.agregar_meta') }}" class="btn btn-primary">Agregar Meta</a>
+            </div>
+            
+            {% if metas %}
+            <div class="row">
+                {% for meta in metas %}
+                <div class="col-md-6 mb-4">
+                    <div class="card {% if meta.completada %}bg-light{% endif %}">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ meta.tipo|title }}</h5>
+                            <p class="card-text">
+                                <strong>Objetivo:</strong> {{ meta.valor_objetivo }}
+                                {% if meta.tipo == 'peso' or meta.tipo == 'masa_muscular' or meta.tipo == 'masa_grasa' %}
+                                    kg
+                                {% elif meta.tipo == 'porcentaje_grasa' %}
+                                    %
+                                {% elif meta.tipo == 'circunferencia_cintura' or meta.tipo == 'circunferencia_cadera' %}
+                                    cm
+                                {% endif %}
+                            </p>
+                            <p class="card-text">
+                                <strong>Fecha Objetivo:</strong> {{ meta.fecha_objetivo.strftime('%d/%m/%Y') }}
+                            </p>
+                            {% if meta.notas %}
+                            <p class="card-text"><small class="text-muted">{{ meta.notas }}</small></p>
+                            {% endif %}
+                            <div class="progress mb-2">
+                                {% set dias_totales = (meta.fecha_objetivo - meta.fecha_creacion.date()).days %}
+                                {% set dias_transcurridos = (now.date() - meta.fecha_creacion.date()).days %}
+                                {% set progreso = (dias_transcurridos / dias_totales * 100)|round|int %}
+                                <div class="progress-bar" role="progressbar" style="width: {{ progreso }}%"
+                                     aria-valuenow="{{ progreso }}" aria-valuemin="0" aria-valuemax="100">
+                                    {{ progreso }}%
+                                </div>
+                            </div>
+                            <small class="text-muted">
+                                {% if meta.completada %}
+                                    <span class="badge bg-success">Completada</span>
+                                {% else %}
+                                    {% set dias_restantes = (meta.fecha_objetivo - now.date()).days %}
+                                    {% if dias_restantes > 0 %}
+                                        {{ dias_restantes }} días restantes
+                                    {% else %}
+                                        <span class="badge bg-warning">Tiempo agotado</span>
+                                    {% endif %}
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                No hay metas registradas.
+            </div>
+            {% endif %}
+            
+            <div class="mt-4">
+                <a href="{{ url_for('cliente.perfil') }}" class="btn btn-secondary">Volver al Perfil</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

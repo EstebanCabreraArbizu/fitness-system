@@ -7,6 +7,7 @@ load_dotenv()
 class Config:
     # Configuración básica
     SECRET_KEY = os.environ.get('SECRET_KEY', 'una_clave_secreta_muy_segura')
+    DEBUG = os.environ.get('FLASK_DEBUG', '1') == '1'
     
     # Configuración de la base de datos
     SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:marte@localhost/fitness_trainer3'
