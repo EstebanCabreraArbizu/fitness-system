@@ -39,108 +39,14 @@
         <div class="col-md-5">
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0">Agregar Nueva Comida</h5>
+                    <h5 class="mb-0">Agregar Comidas</h5>
                 </div>
                 <div class="card-body">
                     <form method="POST">
-                        <div class="mb-3">
-                            <label for="tipo_comida" class="form-label">Tipo de Comida</label>
-                            <select class="form-select" id="tipo_comida" name="tipo_comida" required>
-                                <option value="Desayuno">Desayuno</option>
-                                <option value="Media Mañana">Media Mañana</option>
-                                <option value="Almuerzo">Almuerzo</option>
-                                <option value="Merienda">Merienda</option>
-                                <option value="Cena">Cena</option>
-                                <option value="Post-entreno">Post-entreno</option>
-                                <option value="Otro">Otro</option>
-                            </select>
+                        <div id="comidas-container">
+                            <!-- Las comidas se agregarán aquí dinámicamente -->
                         </div>
-                        
-                        <div class="mb-3">
-                            <label for="hora" class="form-label">Hora</label>
-                            <input type="time" class="form-control" id="hora" name="hora" required>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Días de la Semana</label>
-                            <div class="row g-2">
-                                <div class="col">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="lunes" id="lunes" checked>
-                                        <label class="form-check-label" for="lunes">Lun</label>
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="martes" id="martes" checked>
-                                        <label class="form-check-label" for="martes">Mar</label>
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="miercoles" id="miercoles" checked>
-                                        <label class="form-check-label" for="miercoles">Mié</label>
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="jueves" id="jueves" checked>
-                                        <label class="form-check-label" for="jueves">Jue</label>
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="viernes" id="viernes" checked>
-                                        <label class="form-check-label" for="viernes">Vie</label>
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="sabado" id="sabado" checked>
-                                        <label class="form-check-label" for="sabado">Sáb</label>
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="domingo" id="domingo" checked>
-                                        <label class="form-check-label" for="domingo">Dom</label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="descripcion" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="descripcion" name="descripcion" 
-                                      rows="3" required></textarea>
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-6">
-                                <label for="calorias" class="form-label">Calorías (kcal)</label>
-                                <input type="number" class="form-control" id="calorias" name="calorias" required>
-                            </div>
-                            <div class="col-6">
-                                <label for="proteinas" class="form-label">Proteínas (g)</label>
-                                <input type="number" step="0.1" class="form-control" id="proteinas" 
-                                       name="proteinas" required>
-                            </div>
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-6">
-                                <label for="carbohidratos" class="form-label">Carbohidratos (g)</label>
-                                <input type="number" step="0.1" class="form-control" id="carbohidratos" 
-                                       name="carbohidratos" required>
-                            </div>
-                            <div class="col-6">
-                                <label for="grasas" class="form-label">Grasas (g)</label>
-                                <input type="number" step="0.1" class="form-control" id="grasas" 
-                                       name="grasas" required>
-                            </div>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary w-100">
+                        <button type="button" class="btn btn-secondary mt-3" onclick="agregarComida()">
                             <i class="fas fa-plus-circle me-1"></i> Agregar Comida
                         </button>
                     </form>
@@ -305,4 +211,139 @@
         </a>
     </div>
 </div>
+
+<script>
+function agregarComida() {
+    const container = document.getElementById('comidas-container');
+    const comidaIndex = container.children.length;
+    const comidaHTML = `
+        <div class="comida-grupo border p-3 mb-3">
+            <div class="mb-3">
+                <label class="form-label">Tipo de Comida</label>
+                <select class="form-select" name="tipo_comida[]" required>
+                    <option value="Desayuno">Desayuno</option>
+                    <option value="Media Mañana">Media Mañana</option>
+                    <option value="Almuerzo">Almuerzo</option>
+                    <option value="Merienda">Merienda</option>
+                    <option value="Cena">Cena</option>
+                    <option value="Post-entreno">Post-entreno</option>
+                    <option value="Otro">Otro</option>
+                </select>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Hora</label>
+                <input type="time" class="form-control" name="hora[]" required>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Días de la Semana</label>
+                <div class="row g-2">
+                    <div class="col">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="dias[${comidaIndex}][1]" value="1" checked>
+                            <label class="form-check-label">Lun</label>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="dias[${comidaIndex}][2]" value="2" checked>
+                            <label class="form-check-label">Mar</label>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="dias[${comidaIndex}][3]" value="3" checked>
+                            <label class="form-check-label">Mié</label>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="dias[${comidaIndex}][4]" value="4" checked>
+                            <label class="form-check-label">Jue</label>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="dias[${comidaIndex}][5]" value="5" checked>
+                            <label class="form-check-label">Vie</label>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="dias[${comidaIndex}][6]" value="6" checked>
+                            <label class="form-check-label">Sáb</label>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="dias[${comidaIndex}][7]" value="7" checked>
+                            <label class="form-check-label">Dom</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Descripción</label>
+                <textarea class="form-control" name="descripcion[]" rows="3" required></textarea>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-6">
+                    <label class="form-label">Calorías (kcal)</label>
+                    <input type="number" class="form-control" name="calorias[]" required>
+                </div>
+                <div class="col-6">
+                    <label class="form-label">Proteínas (g)</label>
+                    <input type="number" step="0.1" class="form-control" name="proteinas[]" required>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-6">
+                    <label class="form-label">Carbohidratos (g)</label>
+                    <input type="number" step="0.1" class="form-control" name="carbohidratos[]" required>
+                </div>
+                <div class="col-6">
+                    <label class="form-label">Grasas (g)</label>
+                    <input type="number" step="0.1" class="form-control" name="grasas[]" required>
+                </div>
+            </div>
+            
+            <button type="button" class="btn btn-danger btn-sm" onclick="eliminarComida(this)">
+                <i class="fas fa-trash me-1"></i> Eliminar Comida
+            </button>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', comidaHTML);
+}
+
+function eliminarComida(button) {
+    button.closest('.comida-grupo').remove();
+}
+
+// Validación del formulario antes de enviar
+document.querySelector('form').addEventListener('submit', function(e) {
+    let isValid = true;
+    const comidas = document.querySelectorAll('.comida-grupo');
+    
+    comidas.forEach(comida => {
+        const diasSeleccionados = comida.querySelectorAll('input[type="checkbox"]:checked');
+        if (diasSeleccionados.length === 0) {
+            isValid = false;
+            alert('Por favor, selecciona al menos un día para cada comida.');
+        }
+    });
+    
+    if (!isValid) {
+        e.preventDefault();
+    }
+});
+
+// Agregar una comida por defecto cuando se carga la página
+document.addEventListener('DOMContentLoaded', function() {
+    agregarComida();
+});
+</script>
 {% endblock %} 

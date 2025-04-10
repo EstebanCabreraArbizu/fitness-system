@@ -112,31 +112,50 @@ def editar_comidas(dieta_id):
     
     if request.method == 'POST':
         try:
-            comida = ComidaDieta(
-                dieta_id=dieta_id,
-                tipo_comida=request.form['tipo_comida'],
-                hora=datetime.strptime(request.form['hora'], '%H:%M').time(),
-                descripcion=request.form['descripcion'],
-                calorias=request.form.get('calorias', type=int),
-                proteinas=request.form.get('proteinas', type=float),
-                carbohidratos=request.form.get('carbohidratos', type=float),
-                grasas=request.form.get('grasas', type=float),
-                lunes='lunes' in request.form,
-                martes='martes' in request.form,
-                miercoles='miercoles' in request.form,
-                jueves='jueves' in request.form,
-                viernes='viernes' in request.form,
-                sabado='sabado' in request.form,
-                domingo='domingo' in request.form
-            )
+            # Obtener los arrays de datos de las comidas
+            tipos_comida = request.form.getlist('tipo_comida[]')
+            horas = request.form.getlist('hora[]')
+            descripciones = request.form.getlist('descripcion[]')
+            calorias = request.form.getlist('calorias[]')
+            proteinas = request.form.getlist('proteinas[]')
+            carbohidratos = request.form.getlist('carbohidratos[]')
+            grasas = request.form.getlist('grasas[]')
             
-            db.session.add(comida)
+            # Procesar cada comida
+            for i in range(len(tipos_comida)):
+                # Obtener los días seleccionados para esta comida
+                dias = []
+                for dia in range(1, 8):
+                    if request.form.get(f'dias[{i}][{dia}]'):
+                        dias.append(dia)
+                
+                # Crear la comida
+                comida = ComidaDieta(
+                    dieta_id=dieta_id,
+                    tipo_comida=tipos_comida[i],
+                    hora=datetime.strptime(horas[i], '%H:%M').time(),
+                    descripcion=descripciones[i],
+                    calorias=int(calorias[i]),
+                    proteinas=float(proteinas[i]),
+                    carbohidratos=float(carbohidratos[i]),
+                    grasas=float(grasas[i]),
+                    lunes=1 in dias,
+                    martes=2 in dias,
+                    miercoles=3 in dias,
+                    jueves=4 in dias,
+                    viernes=5 in dias,
+                    sabado=6 in dias,
+                    domingo=7 in dias
+                )
+                
+                db.session.add(comida)
+            
             db.session.commit()
-            flash('Comida agregada exitosamente', 'success')
+            flash('Comidas agregadas exitosamente', 'success')
             
         except Exception as e:
             db.session.rollback()
-            flash(f'Error al agregar comida: {str(e)}', 'danger')
+            flash(f'Error al agregar comidas: {str(e)}', 'danger')
     
     return render_template('dieta/comidas.html', dieta=dieta)
 
