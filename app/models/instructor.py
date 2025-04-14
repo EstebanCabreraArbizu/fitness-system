@@ -4,7 +4,7 @@ from app.db import get_db
 from flask import current_app
 
 class Instructor(UserMixin):
-    def __init__(self, id, nombres, celular, email, contrasenia, status,apellidos, imagen):
+    def __init__(self, id, nombres, celular, email, contrasenia, status,apellidos, imagen, fecha_registro = None):
         self.id = id
         self.nombres = nombres
         self.celular = celular
@@ -13,12 +13,13 @@ class Instructor(UserMixin):
         self.status = status
         self.apellidos = apellidos
         self.imagen = imagen
+        self.fecha_registro = fecha_registro
         self._is_authenticated = True  # Agregar esta línea
     @property
     def is_authenticated(self):
         return self._is_authenticated
     def get_id(self):
-        return str(self.id)
+        return f"i_{self.id}"
     def set_nombre(self, nombre):
         self.nombres = nombre
     def get_nombre(self):

@@ -4,23 +4,27 @@ from app import login_manager
 from app.db import get_db
 
 class Client(UserMixin):
-    def __init__(self, id, nombres, celular, email, contrasenia, direccion, tipo_cliente, status,apellidos, imagen):
+    def __init__(self, id, nombres, apellidos, celular, email, contrasenia, direccion, tipo_cliente, status, imagen,  fecha_pago=None, peso=None, altura=None, fecha_registro=None):
         self.id = id
         self.nombres = nombres
+        self.apellidos = apellidos
         self.celular = celular
         self.email = email
         self.contrasenia = contrasenia
         self.direccion = direccion
         self.tipo_cliente = tipo_cliente
         self.status = status
-        self.apellidos = apellidos
         self.imagen = imagen
+        self.peso = peso
+        self.altura = altura
+        self.fecha_pago = fecha_pago  # Agregar este campo si es necesario
+        self.fecha_registro = fecha_registro
         self._is_authenticated = True  # Agregar esta línea
     @property
     def is_authenticated(self):
         return self._is_authenticated
     def get_id(self):
-        return str(self.id)
+        return f"c_{self.id}"
     def set_nombre(self, nombres):
         self.nombres = nombres
     def get_nombre(self):

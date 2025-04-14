@@ -1,8 +1,7 @@
-import time
 import re
 import os
 import hashlib
-import traceback
+import time
 from datetime import timedelta
 from urllib.parse import urlparse
 from flask import Blueprint, request, render_template, redirect, url_for, flash, current_app
@@ -44,8 +43,13 @@ def is_strong_password(password):
 @users.route('/login', methods=['GET', 'POST'])
 def login():
     """Maneja el inicio de sesión de usuarios"""
+    # Debug - Quitar después
+    test_password = "Password123!".strip()
+    test_salt = "fitsystem2025".strip()
+    test_hash = hashlib.sha256((test_password + test_salt).encode()).hexdigest()
+    print(f"Ejemplo de hash generado para 'Password123!': {test_hash}")
     if current_user.is_authenticated:
-        return redirect_based_on_role(current_user)
+        return redirect(url_for('dieta.index'))
 
     if request.method == 'GET':
         return render_template('users/login.html')
@@ -53,10 +57,11 @@ def login():
     # Procesar formulario login
     email = request.form.get('correo', '').strip()
     password = request.form.get('contrasenia', '')
+    print(f"Login attempt with email: {email}")
 
     if not email or not password:
         flash('Por favor ingrese correo y contraseña', 'warning')
-        return redirect(url_for('users.login'))
+        return render_template('users/login.html')
 
     try:
         # Intentar iniciar sesión como Cliente primero
@@ -74,12 +79,12 @@ def login():
         else:
             time.sleep(0.5)  # Delay para prevenir enumeración
             flash('Usuario no encontrado o contraseña incorrecta', 'danger')
-            return redirect(url_for('users.login'))
+            return render_template('users/login.html')
 
     except Exception as e:
         flash('Error al iniciar sesión. Por favor intente más tarde.', 'danger')
         current_app.logger.error(f"Error de login: {str(e)}")
-        return redirect(url_for('users.login'))
+        return render_template('users/login.html')
 
 
 def authenticate_client(email, password):
@@ -150,7 +155,7 @@ def authenticate_instructor(email, password):
                     status=user_data['status'],
                     imagen=user_data['imagen']
                 )
-        return None
+        return None 
     except Exception as e:
         current_app.logger.error(f"Error autenticando instructor: {str(e)}")
         return None
@@ -158,17 +163,21 @@ def authenticate_instructor(email, password):
 
 def redirect_based_on_role(user):
     """Redirecciona al usuario según su tipo"""
+    if not user.is_authenticated:
+        flash('Debes iniciar sesión para acceder a esta página.', 'warning')
+        return redirect(url_for('users.login'))
+    
     next_url = request.args.get('next')
 
     # Validar URL next para prevenir redirecciones forzadas
-    if next_url and urlparse(next_url).netloc == request.host:
+    if next_url and (urlparse(next_url).netloc == request.host or urlparse(next_url).netloc == ''):
         return redirect(next_url)
 
     # Redirección según tipo de usuario
     if isinstance(user, Client):
-        return redirect(url_for('client.dashboard'))
+        return redirect(url_for('dieta.index'))
     elif isinstance(user, Instructor):
-        return redirect(url_for('instructor.dashboard'))
+        return redirect(url_for('dieta.index'))
     else:
         flash('Tipo de usuario no reconocido.', 'danger')
         return redirect(url_for('users.login'))
@@ -551,3 +560,12 @@ def logout():
     logout_user()
     flash('Has cerrado sesión exitosamente', 'info')
     return redirect(url_for('users.login'))
+
+@users.route('/debug_session')
+def debug_session():
+    """Debug route to check user authentication status"""
+    if current_user.is_authenticated:
+        user_type = "Client" if isinstance(current_user, Client) else "Instructor" if isinstance(current_user, Instructor) else "Unknown"
+        return f"User is authenticated. Type: {user_type}, ID: {current_user.get_id()}, Name: {current_user.get_nombre()}"
+    else:
+        return "User is NOT authenticated."

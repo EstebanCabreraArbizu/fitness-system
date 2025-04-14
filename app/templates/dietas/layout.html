@@ -16,7 +16,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">FitSystem</a>
+            <a class="navbar-brand" href="{{ url_for('dieta.index') }}">FitSystem</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -30,7 +30,7 @@
                     {% if current_user.__class__.__name__ == 'Instructor' %}
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint.startswith('client') %}active{% endif %}" 
-                           href="{{ url_for('client.index') }}">Clientes</a>
+                           href="{{ url_for('dieta.index') }}">Clientes</a>
                     </li>
                     {% endif %}
                     <li class="nav-item">
