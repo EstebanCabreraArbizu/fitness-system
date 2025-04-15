@@ -2,6 +2,17 @@
 
 {% block content %}
 <div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="h4">Perfil del Cliente</h2>
+        </div>
+        <div class="col text-end">
+            <a href="{{ url_for('seguimiento.ver_seguimiento', cliente_id=cliente.id) }}" class="btn btn-primary">
+                <i class="fas fa-chart-line me-1"></i> Ver Seguimiento
+            </a>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-md-4">
             <div class="card">
@@ -13,7 +24,9 @@
                     <p><strong>Fecha de Nacimiento:</strong> {{ cliente.fecha_nacimiento.strftime('%d/%m/%Y') if cliente.fecha_nacimiento else 'No especificada' }}</p>
                     <p><strong>Género:</strong> {{ cliente.genero or 'No especificado' }}</p>
                     <p><strong>Altura:</strong> {{ cliente.altura or 'No especificada' }} cm</p>
-                    <a href="{{ url_for('cliente.editar_perfil') }}" class="btn btn-primary">Editar Perfil</a>
+                    <a href="{{ url_for('cliente.editar_perfil') }}" class="btn btn-primary">
+                        <i class="fas fa-edit me-1"></i> Editar Perfil
+                    </a>
                 </div>
             </div>
         </div>
@@ -40,8 +53,14 @@
                     {% else %}
                         <p>No hay mediciones registradas</p>
                     {% endif %}
-                    <a href="{{ url_for('cliente.agregar_medicion') }}" class="btn btn-success">Agregar Medición</a>
-                    <a href="{{ url_for('cliente.lista_mediciones') }}" class="btn btn-info">Ver Historial</a>
+                    <div class="mt-3">
+                        <a href="{{ url_for('cliente.agregar_medicion') }}" class="btn btn-success">
+                            <i class="fas fa-plus me-1"></i> Agregar Medición
+                        </a>
+                        <a href="{{ url_for('cliente.lista_mediciones') }}" class="btn btn-info">
+                            <i class="fas fa-list me-1"></i> Ver Historial
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -52,17 +71,34 @@
                         <div class="list-group">
                             {% for meta in cliente.metas if not meta.completada %}
                             <div class="list-group-item">
-                                <h6 class="mb-1">{{ meta.tipo|title }}</h6>
-                                <p class="mb-1">Objetivo: {{ meta.valor_objetivo }}</p>
-                                <small class="text-muted">Fecha objetivo: {{ meta.fecha_objetivo.strftime('%d/%m/%Y') }}</small>
+                                <h6 class="mb-1">{{ meta.nombre }}</h6>
+                                <div class="progress mt-2" style="height: 20px;">
+                                    <div class="progress-bar" role="progressbar" 
+                                         style="width: {{ meta.progreso }}%;" 
+                                         aria-valuenow="{{ meta.progreso }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        {{ meta.progreso|round|int }}%
+                                    </div>
+                                </div>
+                                <small class="text-muted d-block mt-1">
+                                    Objetivo: {{ meta.valor_objetivo }} | 
+                                    Fecha límite: {{ meta.fecha_objetivo.strftime('%d/%m/%Y') }}
+                                </small>
                             </div>
                             {% endfor %}
                         </div>
                     {% else %}
                         <p>No hay metas activas</p>
                     {% endif %}
-                    <a href="{{ url_for('cliente.agregar_meta') }}" class="btn btn-success mt-3">Agregar Meta</a>
-                    <a href="{{ url_for('cliente.lista_metas') }}" class="btn btn-info mt-3">Ver Todas las Metas</a>
+                    <div class="mt-3">
+                        <a href="{{ url_for('cliente.agregar_meta') }}" class="btn btn-success">
+                            <i class="fas fa-plus me-1"></i> Agregar Meta
+                        </a>
+                        <a href="{{ url_for('cliente.lista_metas') }}" class="btn btn-info">
+                            <i class="fas fa-list me-1"></i> Ver Todas las Metas
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

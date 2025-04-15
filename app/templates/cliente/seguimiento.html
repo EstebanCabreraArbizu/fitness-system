@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="h4">
+                <i class="fas fa-chart-line me-2"></i>
+                Seguimiento de {{ cliente.nombres }} {{ cliente.apellidos }}
+            </h2>
+        </div>
+        <div class="col text-end">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevoSeguimientoModal">
+                <i class="fas fa-plus me-1"></i> Nuevo Seguimiento
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Metas Activas</h5>
+                    {% if cliente.rutinas %}
+                        <div class="list-group">
+                            {% for rutina in cliente.rutinas %}
+                                {% for meta in rutina.metas if not meta.logrado %}
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ meta.tipo_medida }}</h6>
+                                        <small class="text-muted">{{ meta.fecha_registro.strftime('%d/%m/%Y') }}</small>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 20px;">
+                                        {% if meta.medida_inicial and meta.medida_objetivo %}
+                                            {% set progreso = meta.progreso if meta.progreso is defined else 0 %}
+                                            {% set progreso_redondeado = progreso|round|int %}
+                                            <div class="progress-bar" role="progressbar" 
+                                                 style="width: {{ progreso_redondeado }}%;" 
+                                                 aria-valuenow="{{ progreso_redondeado }}" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">
+                                                {{ progreso_redondeado }}%
+                                            </div>
+                                        {% else %}
+                                            <div class="progress-bar" role="progressbar" 
+                                                 style="width: 0%;" 
+                                                 aria-valuenow="0" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">
+                                                0%
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <small class="d-block mt-1">
+                                        Actual: {{ meta.valor_actual if meta.valor_actual is defined else meta.medida_inicial }} {{ meta.unidad }} / Objetivo: {{ meta.medida_objetivo }} {{ meta.unidad }}
+                                    </small>
+                                </div>
+                                {% endfor %}
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No hay metas activas</p>
+                    {% endif %}
+                    <a href="{{ url_for('meta.crear', rutina_id=cliente.rutinas[0].id) if cliente.rutinas else '#' }}" 
+                       class="btn btn-outline-primary btn-sm mt-3">
+                        <i class="fas fa-plus me-1"></i> Agregar Meta
+                    </a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Última Medición</h5>
+                    {% if cliente.mediciones %}
+                        {% set ultima = cliente.mediciones|sort(attribute='fecha')|last %}
+                        <p><strong>Fecha:</strong> {{ ultima.fecha.strftime('%d/%m/%Y') }}</p>
+                        <p><strong>Peso:</strong> {{ ultima.peso }} kg</p>
+                        <p><strong>Masa Muscular:</strong> {{ ultima.masa_muscular }} kg</p>
+                        <p><strong>Grasa Corporal:</strong> {{ ultima.porcentaje_grasa }}%</p>
+                    {% else %}
+                        <p class="text-muted">No hay mediciones registradas</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Historial de Seguimiento</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Meta</th>
+                                    <th>Valor Actual</th>
+                                    <th>Progreso</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for seguimiento in seguimientos %}
+                                <tr>
+                                    <td>{{ seguimiento.fecha.strftime('%d/%m/%Y') }}</td>
+                                    <td>{{ seguimiento.meta.tipo_medida }}</td>
+                                    <td>{{ seguimiento.valor_actual }} {{ seguimiento.meta.unidad }}</td>
+                                    <td>
+                                        {% if seguimiento.meta.medida_inicial and seguimiento.meta.medida_objetivo %}
+                                            {% set progreso = seguimiento.progreso if seguimiento.progreso is defined else 0 %}
+                                            {% set progreso_redondeado = progreso|round|int %}
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar {% if progreso_redondeado >= 0 %}bg-success{% else %}bg-danger{% endif %}" 
+                                                     role="progressbar" 
+                                                     style="width: {{ seguimiento.progreso_absoluto if seguimiento.progreso_absoluto is defined else 0 }}%">
+                                                    {{ progreso_redondeado }}%
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar" 
+                                                     role="progressbar" 
+                                                     style="width: 0%">
+                                                    0%
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" 
+                                                onclick="editarSeguimiento({{ seguimiento.id }})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Nuevo Seguimiento -->
+<div class="modal fade" id="nuevoSeguimientoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nuevo Seguimiento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formSeguimiento" method="POST" action="{{ url_for('seguimiento.agregar_seguimiento', cliente_id=cliente.id) }}">
+                    <div class="mb-3">
+                        <label for="meta" class="form-label">Meta</label>
+                        <select class="form-select" id="meta" name="meta_id" required>
+                            <option value="">Seleccionar meta...</option>
+                            {% for rutina in cliente.rutinas %}
+                                {% for meta in rutina.metas if not meta.logrado %}
+                                <option value="{{ meta.id }}">{{ meta.tipo_medida }} ({{ meta.medida_inicial }} {{ meta.unidad }} → {{ meta.medida_objetivo }} {{ meta.unidad }})</option>
+                                {% endfor %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="valor_actual" class="form-label">Valor Actual</label>
+                        <input type="number" class="form-control" id="valor_actual" name="valor_actual" 
+                               step="0.01" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notas" class="form-label">Notas</label>
+                        <textarea class="form-control" id="notas" name="notas" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" form="formSeguimiento" class="btn btn-primary">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function editarSeguimiento(id) {
+    // Implementar la lógica de edición
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('formSeguimiento');
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        // Implementar el envío del formulario
+    });
+});
+</script>
+{% endblock %} 

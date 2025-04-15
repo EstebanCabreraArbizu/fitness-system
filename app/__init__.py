@@ -33,12 +33,14 @@ def create_app():
     from app.routes.rutina import rutina_bp
     from app.routes.meta import meta_bp
     from app.routes.dieta import dieta_bp
+    from app.routes.seguimiento import seguimiento_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(client_bp)
     app.register_blueprint(rutina_bp)
     app.register_blueprint(meta_bp)
     app.register_blueprint(dieta_bp)
+    app.register_blueprint(seguimiento_bp)
 
     # Ruta raíz
     @app.route('/')

@@ -1,6 +1,7 @@
 from app.extensions import db
 from datetime import datetime
 from app.models.dieta import Dieta
+from app.models.meta import Meta
 
 class Rutina(db.Model):
     __tablename__ = 'rutinas'
@@ -28,6 +29,12 @@ class Rutina(db.Model):
                                lazy='dynamic',
                                cascade='all, delete-orphan',
                                order_by='EjercicioRutina.dia_semana, EjercicioRutina.orden')
+    
+    # Relación con metas
+    metas = db.relationship('Meta', 
+                          back_populates='rutina',
+                          lazy='dynamic',
+                          cascade='all, delete-orphan')
 
 class EjercicioRutina(db.Model):
     __tablename__ = 'ejercicios_rutina'
