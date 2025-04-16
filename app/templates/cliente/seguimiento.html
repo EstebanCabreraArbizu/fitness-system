@@ -85,6 +85,12 @@
         </div>
 
         <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Evolución de Metas Activas</h5>
+                    <canvas id="graficoMetas" height="120"></canvas>
+                </div>
+            </div>
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title mb-4">Historial de Seguimiento</h5>
@@ -185,7 +191,150 @@
     </div>
 </div>
 
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 <script>
+// Preparar los datos para el gráfico
+const metas_activas = {{ metas_activas|tojson }};
+
+// Obtener todas las fechas únicas (eje X)
+let fechas = new Set();
+metas_activas.forEach(meta => {
+    meta.datos.forEach(d => fechas.add(d.fecha));
+});
+fechas = Array.from(fechas).sort();
+
+// Preparar datasets para cada meta
+const datasets = metas_activas.map((meta, idx) => {
+    // Colores distintos para cada línea con mejor contraste
+    const colores = [
+        {line: '#2196F3', fill: '#2196F333'},  // Azul
+        {line: '#4CAF50', fill: '#4CAF5033'},  // Verde
+        {line: '#F44336', fill: '#F4433633'},  // Rojo
+        {line: '#FFC107', fill: '#FFC10733'},  // Amarillo
+        {line: '#9C27B0', fill: '#9C27B033'},  // Morado
+        {line: '#FF5722', fill: '#FF572233'},  // Naranja
+    ];
+    const color = colores[idx % colores.length];
+    
+    // Mapear valores por fecha
+    const valoresPorFecha = {};
+    meta.datos.forEach(d => { valoresPorFecha[d.fecha] = d.valor; });
+    const data = fechas.map(f => valoresPorFecha[f] !== undefined ? valoresPorFecha[f] : null);
+    
+    return {
+        label: meta.tipo_medida + ' (' + meta.unidad + ')',
+        data: data,
+        type: 'line',  // Tipo de gráfico por defecto
+        borderColor: color.line,
+        backgroundColor: color.fill,
+        borderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        tension: 0.1,
+        fill: true,
+        spanGaps: true
+    };
+});
+
+const ctx = document.getElementById('graficoMetas').getContext('2d');
+const chart = new Chart(ctx, {
+    data: {
+        labels: fechas,
+        datasets: datasets
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+                labels: {
+                    usePointStyle: true,
+                    padding: 15,
+                    font: {
+                        size: 12
+                    }
+                }
+            },
+            tooltip: {
+                mode: 'index',
+                intersect: false,
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                titleColor: '#000',
+                bodyColor: '#000',
+                borderColor: '#ddd',
+                borderWidth: 1,
+                padding: 10,
+                callbacks: {
+                    label: function(context) {
+                        let label = context.dataset.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        if (context.parsed.y !== null) {
+                            label += context.parsed.y.toFixed(1);
+                        }
+                        return label;
+                    }
+                }
+            }
+        },
+        interaction: {
+            mode: 'nearest',
+            axis: 'x',
+            intersect: false
+        },
+        scales: {
+            x: {
+                type: 'time',
+                time: {
+                    unit: 'day',
+                    displayFormats: {
+                        day: 'dd/MM/yyyy'
+                    }
+                },
+                grid: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: 'Fecha',
+                    font: {
+                        size: 14,
+                        weight: 'bold'
+                    }
+                }
+            },
+            y: {
+                grid: {
+                    color: '#eee'
+                },
+                title: {
+                    display: true,
+                    text: 'Valor',
+                    font: {
+                        size: 14,
+                        weight: 'bold'
+                    }
+                },
+                ticks: {
+                    callback: function(value) {
+                        return value.toFixed(1);
+                    }
+                }
+            }
+        },
+        animations: {
+            tension: {
+                duration: 1000,
+                easing: 'linear'
+            }
+        }
+    }
+});
+
 function editarSeguimiento(id) {
     // Implementar la lógica de edición
 }
@@ -194,7 +343,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('formSeguimiento');
     form.addEventListener('submit', function(e) {
         e.preventDefault();
-        // Implementar el envío del formulario
+        
+        fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Recargar la página para mostrar el nuevo seguimiento
+                window.location.reload();
+            } else {
+                alert('Error al guardar el seguimiento: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al guardar el seguimiento');
+        });
     });
 });
 </script>

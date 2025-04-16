@@ -21,12 +21,17 @@ class Meta(db.Model):
                                 back_populates='meta',
                                 cascade='all, delete-orphan',
                                 order_by='Seguimiento.fecha.desc()')
+    historial_medidas = db.relationship('HistorialMedida', 
+                                backref='meta',
+                                cascade='all, delete-orphan',
+                                order_by='HistorialMedida.fecha.asc()')
     
     @property
     def valor_actual(self):
         """Obtiene el valor actual basado en el último seguimiento"""
-        ultimo_seguimiento = self.seguimientos.first()
-        return ultimo_seguimiento.valor_actual if ultimo_seguimiento else self.medida_inicial
+        if not self.seguimientos:
+            return self.medida_inicial
+        return self.seguimientos[0].valor_actual if self.seguimientos else self.medida_inicial
     
     @property
     def progreso(self):
@@ -58,7 +63,7 @@ class HistorialMedida(db.Model):
     __tablename__ = 'historial_medidas_metas'
     
     id = db.Column(db.Integer, primary_key=True)
-    meta_id = db.Column(db.Integer, db.ForeignKey('meta.id', ondelete='CASCADE'), nullable=False)
+    meta_id = db.Column(db.Integer, db.ForeignKey('metas.id', ondelete='CASCADE'), nullable=False)
     fecha = db.Column(db.DateTime, default=datetime.utcnow)
     medida = db.Column(db.Float, nullable=False)
     notas = db.Column(db.Text, nullable=True) 

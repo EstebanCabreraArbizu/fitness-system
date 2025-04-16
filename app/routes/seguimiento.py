@@ -21,7 +21,46 @@ def ver_seguimiento(cliente_id):
         .filter(Rutina.cliente_id == cliente_id)\
         .order_by(Seguimiento.fecha.desc())\
         .all()
-    return render_template('cliente/seguimiento.html', cliente=cliente, seguimientos=seguimientos)
+
+    # Preparar datos para el gráfico: evolución de todas las metas activas
+    metas_activas = []
+    for rutina in cliente.rutinas:
+        for meta in rutina.metas:
+            if not meta.logrado:
+                # Medida inicial
+                datos = [{
+                    'fecha': meta.fecha_registro.strftime('%Y-%m-%d'),
+                    'valor': meta.medida_inicial,
+                    'tipo': 'Inicial'
+                }]
+                # Historial de medidas
+                for h in sorted(meta.historial_medidas, key=lambda x: x.fecha):
+                    datos.append({
+                        'fecha': h.fecha.strftime('%Y-%m-%d'),
+                        'valor': h.medida,
+                        'tipo': 'Historial'
+                    })
+                # Seguimientos
+                for s in sorted(meta.seguimientos, key=lambda x: x.fecha):
+                    datos.append({
+                        'fecha': s.fecha.strftime('%Y-%m-%d'),
+                        'valor': s.valor_actual,
+                        'tipo': 'Seguimiento'
+                    })
+                # Eliminar duplicados por fecha (dejar el último valor de cada fecha)
+                datos_dict = {}
+                for d in datos:
+                    datos_dict[d['fecha']] = d
+                datos_final = list(datos_dict.values())
+                datos_final.sort(key=lambda x: x['fecha'])
+                metas_activas.append({
+                    'id': meta.id,
+                    'tipo_medida': meta.tipo_medida,
+                    'unidad': meta.unidad,
+                    'datos': datos_final
+                })
+
+    return render_template('cliente/seguimiento.html', cliente=cliente, seguimientos=seguimientos, metas_activas=metas_activas)
 
 @seguimiento_bp.route('/agregar/<int:cliente_id>', methods=['POST'])
 @login_required
