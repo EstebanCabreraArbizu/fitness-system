@@ -16,6 +16,93 @@
         </div>
     </div>
 
+    <!-- Nueva sección de datos personales -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-user me-2"></i>
+                        Datos Personales
+                    </h5>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <p><strong><i class="fas fa-id-card me-2"></i>Nombre:</strong> {{ cliente.nombres }} {{ cliente.apellidos }}</p>
+                            <p><strong><i class="fas fa-envelope me-2"></i>Email:</strong> {{ cliente.email }}</p>
+                            <p><strong><i class="fas fa-phone me-2"></i>Celular:</strong> {{ cliente.celular }}</p>
+                            <p><strong><i class="fas fa-map-marker-alt me-2"></i>Dirección:</strong> {{ cliente.direccion }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong><i class="fas fa-user-tag me-2"></i>Tipo de Cliente:</strong> {{ cliente.tipo_cliente }}</p>
+                            <p><strong><i class="fas fa-calendar-check me-2"></i>Fecha de Pago:</strong> {{ cliente.fecha_pago.strftime('%d/%m/%Y') if cliente.fecha_pago else 'No especificada' }}</p>
+                            <p><strong><i class="fas fa-info-circle me-2"></i>Estado:</strong> 
+                                {% if cliente.status == 1 %}
+                                    <span class="badge bg-success">Activo</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactivo</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-clipboard-list me-2"></i>
+                        Mediciones y Evaluaciones
+                    </h5>
+                    <div class="table-responsive mt-3">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Peso</th>
+                                    <th>% Grasa</th>
+                                    <th>Masa Muscular</th>
+                                    <th>IMC</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if cliente.mediciones %}
+                                    {% for medicion in cliente.mediciones|sort(attribute='fecha', reverse=true)|slice(0, 5) %}
+                                    <tr>
+                                        <td>{{ medicion.fecha.strftime('%d/%m/%Y') }}</td>
+                                        <td>{{ medicion.peso|round(1) }} kg</td>
+                                        <td>{{ medicion.porcentaje_grasa|round(1) }}%</td>
+                                        <td>{{ medicion.masa_muscular|round(1) }} kg</td>
+                                        <td>{{ medicion.imc|round(1) }}</td>
+                                        <td>
+                                            {% if medicion.notas %}
+                                                <span class="badge bg-info" data-bs-toggle="tooltip" title="{{ medicion.notas }}">
+                                                    <i class="fas fa-info-circle"></i>
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="6" class="text-center">No hay mediciones registradas</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-end mt-3">
+                        <a href="{{ url_for('medicion.agregar_medicion', cliente_id=cliente.id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-plus me-1"></i>Nueva Medición
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-md-4">
             <div class="card mb-4">
@@ -88,7 +175,9 @@
             <div class="card mb-4">
                 <div class="card-body">
                     <h5 class="card-title mb-4">Evolución de Metas Activas</h5>
-                    <canvas id="graficoMetas" height="120"></canvas>
+                    <div style="position: relative; height: 400px;"> <!-- Agregamos contenedor con altura fija -->
+                        <canvas id="graficoMetas"></canvas>
+                    </div>
                 </div>
             </div>
             <div class="card">
@@ -246,7 +335,8 @@ const chart = new Chart(ctx, {
     },
     options: {
         responsive: true,
-        maintainAspectRatio: false,
+        maintainAspectRatio: true, // Cambiamos a true
+        aspectRatio: 2, // Agregamos ratio fijo
         plugins: {
             legend: {
                 position: 'top',
@@ -267,6 +357,7 @@ const chart = new Chart(ctx, {
                 borderColor: '#ddd',
                 borderWidth: 1,
                 padding: 10,
+                position: 'nearest',
                 callbacks: {
                     label: function(context) {
                         let label = context.dataset.label || '';
@@ -284,7 +375,16 @@ const chart = new Chart(ctx, {
         interaction: {
             mode: 'nearest',
             axis: 'x',
-            intersect: false
+            intersect: false,
+            includeInvisible: false
+        },
+        layout: {
+            padding: {
+                top: 20,
+                right: 20,
+                bottom: 20,
+                left: 20
+            }
         },
         scales: {
             x: {
@@ -320,10 +420,13 @@ const chart = new Chart(ctx, {
                     }
                 },
                 ticks: {
+                    maxTicksLimit: 8, // Limitamos el número de ticks
                     callback: function(value) {
                         return value.toFixed(1);
                     }
-                }
+                },
+                beginAtZero: false,
+                grace: '5%' // Agregamos un margen de gracia
             }
         },
         animations: {
@@ -364,4 +467,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-{% endblock %} 
+{% endblock %}

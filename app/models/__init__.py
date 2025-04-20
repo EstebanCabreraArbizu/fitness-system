@@ -5,3 +5,4 @@ from .product import Product
 from .product_image import ProductImage
 from .rutina import Rutina, EjercicioRutina
 from .meta import Meta, HistorialMedida
+from .medicion import Medicion

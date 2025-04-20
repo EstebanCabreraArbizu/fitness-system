@@ -34,6 +34,7 @@ def create_app():
     from app.routes.meta import meta_bp
     from app.routes.dieta import dieta_bp
     from app.routes.seguimiento import seguimiento_bp
+    from app.routes.medicion import medicion_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(client_bp)
@@ -41,6 +42,7 @@ def create_app():
     app.register_blueprint(meta_bp)
     app.register_blueprint(dieta_bp)
     app.register_blueprint(seguimiento_bp)
+    app.register_blueprint(medicion_bp)
 
     # Ruta raíz
     @app.route('/')
@@ -52,5 +54,11 @@ def create_app():
     # Agregar funciones auxiliares a Jinja2
     app.jinja_env.filters['min'] = min
     app.jinja_env.filters['max'] = max
+    
+    # Agregar filtro slice para listas
+    def slice_list(value, start, end):
+        return list(value)[start:end]
+    
+    app.jinja_env.filters['slice'] = slice_list
 
     return app

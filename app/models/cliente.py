@@ -23,3 +23,7 @@ class Cliente(db.Model):
     
     # Relación con dietas
     dietas = db.relationship('Dieta', back_populates='cliente', cascade='all, delete-orphan')
+    
+    # Relación con mediciones
+    mediciones = db.relationship('Medicion', back_populates='cliente', cascade='all, delete-orphan',
+                               order_by='Medicion.fecha.desc()')

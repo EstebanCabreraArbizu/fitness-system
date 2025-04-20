@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="h4">
+                <i class="fas fa-plus me-2"></i>
+                Nueva Medición para {{ cliente.nombres }} {{ cliente.apellidos }}
+            </h2>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="fecha" class="form-label">Fecha</label>
+                        <input type="date" class="form-control" id="fecha" name="fecha" required>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="peso" class="form-label">Peso (kg)</label>
+                        <input type="number" class="form-control" id="peso" name="peso" step="0.1" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="altura" class="form-label">Altura (cm)</label>
+                        <input type="number" class="form-control" id="altura" name="altura" step="0.1" required>
+                    </div>
+                </div>
+
+                <h5 class="mt-4">Circunferencias (cm)</h5>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="cintura" class="form-label">Cintura</label>
+                        <input type="number" class="form-control" id="cintura" name="cintura" step="0.1">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="cadera" class="form-label">Cadera</label>
+                        <input type="number" class="form-control" id="cadera" name="cadera" step="0.1">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="pecho" class="form-label">Pecho</label>
+                        <input type="number" class="form-control" id="pecho" name="pecho" step="0.1">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="brazo" class="form-label">Brazo</label>
+                        <input type="number" class="form-control" id="brazo" name="brazo" step="0.1">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="muslo" class="form-label">Muslo</label>
+                        <input type="number" class="form-control" id="muslo" name="muslo" step="0.1">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="pantorrilla" class="form-label">Pantorrilla</label>
+                        <input type="number" class="form-control" id="pantorrilla" name="pantorrilla" step="0.1">
+                    </div>
+                </div>
+
+                <h5 class="mt-4">Composición Corporal</h5>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="porcentaje_grasa" class="form-label">Porcentaje de Grasa (%)</label>
+                        <input type="number" class="form-control" id="porcentaje_grasa" name="porcentaje_grasa" step="0.1">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="masa_muscular" class="form-label">Masa Muscular (kg)</label>
+                        <input type="number" class="form-control" id="masa_muscular" name="masa_muscular" step="0.1">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="masa_grasa" class="form-label">Masa Grasa (kg)</label>
+                        <input type="number" class="form-control" id="masa_grasa" name="masa_grasa" step="0.1">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="notas" class="form-label">Notas</label>
+                    <textarea class="form-control" id="notas" name="notas" rows="3"></textarea>
+                </div>
+
+                <div class="text-end">
+                    <a href="{{ url_for('medicion.lista_mediciones', cliente_id=cliente.id) }}" class="btn btn-secondary me-2">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        Guardar Medición
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 
