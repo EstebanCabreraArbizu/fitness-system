@@ -4,7 +4,7 @@ from datetime import datetime
 class Servicio(db.Model):
     __tablename__ = 'servicios'
     
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nombre = db.Column(db.String(100), nullable=False)
     descripcion = db.Column(db.Text)
     precio = db.Column(db.Float, nullable=False)
