@@ -94,8 +94,11 @@
                         </table>
                     </div>
                     <div class="text-end mt-3">
-                        <a href="{{ url_for('medicion.agregar_medicion', cliente_id=cliente.id) }}" class="btn btn-sm btn-outline-primary">
+                        <a href="{{ url_for('medicion.agregar_medicion', cliente_id=cliente.id) }}" class="btn btn-sm btn-outline-primary me-2">
                             <i class="fas fa-plus me-1"></i>Nueva Medición
+                        </a>
+                        <a href="{{ url_for('medicion.lista_mediciones', cliente_id=cliente.id) }}" class="btn btn-sm btn-outline-info">
+                            <i class="fas fa-list me-1"></i>Ver Historial Completo
                         </a>
                     </div>
                 </div>

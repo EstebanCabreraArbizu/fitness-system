@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="h4">
+                <i class="fas fa-ruler me-2"></i>
+                Historial de Mediciones - {{ cliente.nombres }} {{ cliente.apellidos }}
+            </h2>
+        </div>
+        <div class="col text-end">
+            <a href="{{ url_for('medicion.agregar_medicion', cliente_id=cliente.id) }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i> Nueva Medición
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if mediciones %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Medidas Corporales</th>
+                            <th>Circunferencias</th>
+                            <th>Composición Corporal</th>
+                            <th>Notas</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for medicion in mediciones %}
+                        <tr>
+                            <td>{{ medicion.fecha.strftime('%d/%m/%Y') }}</td>
+                            <td>
+                                <strong>Peso:</strong> {{ medicion.peso|round(1) }} kg<br>
+                                <strong>Altura:</strong> {{ medicion.altura|round(1) }} cm<br>
+                                <strong>IMC:</strong> {{ medicion.imc|round(1) }}
+                            </td>
+                            <td>
+                                <strong>Cintura:</strong> {{ medicion.cintura|round(1) }} cm<br>
+                                <strong>Cadera:</strong> {{ medicion.cadera|round(1) }} cm<br>
+                                <strong>Pecho:</strong> {{ medicion.pecho|round(1) }} cm<br>
+                                <strong>Brazo:</strong> {{ medicion.brazo|round(1) }} cm<br>
+                                <strong>Muslo:</strong> {{ medicion.muslo|round(1) }} cm<br>
+                                <strong>Pantorrilla:</strong> {{ medicion.pantorrilla|round(1) }} cm
+                            </td>
+                            <td>
+                                <strong>% Grasa:</strong> {{ medicion.porcentaje_grasa|round(1) }}%<br>
+                                <strong>Masa Muscular:</strong> {{ medicion.masa_muscular|round(1) }} kg<br>
+                                <strong>Masa Grasa:</strong> {{ medicion.masa_grasa|round(1) }} kg
+                            </td>
+                            <td>
+                                {% if medicion.notas %}
+                                <span class="text-muted">{{ medicion.notas }}</span>
+                                {% else %}
+                                <span class="text-muted">Sin notas</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{{ url_for('medicion.editar_medicion', medicion_id=medicion.id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-danger"
+                                            onclick="confirmarEliminacion('{{ url_for('medicion.eliminar_medicion', medicion_id=medicion.id) }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <p class="text-muted mb-0">No hay mediciones registradas</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación de eliminación -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro de que deseas eliminar esta medición? Esta acción no se puede deshacer.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="deleteForm" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmarEliminacion(url) {
+    const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+    document.getElementById('deleteForm').action = url;
+    modal.show();
+}
+</script>
+{% endblock %} 
