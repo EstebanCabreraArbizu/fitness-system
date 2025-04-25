@@ -7,6 +7,9 @@ class Discipline(db.Model):
     nombre = db.Column(db.String(100), nullable=False)
     descripcion = db.Column(db.Text, nullable=False)
     
-    # Eliminar relaciones bidireccionales para simplificar
+    # Relaciones
     instructores = db.relationship('Instructor', secondary='discipline_instructor')
-    # No definir otras relaciones aquí
+    clientes = db.relationship('Cliente', secondary='discipline_cliente')
+    
+    def __repr__(self):
+        return f"<Discipline {self.nombre}>"

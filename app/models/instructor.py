@@ -1,5 +1,6 @@
 from app.extensions import db
 from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
 
 class Instructor(UserMixin, db.Model):
     __tablename__ = 'instructor'
@@ -18,6 +19,26 @@ class Instructor(UserMixin, db.Model):
     clientes = db.relationship('Cliente', secondary='cliente_instructor', viewonly=True)
     rutinas = db.relationship('Rutina', backref='instructor_ref', foreign_keys='Rutina.instructor_id')
     dietas = db.relationship('Dieta', foreign_keys='Dieta.instructor_id')
+    
+    # Nuevas relaciones
+    servicios = db.relationship('Servicio', back_populates='instructor', cascade='all, delete-orphan')
+    certificaciones = db.relationship('Certificacion', back_populates='instructor', cascade='all, delete-orphan')
+    testimonios = db.relationship('Testimonio', back_populates='instructor', cascade='all, delete-orphan')
+
+    @property
+    def password(self):
+        raise AttributeError('password is not a readable attribute')
+
+    @password.setter
+    def password(self, password):
+        self.contrasenia = generate_password_hash(password)
+
+    def verify_password(self, password):
+        return check_password_hash(self.contrasenia, password)
 
     def get_id(self):
         return str(self.id)
+
+    @property
+    def nombre_completo(self):
+        return f"{self.nombres} {self.apellidos}"

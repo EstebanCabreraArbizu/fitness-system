@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">Editar Horario - {{ horario.servicio.nombre }}</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="dia_semana" class="form-label">Día de la Semana</label>
+                            <select class="form-select" id="dia_semana" name="dia_semana" required>
+                                <option value="0" {% if horario.dia_semana == 0 %}selected{% endif %}>Lunes</option>
+                                <option value="1" {% if horario.dia_semana == 1 %}selected{% endif %}>Martes</option>
+                                <option value="2" {% if horario.dia_semana == 2 %}selected{% endif %}>Miércoles</option>
+                                <option value="3" {% if horario.dia_semana == 3 %}selected{% endif %}>Jueves</option>
+                                <option value="4" {% if horario.dia_semana == 4 %}selected{% endif %}>Viernes</option>
+                                <option value="5" {% if horario.dia_semana == 5 %}selected{% endif %}>Sábado</option>
+                                <option value="6" {% if horario.dia_semana == 6 %}selected{% endif %}>Domingo</option>
+                            </select>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="hora_inicio" class="form-label">Hora de Inicio</label>
+                                    <input type="time" class="form-control" id="hora_inicio" name="hora_inicio" 
+                                           value="{{ horario.hora_inicio.strftime('%H:%M') }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="hora_fin" class="form-label">Hora de Fin</label>
+                                    <input type="time" class="form-control" id="hora_fin" name="hora_fin" 
+                                           value="{{ horario.hora_fin.strftime('%H:%M') }}" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="cupo_maximo" class="form-label">Cupo Máximo</label>
+                            <input type="number" class="form-control" id="cupo_maximo" name="cupo_maximo" 
+                                   min="1" value="{{ horario.cupo_maximo }}" required>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Guardar Cambios
+                            </button>
+                            <a href="{{ url_for('servicio.lista_horarios', servicio_id=horario.servicio_id) }}" 
+                               class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

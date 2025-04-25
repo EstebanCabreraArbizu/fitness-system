@@ -1,6 +1,31 @@
 from app.extensions import db
 from datetime import datetime
 
+class HistorialMedida(db.Model):
+    __tablename__ = 'historial_medidas_metas'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    meta_id = db.Column(db.Integer, db.ForeignKey('metas.id', ondelete='CASCADE'), nullable=False)
+    fecha = db.Column(db.DateTime, default=datetime.utcnow)
+    medida = db.Column(db.Float, nullable=False)
+    notas = db.Column(db.Text, nullable=True)
+    
+    # Relación con Meta
+    meta = db.relationship('Meta', back_populates='historial_medidas')
+    
+    def __repr__(self):
+        return f"<HistorialMedida {self.id} - {self.medida} - {self.fecha}>"
+    
+    @property
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'meta_id': self.meta_id,
+            'fecha': self.fecha.strftime('%Y-%m-%d %H:%M'),
+            'medida': self.medida,
+            'notas': self.notas
+        }
+
 class HistorialMedidas(db.Model):
     __tablename__ = 'historial_medidas'
     

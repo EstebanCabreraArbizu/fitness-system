@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Horarios</h2>
+        <a href="{{ url_for('horario.nuevo_horario') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nuevo Horario
+        </a>
+    </div>
+
+    {% if horarios %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Servicio</th>
+                    <th>Instructor</th>
+                    <th>Día</th>
+                    <th>Hora Inicio</th>
+                    <th>Hora Fin</th>
+                    <th>Cupo Máximo</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for horario in horarios %}
+                <tr>
+                    <td>{{ horario.servicio.nombre }}</td>
+                    <td>{{ horario.instructor.nombre }} {{ horario.instructor.apellido }}</td>
+                    <td>
+                        {% set dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'] %}
+                        {{ dias[horario.dia_semana - 1] }}
+                    </td>
+                    <td>{{ horario.hora_inicio.strftime('%H:%M') }}</td>
+                    <td>{{ horario.hora_fin.strftime('%H:%M') }}</td>
+                    <td>{{ horario.cupo_maximo }}</td>
+                    <td>
+                        {% if horario.activo %}
+                        <span class="badge bg-success">Activo</span>
+                        {% else %}
+                        <span class="badge bg-danger">Inactivo</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <a href="{{ url_for('horario.editar_horario', horario_id=horario.id) }}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" 
+                                    class="btn btn-sm btn-outline-danger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#deleteModal{{ horario.id }}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+
+                        <!-- Modal de confirmación para eliminar -->
+                        <div class="modal fade" id="deleteModal{{ horario.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Confirmar Eliminación</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        ¿Está seguro que desea eliminar este horario?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        <form action="{{ url_for('horario.eliminar_horario', horario_id=horario.id) }}" 
+                                              method="POST" style="display: inline;">
+                                            <button type="submit" class="btn btn-danger">Eliminar</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        No hay horarios registrados.
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

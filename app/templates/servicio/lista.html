@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Servicios</h2>
+        <a href="{{ url_for('servicio.nuevo_servicio') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nuevo Servicio
+        </a>
+    </div>
+
+    {% if servicios %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Precio</th>
+                    <th>Duración</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for servicio in servicios %}
+                <tr>
+                    <td>{{ servicio.nombre }}</td>
+                    <td>{{ servicio.descripcion }}</td>
+                    <td>${{ "%.2f"|format(servicio.precio) }}</td>
+                    <td>{{ servicio.duracion }} min</td>
+                    <td>
+                        <div class="btn-group">
+                            <a href="{{ url_for('servicio.lista_horarios', servicio_id=servicio.id) }}" 
+                               class="btn btn-sm btn-info" title="Ver Horarios">
+                                <i class="fas fa-clock"></i>
+                            </a>
+                            <a href="{{ url_for('servicio.editar_servicio', servicio_id=servicio.id) }}" 
+                               class="btn btn-sm btn-warning" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{{ url_for('servicio.eliminar_servicio', servicio_id=servicio.id) }}" 
+                               class="btn btn-sm btn-danger" title="Eliminar"
+                               onclick="return confirm('¿Está seguro de eliminar este servicio?')">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        No hay servicios registrados.
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

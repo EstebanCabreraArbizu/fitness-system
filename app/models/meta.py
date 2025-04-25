@@ -1,5 +1,6 @@
 from app.extensions import db
 from datetime import datetime
+from .historial_medidas import HistorialMedida
 
 class Meta(db.Model):
     __tablename__ = 'metas'
@@ -22,7 +23,7 @@ class Meta(db.Model):
                                 cascade='all, delete-orphan',
                                 order_by='Seguimiento.fecha.desc()')
     historial_medidas = db.relationship('HistorialMedida', 
-                                backref='meta',
+                                back_populates='meta',
                                 cascade='all, delete-orphan',
                                 order_by='HistorialMedida.fecha.asc()')
     
@@ -57,13 +58,4 @@ class Meta(db.Model):
             self.logrado = True
             self.fecha_logro = datetime.utcnow()
             
-        return seguimiento
-
-class HistorialMedida(db.Model):
-    __tablename__ = 'historial_medidas_metas'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    meta_id = db.Column(db.Integer, db.ForeignKey('metas.id', ondelete='CASCADE'), nullable=False)
-    fecha = db.Column(db.DateTime, default=datetime.utcnow)
-    medida = db.Column(db.Float, nullable=False)
-    notas = db.Column(db.Text, nullable=True) 
+        return seguimiento 

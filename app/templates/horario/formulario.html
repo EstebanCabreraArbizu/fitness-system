@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{{ titulo }}</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.csrf_token }}
+                        
+                        <div class="mb-3">
+                            {{ form.servicio.label(class="form-label") }}
+                            {{ form.servicio(class="form-select") }}
+                            {% if form.servicio.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.servicio.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.instructor.label(class="form-label") }}
+                            {{ form.instructor(class="form-select") }}
+                            {% if form.instructor.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.instructor.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.dia_semana.label(class="form-label") }}
+                            {{ form.dia_semana(class="form-select") }}
+                            {% if form.dia_semana.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.dia_semana.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.hora_inicio.label(class="form-label") }}
+                                    {{ form.hora_inicio(class="form-control") }}
+                                    {% if form.hora_inicio.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.hora_inicio.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.hora_fin.label(class="form-label") }}
+                                    {{ form.hora_fin(class="form-control") }}
+                                    {% if form.hora_fin.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.hora_fin.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.cupo_maximo.label(class="form-label") }}
+                            {{ form.cupo_maximo(class="form-control") }}
+                            {% if form.cupo_maximo.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.cupo_maximo.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.activo(class="form-check-input") }}
+                                {{ form.activo.label(class="form-check-label") }}
+                            </div>
+                            {% if form.activo.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.activo.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Guardar
+                            </button>
+                            <a href="{{ url_for('horario.lista_horarios') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
