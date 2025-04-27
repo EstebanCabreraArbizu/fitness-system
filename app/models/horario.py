@@ -1,23 +1,22 @@
+from datetime import time
 from app.extensions import db
-from datetime import datetime, time
 
-class Horario(db.Model):
-    __tablename__ = 'horarios'
+class HorarioServicio(db.Model):
+    __tablename__ = 'horarios_servicio'
+    __table_args__ = {'extend_existing': True}
     
     id = db.Column(db.Integer, primary_key=True)
     servicio_id = db.Column(db.Integer, db.ForeignKey('servicios.id'), nullable=False)
-    dia_semana = db.Column(db.Integer, nullable=False)  # 0=Lunes, 1=Martes, etc.
+    dia_semana = db.Column(db.Integer, nullable=False)  # 0-6 (Lunes-Domingo)
     hora_inicio = db.Column(db.Time, nullable=False)
     hora_fin = db.Column(db.Time, nullable=False)
-    cupo_maximo = db.Column(db.Integer, nullable=False, default=1)
+    cupo_maximo = db.Column(db.Integer, nullable=False)
     activo = db.Column(db.Boolean, default=True)
-    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
-    fecha_actualizacion = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
+    
     # Relaciones
     servicio = db.relationship('Servicio', back_populates='horarios')
     reservas = db.relationship('Reserva', back_populates='horario', cascade='all, delete-orphan')
-
+    
     def __init__(self, servicio_id, dia_semana, hora_inicio, hora_fin, cupo_maximo):
         self.servicio_id = servicio_id
         self.dia_semana = dia_semana
@@ -25,22 +24,28 @@ class Horario(db.Model):
         self.hora_fin = hora_fin
         self.cupo_maximo = cupo_maximo
         self.activo = True
-
+        
+    def __repr__(self):
+        return f'<HorarioServicio {self.id} - Servicio {self.servicio_id}>'
+        
     @property
-    def dia_semana_texto(self):
+    def dia_nombre(self):
         dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
         return dias[self.dia_semana]
+        
+    @property
+    def disponibilidad(self):
+        return self.cupo_maximo - len(self.reservas)
+        
+    def tiene_cupo(self):
+        return self.disponibilidad > 0
+        
+    def esta_disponible(self):
+        return self.activo and self.tiene_cupo()
 
     @property
     def horario_texto(self):
         return f"{self.hora_inicio.strftime('%H:%M')} - {self.hora_fin.strftime('%H:%M')}"
-
-    @property
-    def disponibilidad(self):
-        return self.cupo_maximo - len(self.reservas)
-
-    def tiene_cupo(self):
-        return self.disponibilidad > 0
 
     def esta_disponible(self, fecha):
         """Verifica si el horario está disponible para una fecha específica"""
@@ -57,9 +62,6 @@ class Horario(db.Model):
             return False
             
         return True
-
-    def __repr__(self):
-        return f"<Horario {self.dia_semana_texto} {self.horario_texto}>"
 
     @property
     def cupos_disponibles(self):

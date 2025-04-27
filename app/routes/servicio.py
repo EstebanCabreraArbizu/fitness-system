@@ -5,6 +5,7 @@ from app.models.instructor import Instructor
 from app.extensions import db
 from datetime import datetime, time
 import os
+from app.forms.horario import HorarioForm
 
 servicio_bp = Blueprint('servicio', __name__, url_prefix='/servicios')
 
@@ -23,7 +24,7 @@ def perfil_instructor():
 @login_required
 def lista_servicios():
     """Lista todos los servicios del instructor"""
-    servicios = current_user.servicios
+    servicios = [s for s in current_user.servicios if s.activo]
     return render_template('servicio/lista.html', servicios=servicios)
 
 @servicio_bp.route('/nuevo', methods=['GET', 'POST'])
@@ -46,12 +47,14 @@ def nuevo_servicio():
             dias = request.form.getlist('dia_semana[]')
             horas_inicio = request.form.getlist('hora_inicio[]')
             horas_fin = request.form.getlist('hora_fin[]')
+            cupos_maximos = request.form.getlist('cupo_maximo[]')
             
-            for dia, inicio, fin in zip(dias, horas_inicio, horas_fin):
+            for dia, inicio, fin, cupo in zip(dias, horas_inicio, horas_fin, cupos_maximos):
                 horario = HorarioServicio(
                     dia_semana=int(dia),
                     hora_inicio=datetime.strptime(inicio, '%H:%M').time(),
-                    hora_fin=datetime.strptime(fin, '%H:%M').time()
+                    hora_fin=datetime.strptime(fin, '%H:%M').time(),
+                    cupo_maximo=int(cupo)
                 )
                 servicio.horarios.append(horario)
             
@@ -93,12 +96,14 @@ def editar_servicio(servicio_id):
             dias = request.form.getlist('dia_semana[]')
             horas_inicio = request.form.getlist('hora_inicio[]')
             horas_fin = request.form.getlist('hora_fin[]')
+            cupos_maximos = request.form.getlist('cupo_maximo[]')
             
-            for dia, inicio, fin in zip(dias, horas_inicio, horas_fin):
+            for dia, inicio, fin, cupo in zip(dias, horas_inicio, horas_fin, cupos_maximos):
                 horario = HorarioServicio(
                     dia_semana=int(dia),
                     hora_inicio=datetime.strptime(inicio, '%H:%M').time(),
-                    hora_fin=datetime.strptime(fin, '%H:%M').time()
+                    hora_fin=datetime.strptime(fin, '%H:%M').time(),
+                    cupo_maximo=int(cupo)
                 )
                 servicio.horarios.append(horario)
             
@@ -127,87 +132,60 @@ def eliminar_servicio(servicio_id):
     flash('Servicio eliminado exitosamente', 'success')
     return redirect(url_for('servicio.lista_servicios'))
 
-@servicio_bp.route('/<int:servicio_id>/horarios')
-@login_required
+@servicio_bp.route('/servicios/<int:servicio_id>/horarios')
 def lista_horarios(servicio_id):
-    """Lista los horarios de un servicio"""
     servicio = Servicio.query.get_or_404(servicio_id)
-    
-    if servicio.instructor_id != current_user.id:
-        flash('No tienes permiso para ver los horarios de este servicio', 'danger')
-        return redirect(url_for('servicio.lista_servicios'))
-        
-    return render_template('servicio/horarios.html', servicio=servicio)
+    horarios = HorarioServicio.query.filter_by(servicio_id=servicio_id).order_by(HorarioServicio.dia_semana, HorarioServicio.hora_inicio).all()
+    return render_template('servicio/horarios.html', servicio=servicio, horarios=horarios)
 
-@servicio_bp.route('/<int:servicio_id>/horarios/nuevo', methods=['GET', 'POST'])
-@login_required
+@servicio_bp.route('/servicios/<int:servicio_id>/horarios/nuevo', methods=['GET', 'POST'])
 def nuevo_horario(servicio_id):
-    """Agregar un nuevo horario a un servicio"""
     servicio = Servicio.query.get_or_404(servicio_id)
+    form = HorarioForm()
     
-    if servicio.instructor_id != current_user.id:
-        flash('No tienes permiso para agregar horarios a este servicio', 'danger')
-        return redirect(url_for('servicio.lista_servicios'))
-    
-    if request.method == 'POST':
+    if form.validate_on_submit():
         try:
-            horario = HorarioServicio(
-                servicio_id=servicio_id,
-                dia_semana=int(request.form['dia_semana']),
-                hora_inicio=datetime.strptime(request.form['hora_inicio'], '%H:%M').time(),
-                hora_fin=datetime.strptime(request.form['hora_fin'], '%H:%M').time(),
-                cupo_maximo=int(request.form['cupo_maximo'])
-            )
+            # Crear un horario para cada día seleccionado
+            for dia in form.dias_semana.data:
+                horario = HorarioServicio(
+                    servicio_id=servicio_id,
+                    dia_semana=int(dia),
+                    hora_inicio=form.hora_inicio.data,
+                    hora_fin=form.hora_fin.data,
+                    cupo_maximo=form.cupo_maximo.data
+                )
+                db.session.add(horario)
             
-            db.session.add(horario)
             db.session.commit()
-            flash('Horario agregado exitosamente', 'success')
+            flash('Horarios creados exitosamente', 'success')
             return redirect(url_for('servicio.lista_horarios', servicio_id=servicio_id))
-            
         except Exception as e:
             db.session.rollback()
-            flash(f'Error al agregar el horario: {str(e)}', 'danger')
-    
-    return render_template('servicio/nuevo_horario.html', servicio=servicio)
+            flash(f'Error al crear los horarios: {str(e)}', 'danger')
+        
+    return render_template('servicio/nuevo_horario.html', form=form, servicio=servicio)
 
 @servicio_bp.route('/horarios/<int:horario_id>/editar', methods=['GET', 'POST'])
-@login_required
 def editar_horario(horario_id):
-    """Editar un horario existente"""
     horario = HorarioServicio.query.get_or_404(horario_id)
-    
-    if horario.servicio.instructor_id != current_user.id:
-        flash('No tienes permiso para editar este horario', 'danger')
-        return redirect(url_for('servicio.lista_servicios'))
+    form = HorarioForm(obj=horario)
     
     if request.method == 'POST':
-        try:
-            horario.dia_semana = int(request.form['dia_semana'])
-            horario.hora_inicio = datetime.strptime(request.form['hora_inicio'], '%H:%M').time()
-            horario.hora_fin = datetime.strptime(request.form['hora_fin'], '%H:%M').time()
-            horario.cupo_maximo = int(request.form['cupo_maximo'])
-            
-            db.session.commit()
-            flash('Horario actualizado exitosamente', 'success')
-            return redirect(url_for('servicio.lista_horarios', servicio_id=horario.servicio_id))
-            
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error al actualizar el horario: {str(e)}', 'danger')
+        horario.dia_semana = int(request.form['dia_semana'])
+        horario.hora_inicio = form.hora_inicio.data
+        horario.hora_fin = form.hora_fin.data
+        horario.cupo_maximo = form.cupo_maximo.data
+        db.session.commit()
+        flash('Horario actualizado exitosamente', 'success')
+        return redirect(url_for('servicio.lista_horarios', servicio_id=horario.servicio_id))
     
-    return render_template('servicio/editar_horario.html', horario=horario)
+    return render_template('servicio/editar_horario.html', form=form, horario=horario)
 
-@servicio_bp.route('/horarios/<int:horario_id>/eliminar')
-@login_required
+@servicio_bp.route('/horarios/<int:horario_id>/eliminar', methods=['POST'])
 def eliminar_horario(horario_id):
-    """Eliminar un horario"""
     horario = HorarioServicio.query.get_or_404(horario_id)
-    
-    if horario.servicio.instructor_id != current_user.id:
-        flash('No tienes permiso para eliminar este horario', 'danger')
-        return redirect(url_for('servicio.lista_servicios'))
-        
     servicio_id = horario.servicio_id
+    
     db.session.delete(horario)
     db.session.commit()
     flash('Horario eliminado exitosamente', 'success')
