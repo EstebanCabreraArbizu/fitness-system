@@ -20,6 +20,8 @@
                     <h3 class="h4">{{ instructor.nombre_completo }}</h3>
                     <p class="text-muted">{{ instructor.especialidad }}</p>
                     <p><i class="fas fa-star text-warning"></i> {{ instructor.experiencia }} años de experiencia</p>
+                    <p><i class="fas fa-birthday-cake me-2"></i>Edad: {{ instructor.edad or 'No especificada' }}</p>
+                    <p><i class="fas fa-graduation-cap me-2"></i>Estudios: {{ instructor.estudios or 'No especificados' }}</p>
                     
                     <!-- Redes Sociales -->
                     {% if instructor.redes_sociales %}
@@ -66,7 +68,7 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">Servicios Ofrecidos</h4>
                     {% if current_user.id == instructor.id %}
-                    <a href="{{ url_for('servicio.agregar_servicio') }}" class="btn btn-primary btn-sm">
+                    <a href="{{ url_for('servicio.nuevo_servicio') }}" class="btn btn-primary btn-sm">
                         <i class="fas fa-plus me-1"></i>Agregar Servicio
                     </a>
                     {% endif %}
@@ -135,6 +137,13 @@
                                             Obtenido en {{ cert.fecha_obtencion.strftime('%B %Y') }}
                                         </small>
                                     </p>
+                                    {% if current_user.id == instructor.id %}
+                                    <form action="{{ url_for('servicio.eliminar_certificacion', cert_id=cert.id) }}" method="POST" style="display:inline;">
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Seguro que deseas eliminar esta certificación?')">
+                                            <i class="fas fa-trash"></i> Eliminar
+                                        </button>
+                                    </form>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -197,5 +206,48 @@
             </div>
         </div>
     </div>
+
+    <!-- Galería de fotos con estudiantes -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Fotos con Estudiantes</h4>
+                    {% if current_user.id == instructor.id %}
+                    <a href="{{ url_for('servicio.subir_foto_instructor') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus me-1"></i>Subir Foto
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for foto in instructor.fotos %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <img src="{{ url_for('static', filename=foto.ruta) }}" class="card-img-top" alt="Foto con estudiantes">
+                                <div class="card-body">
+                                    <p class="card-text">{{ foto.descripcion }}</p>
+                                    {% if current_user.id == instructor.id %}
+                                    <form action="{{ url_for('servicio.eliminar_foto_instructor', foto_id=foto.id) }}" method="POST" style="display:inline;">
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Seguro que deseas eliminar esta foto?')">
+                                            <i class="fas fa-trash"></i> Eliminar
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if current_user.id == instructor.id %}
+        <a href="{{ url_for('servicio.editar_perfil_instructor') }}" class="btn btn-outline-primary btn-sm mb-2">
+            <i class="fas fa-edit"></i> Editar Perfil
+        </a>
+    {% endif %}
 </div>
 {% endblock %} 

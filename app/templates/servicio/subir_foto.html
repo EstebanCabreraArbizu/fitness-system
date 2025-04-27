@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0"><i class="fas fa-image me-2"></i>Subir Foto con Estudiantes</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+                        <div class="mb-3">
+                            {{ form.imagen.label(class="form-label") }}
+                            {{ form.imagen(class="form-control") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.descripcion.label(class="form-label") }}
+                            {{ form.descripcion(class="form-control") }}
+                        </div>
+                        <div class="d-grid gap-2">
+                            {{ form.submit(class="btn btn-success") }}
+                            <a href="{{ url_for('servicio.perfil_instructor') }}" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-user-edit me-2"></i>Editar Perfil</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+                        <div class="mb-3">
+                            {{ form.nombres.label(class="form-label") }}
+                            {{ form.nombres(class="form-control") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.apellidos.label(class="form-label") }}
+                            {{ form.apellidos(class="form-control") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.telefono.label(class="form-label") }}
+                            {{ form.telefono(class="form-control") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.edad.label(class="form-label") }}
+                            {{ form.edad(class="form-control") }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.estudios.label(class="form-label") }}
+                            {{ form.estudios(class="form-control", rows=2) }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.imagen.label(class="form-label") }}
+                            {{ form.imagen(class="form-control") }}
+                        </div>
+                        <div class="d-grid gap-2">
+                            {{ form.submit(class="btn btn-success") }}
+                            <a href="{{ url_for('servicio.perfil_instructor') }}" class="btn btn-secondary">
+                                Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,11 +1,13 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from app.models.servicio import Servicio, HorarioServicio, Certificacion, Testimonio
-from app.models.instructor import Instructor
+from app.models.instructor import Instructor, FotoInstructor
 from app.extensions import db
 from datetime import datetime, time
 import os
 from app.forms.horario import HorarioForm
+from app.forms.servicio import EditarPerfilInstructorForm, FotoInstructorForm
+import secrets
 
 servicio_bp = Blueprint('servicio', __name__, url_prefix='/servicios')
 
@@ -203,7 +205,11 @@ def agregar_certificacion():
             
             if imagen:
                 filename = f"cert_{current_user.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.{imagen.filename.split('.')[-1]}"
-                imagen.save(os.path.join('app/static/uploads/certificaciones', filename))
+                ruta_absoluta = os.path.join('app/static/uploads/certificaciones', filename)
+                directorio = os.path.dirname(ruta_absoluta)
+                if not os.path.exists(directorio):
+                    os.makedirs(directorio)
+                imagen.save(ruta_absoluta)
                 ruta_imagen = f'uploads/certificaciones/{filename}'
             
             certificacion = Certificacion(
@@ -266,4 +272,77 @@ def agregar_testimonio(cliente_id):
             db.session.rollback()
             flash(f'Error al agregar el testimonio: {str(e)}', 'danger')
     
-    return render_template('servicio/agregar_testimonio.html', cliente_id=cliente_id) 
+    return render_template('servicio/agregar_testimonio.html', cliente_id=cliente_id)
+
+@servicio_bp.route('/perfil/editar', methods=['GET', 'POST'])
+@login_required
+def editar_perfil_instructor():
+    form = EditarPerfilInstructorForm(obj=current_user)
+    if form.validate_on_submit():
+        current_user.nombres = form.nombres.data
+        current_user.apellidos = form.apellidos.data
+        current_user.email = form.email.data
+        current_user.telefono = form.telefono.data
+        current_user.edad = form.edad.data
+        current_user.estudios = form.estudios.data
+        # Guardar imagen si se subió
+        if form.imagen.data:
+            imagen = form.imagen.data
+            nombre_archivo = f"instructor_{current_user.id}_{secrets.token_hex(8)}.{imagen.filename.rsplit('.', 1)[-1]}"
+            ruta = f'static/uploads/instructores/{nombre_archivo}'
+            directorio = os.path.dirname(ruta)
+            if not os.path.exists(directorio):
+                os.makedirs(directorio)
+            imagen.save(ruta)
+            current_user.foto_perfil = f'uploads/instructores/{nombre_archivo}'
+        db.session.commit()
+        flash('Perfil actualizado exitosamente', 'success')
+        return redirect(url_for('servicio.perfil_instructor'))
+    return render_template('servicio/editar_perfil.html', form=form)
+
+@servicio_bp.route('/perfil/foto', methods=['GET', 'POST'])
+@login_required
+def subir_foto_instructor():
+    form = FotoInstructorForm()
+    if form.validate_on_submit():
+        imagen = form.imagen.data
+        nombre_archivo = f"foto_instructor_{current_user.id}_{secrets.token_hex(8)}.{imagen.filename.rsplit('.', 1)[-1]}"
+        ruta = f'static/uploads/instructores/{nombre_archivo}'
+        directorio = os.path.dirname(ruta)
+        if not os.path.exists(directorio):
+            os.makedirs(directorio)
+        imagen.save(ruta)
+        foto = FotoInstructor(
+            instructor_id=current_user.id,
+            ruta=f'uploads/instructores/{nombre_archivo}',
+            descripcion=form.descripcion.data
+        )
+        db.session.add(foto)
+        db.session.commit()
+        flash('Foto subida exitosamente', 'success')
+        return redirect(url_for('servicio.perfil_instructor'))
+    return render_template('servicio/subir_foto.html', form=form)
+
+@servicio_bp.route('/certificacion/<int:cert_id>/eliminar', methods=['POST'])
+@login_required
+def eliminar_certificacion(cert_id):
+    cert = Certificacion.query.get_or_404(cert_id)
+    if cert.instructor_id != current_user.id:
+        flash('No tienes permiso para eliminar esta certificación', 'danger')
+        return redirect(url_for('servicio.perfil_instructor'))
+    db.session.delete(cert)
+    db.session.commit()
+    flash('Certificación eliminada exitosamente', 'success')
+    return redirect(url_for('servicio.perfil_instructor'))
+
+@servicio_bp.route('/foto_instructor/<int:foto_id>/eliminar', methods=['POST'])
+@login_required
+def eliminar_foto_instructor(foto_id):
+    foto = FotoInstructor.query.get_or_404(foto_id)
+    if foto.instructor_id != current_user.id:
+        flash('No tienes permiso para eliminar esta foto', 'danger')
+        return redirect(url_for('servicio.perfil_instructor'))
+    db.session.delete(foto)
+    db.session.commit()
+    flash('Foto eliminada exitosamente', 'success')
+    return redirect(url_for('servicio.perfil_instructor')) 

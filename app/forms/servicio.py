@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, DecimalField, IntegerField, BooleanField, FieldList, FormField
-from wtforms.validators import DataRequired, Length, NumberRange
+from wtforms import StringField, TextAreaField, DecimalField, IntegerField, BooleanField, FieldList, FormField, FileField, SubmitField
+from wtforms.validators import DataRequired, Length, NumberRange, Email, Optional
 
 class HorarioForm(FlaskForm):
     dia_semana = IntegerField('Día de la Semana', validators=[
@@ -41,4 +41,19 @@ class ServicioForm(FlaskForm):
     ])
     
     horarios = FieldList(FormField(HorarioForm), min_entries=1)
-    activo = BooleanField('Activo', default=True) 
+    activo = BooleanField('Activo', default=True)
+
+class EditarPerfilInstructorForm(FlaskForm):
+    nombres = StringField('Nombres', validators=[DataRequired(), Length(max=100)])
+    apellidos = StringField('Apellidos', validators=[DataRequired(), Length(max=100)])
+    email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
+    telefono = StringField('Teléfono', validators=[Optional(), Length(max=20)])
+    edad = IntegerField('Edad', validators=[Optional(), NumberRange(min=16, max=100)])
+    estudios = TextAreaField('Estudios', validators=[Optional(), Length(max=500)])
+    imagen = FileField('Foto de Perfil (opcional)')
+    submit = SubmitField('Guardar Cambios')
+
+class FotoInstructorForm(FlaskForm):
+    imagen = FileField('Foto con Estudiantes', validators=[DataRequired()])
+    descripcion = StringField('Descripción', validators=[Optional(), Length(max=255)])
+    submit = SubmitField('Subir Foto') 

@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0"><i class="fas fa-certificate me-2"></i>Agregar Certificación</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="titulo" class="form-label">Título</label>
+                            <input type="text" class="form-control" id="titulo" name="titulo" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="institucion" class="form-label">Institución</label>
+                            <input type="text" class="form-control" id="institucion" name="institucion" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="fecha_obtencion" class="form-label">Fecha de Obtención</label>
+                            <input type="date" class="form-control" id="fecha_obtencion" name="fecha_obtencion" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="descripcion" name="descripcion" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="imagen" class="form-label">Imagen del Certificado (opcional)</label>
+                            <input type="file" class="form-control" id="imagen" name="imagen" accept="image/*">
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">Guardar Certificación</button>
+                            <a href="{{ url_for('servicio.perfil_instructor') }}" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

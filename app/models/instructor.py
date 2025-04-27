@@ -13,6 +13,8 @@ class Instructor(UserMixin, db.Model):
     telefono = db.Column(db.String(20))
     activo = db.Column(db.Boolean, default=True)
     fecha_registro = db.Column(db.DateTime, default=db.func.current_timestamp())
+    edad = db.Column(db.Integer)
+    estudios = db.Column(db.Text)
     
     # Relaciones simplificadas
     disciplines = db.relationship('Discipline', secondary='discipline_instructor')
@@ -24,6 +26,7 @@ class Instructor(UserMixin, db.Model):
     servicios = db.relationship('Servicio', back_populates='instructor', cascade='all, delete-orphan')
     certificaciones = db.relationship('Certificacion', back_populates='instructor', cascade='all, delete-orphan')
     testimonios = db.relationship('Testimonio', back_populates='instructor', cascade='all, delete-orphan')
+    fotos = db.relationship('FotoInstructor', back_populates='instructor', cascade='all, delete-orphan')
 
     @property
     def password(self):
@@ -42,3 +45,11 @@ class Instructor(UserMixin, db.Model):
     @property
     def nombre_completo(self):
         return f"{self.nombres} {self.apellidos}"
+
+class FotoInstructor(db.Model):
+    __tablename__ = 'fotos_instructor'
+    id = db.Column(db.Integer, primary_key=True)
+    instructor_id = db.Column(db.Integer, db.ForeignKey('instructor.id'), nullable=False)
+    ruta = db.Column(db.String(255), nullable=False)
+    descripcion = db.Column(db.Text)
+    instructor = db.relationship('Instructor', back_populates='fotos')
