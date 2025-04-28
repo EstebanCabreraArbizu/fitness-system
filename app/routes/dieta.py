@@ -220,8 +220,8 @@ def detalle(dieta_id):
         cursor.close()
         
         return render_template(
-            'dietas/detalle.html', 
-            dieta=dieta, 
+            'dietas/detalle_dieta.html', 
+            dieta=dietas, 
             comidas=comidas,
             imagenes=imagenes,
             es_instructor=isinstance(current_user, Instructor)
