@@ -36,6 +36,7 @@ def create_app():
     from app.routes.seguimiento import seguimiento_bp
     from app.routes.medicion import medicion_bp
     from app.routes.servicio import servicio_bp
+    from app.routes.product import product_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(client_bp)
@@ -45,6 +46,7 @@ def create_app():
     app.register_blueprint(seguimiento_bp)
     app.register_blueprint(medicion_bp)
     app.register_blueprint(servicio_bp)
+    app.register_blueprint(product_bp)
 
     # Ruta raíz
     @app.route('/')

@@ -27,6 +27,7 @@ class Instructor(UserMixin, db.Model):
     certificaciones = db.relationship('Certificacion', back_populates='instructor', cascade='all, delete-orphan')
     testimonios = db.relationship('Testimonio', back_populates='instructor', cascade='all, delete-orphan')
     fotos = db.relationship('FotoInstructor', back_populates='instructor', cascade='all, delete-orphan')
+    products = db.relationship('Product', back_populates='instructor', cascade='all, delete-orphan')
 
     @property
     def password(self):

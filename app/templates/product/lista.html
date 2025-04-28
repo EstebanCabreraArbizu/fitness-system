@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Mis Productos</h1>
+        <a href="{{ url_for('product.nuevo_producto') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nuevo Producto
+        </a>
+    </div>
+
+    <!-- Filtros y Búsqueda -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="search" class="form-control" placeholder="Buscar productos..." value="{{ request.args.get('search', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="category" class="form-select">
+                        <option value="">Todas las categorías</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}" {% if request.args.get('category')|int == cat.id %}selected{% endif %}>
+                            {{ cat.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">Todos los estados</option>
+                        <option value="1" {% if request.args.get('status') == '1' %}selected{% endif %}>Activo</option>
+                        <option value="0" {% if request.args.get('status') == '0' %}selected{% endif %}>Inactivo</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de Productos -->
+    <div class="row">
+        {% for producto in productos %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                {% if producto.images %}
+                <img src="{{ url_for('static', filename='uploads/products/' + producto.images[0].image_name) }}" 
+                     class="card-img-top" alt="{{ producto.title }}">
+                {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="fas fa-image fa-3x text-muted"></i>
+                </div>
+                {% endif %}
+                
+                <div class="card-body">
+                    <h5 class="card-title">{{ producto.title }}</h5>
+                    <p class="card-text text-muted">{{ producto.category.name }}</p>
+                    <p class="card-text">
+                        <strong>Precio:</strong> ${{ "%.2f"|format(producto.price) }}
+                        {% if producto.descuento > 0 %}
+                        <span class="text-danger">-{{ "%.0f"|format(producto.descuento) }}%</span>
+                        {% endif %}
+                    </p>
+                    <p class="card-text">
+                        <small class="text-{{ 'success' if producto.status else 'danger' }}">
+                            {{ 'Activo' if producto.status else 'Inactivo' }}
+                        </small>
+                    </p>
+                </div>
+                
+                <div class="card-footer bg-white">
+                    <div class="btn-group w-100">
+                        <a href="{{ url_for('product.editar_producto', id=producto.id) }}" 
+                           class="btn btn-outline-primary">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                        <button type="button" class="btn btn-outline-danger" 
+                                onclick="confirmarEliminacion({{ producto.id }})">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                No se encontraron productos. 
+                <a href="{{ url_for('product.nuevo_producto') }}" class="alert-link">Crear un nuevo producto</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Paginación -->
+    {% if pagination and pagination.pages > 1 %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% for page in pagination.iter_pages() %}
+                {% if page %}
+                    <li class="page-item {% if page == pagination.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('product.lista_productos', page=page, **request.args) }}">
+                            {{ page }}
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- Modal de Confirmación -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function confirmarEliminacion(productId) {
+    const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    const form = document.getElementById('deleteForm');
+    form.action = "{{ url_for('product.eliminar_producto', id=0) }}".replace('0', productId);
+    modal.show();
+}
+</script>
+{% endblock %} 

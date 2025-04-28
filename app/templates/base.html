@@ -91,10 +91,14 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('client.index') }}">Mis Clientes</a>
                     </li>
-                    <!-- Otros enlaces -->
                     <li class="nav-item">
-                        <a href="{{ url_for('servicio.nuevo_servicio') }}" class=" nav-link ">
+                        <a href="{{ url_for('servicio.nuevo_servicio') }}" class="nav-link">
                             <i class="fas fa-calendar-alt me-1"></i>Servicios
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('product.product_list') }}" class="nav-link">
+                            <i class="fas fa-shopping-bag me-1"></i>Mis Productos
                         </a>
                     </li>
                 </ul>

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">Nuevo Producto</h2>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Título *</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Categoría *</label>
+                            <select class="form-select" id="category" name="category" required>
+                                <option value="">Selecciona una categoría</option>
+                                <option value="1">Suplementos</option>
+                                <option value="2">Ropa</option>
+                                <option value="3">Accesorios</option>
+                                <option value="4">Equipamiento</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Descripción *</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="marca" class="form-label">Marca *</label>
+                            <input type="text" class="form-control" id="marca" name="marca" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="purchase_price" class="form-label">Precio de Compra *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="purchase_price" name="purchase_price" step="0.01" min="0" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="price" class="form-label">Precio de Venta *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="price" name="price" step="0.01" min="0" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="descuento" class="form-label">Descuento (%)</label>
+                                <input type="number" class="form-control" id="descuento" name="descuento" min="0" max="100" value="0">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="previous_price" class="form-label">Precio Anterior</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="previous_price" name="previous_price" step="0.01" min="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="imagenes" class="form-label">Imágenes del Producto *</label>
+                            <input type="file" class="form-control" id="imagenes" name="imagenes[]" multiple accept="image/*" required>
+                            <div class="form-text">Puedes seleccionar múltiples imágenes</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="palabras_claves" class="form-label">Palabras Clave</label>
+                            <input type="text" class="form-control" id="palabras_claves" name="palabras_claves">
+                            <div class="form-text">Separa las palabras con comas</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="fecha_inicio" class="form-label">Fecha de Inicio</label>
+                                <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="fecha_fin" class="form-label">Fecha de Fin</label>
+                                <input type="date" class="form-control" id="fecha_fin" name="fecha_fin">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="additional" class="form-label">Información Adicional</label>
+                            <textarea class="form-control" id="additional" name="additional" rows="3"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="relevant" name="relevant" value="1">
+                                <label class="form-check-label" for="relevant">
+                                    Producto Relevante
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="outstanding" name="outstanding" value="1" checked>
+                                <label class="form-check-label" for="outstanding">
+                                    Producto Destacado
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Guardar Producto</button>
+                            <a href="{{ url_for('product.lista_productos') }}" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

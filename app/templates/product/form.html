@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">{{ 'Editar' if product else 'Nuevo' }} Producto</h2>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.title.label(class="form-label") }}
+                                    {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else "")) }}
+                                    {% for error in form.title.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.category.label(class="form-label") }}
+                                    {{ form.category(class="form-control" + (" is-invalid" if form.category.errors else "")) }}
+                                    {% for error in form.category.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.marca.label(class="form-label") }}
+                                    {{ form.marca(class="form-control" + (" is-invalid" if form.marca.errors else "")) }}
+                                    {% for error in form.marca.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.purchase_price.label(class="form-label") }}
+                                    {{ form.purchase_price(class="form-control" + (" is-invalid" if form.purchase_price.errors else "")) }}
+                                    {% for error in form.purchase_price.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.price.label(class="form-label") }}
+                                    {{ form.price(class="form-control" + (" is-invalid" if form.price.errors else "")) }}
+                                    {% for error in form.price.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.descuento.label(class="form-label") }}
+                                    {{ form.descuento(class="form-control" + (" is-invalid" if form.descuento.errors else "")) }}
+                                    {% for error in form.descuento.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-group">
+                                {{ form.description.label(class="form-label") }}
+                                {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows=4) }}
+                                {% for error in form.description.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-group">
+                                {{ form.palabras_claves.label(class="form-label") }}
+                                {{ form.palabras_claves(class="form-control" + (" is-invalid" if form.palabras_claves.errors else "")) }}
+                                <small class="form-text text-muted">Separe las palabras clave con comas</small>
+                                {% for error in form.palabras_claves.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.fecha_inicio.label(class="form-label") }}
+                                    {{ form.fecha_inicio(class="form-control" + (" is-invalid" if form.fecha_inicio.errors else ""), type="date") }}
+                                    {% for error in form.fecha_inicio.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.fecha_fin.label(class="form-label") }}
+                                    {{ form.fecha_fin(class="form-control" + (" is-invalid" if form.fecha_fin.errors else ""), type="date") }}
+                                    {% for error in form.fecha_fin.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-group">
+                                {{ form.images.label(class="form-label") }}
+                                {{ form.images(class="form-control" + (" is-invalid" if form.images.errors else ""), multiple="multiple") }}
+                                <small class="form-text text-muted">Seleccione una o más imágenes</small>
+                                {% for error in form.images.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        {% if product and product.images %}
+                        <div class="mb-3">
+                            <label class="form-label">Imágenes actuales</label>
+                            <div class="row">
+                                {% for image in product.images %}
+                                <div class="col-md-3 mb-2">
+                                    <div class="position-relative">
+                                        <img src="{{ url_for('static', filename='uploads/products/' + product.id|string + '/' + image.image_name) }}" 
+                                             class="img-thumbnail" alt="Imagen del producto">
+                                        <form action="{{ url_for('product.product_delete_image', id=product.id, image_id=image.id) }}" 
+                                              method="POST" class="position-absolute top-0 end-0 m-1">
+                                            <button type="submit" class="btn btn-danger btn-sm" 
+                                                    onclick="return confirm('¿Estás seguro de que deseas eliminar esta imagen?');">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.relevant(class="form-check-input") }}
+                                    {{ form.relevant.label(class="form-check-label") }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.additional(class="form-check-input") }}
+                                    {{ form.additional.label(class="form-check-label") }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.outstanding(class="form-check-input") }}
+                                    {{ form.outstanding.label(class="form-check-label") }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                {{ 'Guardar cambios' if product else 'Crear producto' }}
+                            </button>
+                            <a href="{{ url_for('product.product_list') }}" class="btn btn-secondary">
+                                Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

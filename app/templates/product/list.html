@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Mis Productos</h1>
+        <a href="{{ url_for('product.product_create') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nuevo Producto
+        </a>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="search" class="form-control" placeholder="Buscar productos..." value="{{ search }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="category" class="form-select">
+                        <option value="">Todas las categorías</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" {% if category_id == category.id %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">Todos los estados</option>
+                        <option value="active" {% if status == 'active' %}selected{% endif %}>Activos</option>
+                        <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactivos</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de productos -->
+    <div class="row">
+        {% for product in products.items %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                {% if product.images %}
+                <img src="{{ url_for('static', filename='uploads/products/' + product.id|string + '/' + product.images[0].image_name) }}" 
+                     class="card-img-top" alt="{{ product.title }}">
+                {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="fas fa-image fa-3x text-muted"></i>
+                </div>
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.title }}</h5>
+                    <p class="card-text text-muted">{{ product.category.name }}</p>
+                    <p class="card-text">
+                        <strong>Precio:</strong> ${{ product.price }}
+                        {% if product.descuento %}
+                        <span class="text-danger">({{ product.descuento }}% OFF)</span>
+                        {% endif %}
+                    </p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge {% if product.status %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ 'Activo' if product.status else 'Inactivo' }}
+                        </span>
+                        <div class="btn-group">
+                            <a href="{{ url_for('product.product_edit', id=product.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form action="{{ url_for('product.product_toggle_status', id=product.id) }}" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-{% if product.status %}danger{% else %}success{% endif %}">
+                                    <i class="fas fa-{% if product.status %}times{% else %}check{% endif %}"></i>
+                                </button>
+                            </form>
+                            <form action="{{ url_for('product.product_delete', id=product.id) }}" method="POST" class="d-inline"
+                                  onsubmit="return confirm('¿Estás seguro de que deseas eliminar este producto?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                No hay productos disponibles. <a href="{{ url_for('product.product_create') }}">Crear un nuevo producto</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Paginación -->
+    {% if products.pages > 1 %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% for page in products.iter_pages() %}
+                {% if page %}
+                    <li class="page-item {% if page == products.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('product.product_list', page=page, search=search, category=category_id, status=status) }}">
+                            {{ page }}
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %} 
