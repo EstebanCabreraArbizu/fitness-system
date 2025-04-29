@@ -8,14 +8,11 @@ from flask import Blueprint, request, render_template, redirect, url_for, flash,
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from app.db import get_db
-from app.models.client import Client
-from app.models.instructor import Instructor
+from app.models.user import User
 
 users = Blueprint('users', __name__, template_folder='app/templates')
 
 # Funciones auxiliares
-
-
 def hash_password(password):
     """Genera un hash seguro para contraseñas"""
     salt = "fitsystem2025"  # En producción, usar un salt único por usuario
@@ -43,11 +40,6 @@ def is_strong_password(password):
 @users.route('/login', methods=['GET', 'POST'])
 def login():
     """Maneja el inicio de sesión de usuarios"""
-    # Debug - Quitar después
-    test_password = "Password123!".strip()
-    test_salt = "fitsystem2025".strip()
-    test_hash = hashlib.sha256((test_password + test_salt).encode()).hexdigest()
-    print(f"Ejemplo de hash generado para 'Password123!': {test_hash}")
     if current_user.is_authenticated:
         return redirect(url_for('dieta.index'))
 
@@ -57,22 +49,16 @@ def login():
     # Procesar formulario login
     email = request.form.get('correo', '').strip()
     password = request.form.get('contrasenia', '')
-    print(f"Login attempt with email: {email}")
 
     if not email or not password:
         flash('Por favor ingrese correo y contraseña', 'warning')
         return render_template('users/login.html')
 
     try:
-        # Intentar iniciar sesión como Cliente primero
-        user = authenticate_client(email, password)
-
-        if not user:
-            # Si no es cliente, intentar como Instructor
-            user = authenticate_instructor(email, password)
+        # Usar la función unificada de autenticación
+        user = authenticate_user(email, password)
 
         if user:
-            # Recordar usuario por 7 días
             login_user(user, remember=True, duration=timedelta(days=7))
             flash(f'¡Bienvenido {user.get_nombre()}!', 'success')
             return redirect_based_on_role(user)
@@ -86,17 +72,24 @@ def login():
         current_app.logger.error(f"Error de login: {str(e)}")
         return render_template('users/login.html')
 
-
-def authenticate_client(email, password):
-    """Autentica al usuario como Cliente"""
+def authenticate_user(email, password):
+    """Autentica al usuario usando la tabla unificada"""
     try:
         conn = get_db(current_app)
         cursor = conn.cursor()
 
-        # Buscar usuario en tabla Cliente
+        # Buscar usuario en tabla Usuario con datos específicos del tipo
         cursor.execute("""
-            SELECT * FROM Cliente 
-            WHERE email = %s AND status = 1
+            SELECT u.*,
+                IFNULL((SELECT direccion FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as direccion,
+                IFNULL((SELECT tipo_cliente FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as tipo_cliente,
+                IFNULL((SELECT nivel_actividad FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as nivel_actividad,
+                IFNULL((SELECT peso FROM Historial_Medidas WHERE Usuario_id = u.id ORDER BY fecha_medicion DESC LIMIT 1), NULL) as peso,
+                IFNULL((SELECT altura FROM Historial_Medidas WHERE Usuario_id = u.id ORDER BY fecha_medicion DESC LIMIT 1), NULL) as altura,
+                IFNULL((SELECT certificaciones FROM Instructor_datos WHERE Usuario_id = u.id), NULL) as certificaciones,
+                IFNULL((SELECT especialidad FROM Instructor_datos WHERE Usuario_id = u.id), NULL) as especialidad
+            FROM Usuario u
+            WHERE u.email = %s AND u.status = 1
         """, (email,))
 
         user_data = cursor.fetchone()
@@ -107,60 +100,29 @@ def authenticate_client(email, password):
             stored_password = user_data['contrasenia']
 
             if hashed_password == stored_password:
-                return Client(
+                return User(
                     id=user_data['id'],
                     nombres=user_data['nombres'],
                     apellidos=user_data['apellidos'],
                     celular=user_data['celular'],
                     email=user_data['email'],
                     contrasenia=stored_password,
+                    status=user_data['status'],
+                    imagen=user_data['imagen'],
+                    tipo_usuario_id=user_data['Tipo_usuario_id'],
                     direccion=user_data['direccion'],
                     tipo_cliente=user_data['tipo_cliente'],
-                    status=user_data['status'],
-                    imagen=user_data['imagen']
+                    nivel_actividad=user_data['nivel_actividad'],
+                    peso=user_data['peso'],
+                    altura=user_data['altura'],
+                    fecha_registro=user_data['fecha_registro'],
+                    certificaciones=user_data['certificaciones'],
+                    especialidad=user_data['especialidad']
                 )
         return None
     except Exception as e:
-        current_app.logger.error(f"Error autenticando cliente: {str(e)}")
+        current_app.logger.error(f"Error autenticando usuario: {str(e)}")
         return None
-
-
-def authenticate_instructor(email, password):
-    """Autentica al usuario como Instructor"""
-    try:
-        conn = get_db(current_app)
-        cursor = conn.cursor()
-
-        # Buscar usuario en tabla Instructor
-        cursor.execute("""
-            SELECT * FROM Instructor 
-            WHERE email = %s AND status = 1
-        """, (email,))
-
-        user_data = cursor.fetchone()
-        cursor.close()
-
-        if user_data:
-            hashed_password = hash_password(password)
-            stored_password = user_data['contrasenia']
-
-            if hashed_password == stored_password:
-                return Instructor(
-                    id=user_data['id'],
-                    nombres=user_data['nombres'],
-                    apellidos=user_data['apellidos'],
-                    celular=user_data['celular'],
-                    email=user_data['email'],
-                    contrasenia=stored_password,
-                    status=user_data['status'],
-                    imagen=user_data['imagen']
-                )
-        return None 
-    except Exception as e:
-        current_app.logger.error(f"Error autenticando instructor: {str(e)}")
-        return None
-
-
 def redirect_based_on_role(user):
     """Redirecciona al usuario según su tipo"""
     if not user.is_authenticated:
@@ -174,9 +136,9 @@ def redirect_based_on_role(user):
         return redirect(next_url)
 
     # Redirección según tipo de usuario
-    if isinstance(user, Client):
+    if user.is_client():
         return redirect(url_for('dieta.index'))
-    elif isinstance(user, Instructor):
+    elif user.is_instructor():
         return redirect(url_for('dieta.index'))
     else:
         flash('Tipo de usuario no reconocido.', 'danger')
@@ -200,8 +162,7 @@ def add_user():
         # Datos personales
         celular = request.form.get('telefono', '').strip()
         direccion = request.form.get('direccion', '').strip()
-        peso = request.form.get('peso', 0)
-        altura = request.form.get('altura', 0)
+        nivel_actividad = request.form.get('nivel_actividad', '').strip()
 
         # Tipo de usuario
         tipo_usuario = request.form.get('tipoUsuario', '')
@@ -249,7 +210,7 @@ def add_user():
 
         # Crear el usuario según el tipo seleccionado
         user = create_user(tipo_usuario, nombres, apellidos, celular, email,
-                           hashed_password, direccion, tipo_cliente, imagen, peso, altura)
+                           hashed_password, direccion, tipo_cliente, imagen, nivel_actividad)
 
         if not user:
             flash('Tipo de usuario no válido', 'danger')
@@ -316,72 +277,55 @@ def process_profile_image(request):
 
 def email_exists(email):
     """Verifica si el correo ya está registrado en cualquier tabla de usuarios"""
-    conn = None
-    cursor = None
-    try:
-        conn = get_db(current_app)
-        cursor = conn.cursor()
-
-        # Verificar en tabla Cliente
-        cursor.execute("SELECT email FROM Cliente WHERE email = %s", (email,))
-        if cursor.fetchone():
-            return True
-
-        # Verificar en tabla Instructor
-        cursor.execute(
-            "SELECT email FROM Instructor WHERE email = %s", (email,))
-        if cursor.fetchone():
-            return True
-
-        return False
-    finally:
-        if cursor:
-            cursor.close()
+    conn = get_db(current_app)
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM Usuario WHERE email = %s", (email,))
+    return True if cursor.fetchone() else False
 
 
 def create_user(tipo_usuario, nombres, apellidos, celular, email,
-                contrasenia, direccion, tipo_cliente, imagen, peso, altura):
+                contrasenia, direccion, tipo_cliente, imagen, nivel_actividad):
     """Crea un nuevo usuario en la base de datos"""
     conn = None
     cursor = None
     try:
         conn = get_db(current_app)
         cursor = conn.cursor()
-        # Hash de contraseña
-        hashed_password = hash_password(contrasenia)
 
+        # Insertar en tabla Usuario unificada
+        cursor.execute("""
+            INSERT INTO Usuario (
+                nombres, apellidos, celular, email, contrasenia, 
+                status, imagen, fecha_registro, Tipo_usuario_id
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, NOW(), %s
+            )
+        """, (
+            nombres, apellidos, celular, email, contrasenia,
+            1, imagen, 1 if tipo_usuario == 'Cliente' else 2
+        ))
+        
+        user_id = cursor.lastrowid
+        
+        # Si es cliente, insertar datos adicionales en tabla Cliente_datos
         if tipo_usuario == 'Cliente':
-            # Crear cliente
             cursor.execute("""
-                INSERT INTO Cliente (
-                    nombres, apellidos, celular, email, contrasenia, 
-                    direccion, tipo_cliente, status, imagen, peso, altura
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO Cliente_datos (
+                    Usuario_id, direccion, tipo_cliente, nivel_actividad
+                ) VALUES (%s, %s, %s, %s)
             """, (
-                nombres, apellidos, celular, email, hashed_password,
-                direccion, tipo_cliente, 1, imagen,
-                float(peso) if peso else None,
-                float(altura) if altura else None
-            ))
-        else:
-            # Crear instructor
-            cursor.execute("""
-                INSERT INTO Instructor (
-                    nombres, apellidos, celular, email, contrasenia, 
-                    status, imagen
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (
-                nombres, apellidos, celular, email, hashed_password,
-                1, imagen
+                user_id, direccion, tipo_cliente, nivel_actividad
             ))
 
         conn.commit()
-        return True, "Usuario creado exitosamente"
+        
+        # Obtener el usuario recién creado
+        return User.get_by_id(user_id)
     except Exception as e:
         if conn:
             conn.rollback()
         current_app.logger.error(f"Error al crear usuario: {str(e)}")
-        return False, f"Error al crear usuario: {str(e)}"
+        return None
     finally:
         if cursor:
             cursor.close()
@@ -392,32 +336,31 @@ def create_user(tipo_usuario, nombres, apellidos, celular, email,
 def profile(user_id):
     """Ver y editar perfil de usuario"""
     try:
-        # Determinar el tipo de usuario actual
-        if isinstance(current_user, Client):
-            user_type = "Cliente"
-            user_table = "Cliente"
-            id_field = "id"
-        elif isinstance(current_user, Instructor):
-            user_type = "Instructor"
-            user_table = "Instructor"
-            id_field = "id"
-        else:
-            flash('Tipo de usuario no reconocido', 'danger')
-            return redirect(url_for('users.login'))
-
-        # Verificar que el usuario esté accediendo a su propio perfil
-        if int(current_user.get_id()) != user_id:
+        # Verificar acceso al propio perfil
+        if f"u_{user_id}" != current_user.get_id():
             flash('No tienes permiso para acceder a este perfil', 'danger')
-            return redirect(url_for('client.dashboard' if isinstance(current_user, Client) else 'instructor.dashboard'))
+            return redirect(url_for('dieta.index'))
 
         conn = get_db(current_app)
         cursor = conn.cursor()
 
-        # Obtener datos del perfil
-        cursor.execute(
-            f"SELECT * FROM {user_table} WHERE {id_field} = %s", (user_id,))
+        # Obtener datos del perfil de usuario unificado
+        cursor.execute("""
+            SELECT u.*,
+                IFNULL((SELECT direccion FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as direccion,
+                IFNULL((SELECT nivel_actividad FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as nivel_actividad,
+                IFNULL((SELECT tipo_cliente FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as tipo_cliente,
+                IFNULL((SELECT peso FROM Historial_Medidas WHERE Usuario_id = u.id ORDER BY fecha_medicion DESC LIMIT 1), NULL) as peso,
+                IFNULL((SELECT altura FROM Historial_Medidas WHERE Usuario_id = u.id ORDER BY fecha_medicion DESC LIMIT 1), NULL) as altura,
+                IFNULL((SELECT certificaciones FROM Instructor_datos WHERE Usuario_id = u.id), NULL) as certificaciones,
+                IFNULL((SELECT especialidad FROM Instructor_datos WHERE Usuario_id = u.id), NULL) as especialidad
+            FROM Usuario u
+            WHERE u.id = %s
+        """, (user_id,))
+        
         user_data = cursor.fetchone()
         cursor.close()
+        user_type = "Instructor" if user_data['Tipo_usuario_id'] == 2 else "Cliente"
 
         if request.method == 'GET':
             return render_template('users/profile.html', user=user_data, user_type=user_type)
@@ -427,20 +370,7 @@ def profile(user_id):
         apellidos = request.form.get('apellidos', '').strip()
         celular = request.form.get('telefono', '').strip()
         direccion = request.form.get('direccion', '').strip()
-
-        # Procesar cambios específicos de tipo de usuario
-        if user_type == "Cliente":
-            peso = request.form.get('peso', 0)
-            altura = request.form.get('altura', 0)
-            tipo_cliente = request.form.get('tipo_cliente', 'regular')
-            # Convertir peso y altura a valores numéricos
-            try:
-                peso = float(peso) if peso else 0
-                altura = float(altura) if altura else 0
-            except ValueError:
-                peso = 0
-                altura = 0
-
+        
         # Procesar imagen
         imagen = user_data['imagen']  # Valor predeterminado
         imagen_file = request.files.get('imagen')
@@ -451,23 +381,70 @@ def profile(user_id):
             else:
                 imagen = new_imagen
 
-        # Actualizar datos según tipo de usuario
+        # Iniciar transacción
         cursor = conn.cursor()
+        
+        # Actualizar datos básicos en tabla Usuario
+        cursor.execute("""
+            UPDATE Usuario SET
+                nombres = %s, apellidos = %s, celular = %s, imagen = %s
+            WHERE id = %s
+        """, (nombres, apellidos, celular, imagen, user_id))
 
+        # Actualizar datos específicos según tipo de usuario
         if user_type == "Cliente":
+            peso = request.form.get('peso', 0)
+            altura = request.form.get('altura', 0)
+            tipo_cliente = request.form.get('tipo_cliente', 'regular')
+            nivel_actividad = request.form.get('nivel_actividad', 'intermedio')
+            
+            # Convertir peso y altura a valores numéricos
+            try:
+                peso = float(peso) if peso else 0
+                altura = float(altura) if altura else 0
+            except ValueError:
+                peso = 0
+                altura = 0
+                
+            # Actualizar o insertar datos cliente
             cursor.execute("""
-                UPDATE Cliente SET
-                nombres = %s, apellidos = %s, celular = %s, direccion = %s,
-                peso = %s, altura = %s, tipo_cliente = %s, imagen = %s
-                WHERE id = %s
-            """, (nombres, apellidos, celular, direccion, peso, altura,
-                  tipo_cliente, imagen, user_id))
-        else:  # Instructor
+                INSERT INTO Cliente_datos (Usuario_id, direccion, tipo_cliente, nivel_actividad)
+                VALUES (%s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE 
+                    direccion = VALUES(direccion),
+                    tipo_cliente = VALUES(tipo_cliente),
+                    nivel_actividad = VALUES(nivel_actividad)
+            """, (user_id, direccion, tipo_cliente, nivel_actividad))
+            
+            # Registrar nuevas medidas si cambian
+            if (peso != user_data.get('peso', 0) or altura != user_data.get('altura', 0)) and (peso > 0 and altura > 0):
+                imc = round(peso / ((altura / 100) ** 2), 2)
+                cursor.execute("""
+                    INSERT INTO Historial_Medidas (Usuario_id, peso, altura, imc)
+                    VALUES (%s, %s, %s, %s)
+                """, (user_id, peso, altura, imc))
+                
+        elif user_type == "Instructor":
+            certificaciones = request.form.get('certificaciones', '')
+            especialidad = request.form.get('especialidad', '')
+            anios_experiencia = request.form.get('anios_experiencia', 0)
+            estudios = request.form.get('estudios', '')
+            
+            try:
+                anios_experiencia = int(anios_experiencia) if anios_experiencia else 0
+            except ValueError:
+                anios_experiencia = 0
+            
+            # Actualizar o insertar datos instructor
             cursor.execute("""
-                UPDATE Instructor SET 
-                    nombres = %s, apellidos = %s, celular = %s, imagen = %s
-                WHERE id = %s
-            """, (nombres, apellidos, celular, imagen, user_id))
+                INSERT INTO Instructor_datos (Usuario_id, certificaciones, especialidad, anios_experiencia, estudios)
+                VALUES (%s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE 
+                    certificaciones = VALUES(certificaciones),
+                    especialidad = VALUES(especialidad),
+                    anios_experiencia = VALUES(anios_experiencia),
+                    estudios = VALUES(estudios)
+            """, (user_id, certificaciones, especialidad, anios_experiencia, estudios))
 
         conn.commit()
         cursor.close()
@@ -480,7 +457,6 @@ def profile(user_id):
         flash(f'Error al actualizar perfil: {str(e)}', 'danger')
         return redirect(url_for('users.profile', user_id=user_id))
 
-
 @users.route('/change_password/<int:user_id>', methods=['POST'])
 @login_required
 def change_password(user_id):
@@ -492,11 +468,7 @@ def change_password(user_id):
             return redirect(url_for('users.profile', user_id=current_user.get_id()))
 
         # Determinar tabla según tipo de usuario
-        if isinstance(current_user, Client):
-            user_table = "Cliente"
-            id_field = "id"
-        elif isinstance(current_user, Instructor):
-            user_table = "Instructor"
+        if current_user.is_client() or current_user.is_instructor():
             id_field = "id"
         else:
             flash('Tipo de usuario no reconocido', 'danger')
@@ -521,7 +493,7 @@ def change_password(user_id):
         cursor = conn.cursor()
 
         cursor.execute(
-            f"SELECT contrasenia FROM {user_table} WHERE {id_field} = %s", (user_id,))
+            f"SELECT contrasenia FROM Usuario WHERE {id_field} = %s", (user_id,))
         user_data = cursor.fetchone()
 
         if not user_data or hash_password(current_password) != user_data['contrasenia']:
@@ -537,7 +509,7 @@ def change_password(user_id):
         # Actualizar contraseña
         hashed_new_password = hash_password(new_password)
         cursor.execute(
-            f"UPDATE {user_table} SET contrasenia = %s WHERE {id_field} = %s",
+            f"UPDATE Usuario SET contrasenia = %s WHERE {id_field} = %s",
             (hashed_new_password, user_id)
         )
 
@@ -565,7 +537,7 @@ def logout():
 def debug_session():
     """Debug route to check user authentication status"""
     if current_user.is_authenticated:
-        user_type = "Client" if isinstance(current_user, Client) else "Instructor" if isinstance(current_user, Instructor) else "Unknown"
+        user_type = "Client" if current_user.is_client() else "Instructor" if current_user.is_instructor() else "Unknown"
         return f"User is authenticated. Type: {user_type}, ID: {current_user.get_id()}, Name: {current_user.get_nombre()}"
     else:
         return "User is NOT authenticated."

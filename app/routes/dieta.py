@@ -17,24 +17,28 @@ def index():
         conn = get_db(current_app)
         cursor = conn.cursor()
         
-        if isinstance(current_user, Client):
+        if current_user.is_client():
             # Si es cliente, ver sus dietas
             cursor.execute("""
-                SELECT d.*, i.nombres as instructor_nombre, i.apellidos as instructor_apellidos,
+                SELECT d.*, 
+                       ins.nombres as instructor_nombre, 
+                       ins.apellidos as instructor_apellidos,
                        disc.nombre as discipline_nombre
                 FROM Dieta d
-                JOIN Instructor i ON d.Instructor_id = i.id
+                JOIN Usuario ins ON d.Instructor_id = ins.id
                 JOIN Discipline disc ON d.Discipline_id = disc.id
                 WHERE d.Cliente_id = %s
                 ORDER BY d.fecha_registro DESC
             """, (current_user.id,))
-        elif isinstance(current_user, Instructor):
+        elif current_user.is_instructor():
             # Si es instructor, ver las dietas que ha creado
             cursor.execute("""
-                SELECT d.*, c.nombres as cliente_nombre, c.apellidos as cliente_apellidos,
+                SELECT d.*, 
+                       cli.nombres as cliente_nombre, 
+                       cli.apellidos as cliente_apellidos,
                        disc.nombre as discipline_nombre
                 FROM Dieta d
-                JOIN Cliente c ON d.Cliente_id = c.id
+                JOIN Usuario cli ON d.Cliente_id = cli.id
                 JOIN Discipline disc ON d.Discipline_id = disc.id
                 WHERE d.Instructor_id = %s
                 ORDER BY d.fecha_registro DESC
@@ -52,12 +56,12 @@ def index():
         current_app.logger.error(f"Error al listar dietas: {str(e)}")
         flash('Error al cargar las dietas', 'danger')
         return render_template('dietas/index.html', dietas=[])
-
+    
 @dieta.route('/nueva', methods=['GET', 'POST'])
 @login_required
 def nueva_dieta():
     """Crear nueva dieta"""
-    if not isinstance(current_user, Instructor):
+    if not current_user.is_instructor():
         flash('Solo los instructores pueden crear dietas', 'warning')
         return redirect(url_for('dieta.index'))
         
@@ -68,10 +72,11 @@ def nueva_dieta():
             
             # Obtener clientes asignados al instructor
             cursor.execute("""
-                SELECT c.*
-                FROM Cliente c
-                JOIN Cliente_Instructor ci ON c.id = ci.Cliente_id
-                WHERE ci.Instructor_id = %s AND c.status = 1
+                SELECT u.*, cd.direccion, cd.tipo_cliente, cd.peso, cd.altura, cd.fecha_pago 
+                FROM Usuario u
+                JOIN Cliente_datos cd ON u.id = cd.Usuario_id
+                JOIN Cliente_Instructor ci ON u.id = ci.Usuario_id
+                WHERE ci.Usuario_2_id = %s AND u.status = 1 AND u.Tipo_usuario_id = 1
             """, (current_user.id,))
             clientes = cursor.fetchall()
             
@@ -181,12 +186,12 @@ def detalle(dieta_id):
         # Obtener información de la dieta
         cursor.execute("""
             SELECT d.*, 
-                   c.nombres as cliente_nombre, c.apellidos as cliente_apellidos,
-                   i.nombres as instructor_nombre, i.apellidos as instructor_apellidos,
-                   disc.nombre as discipline_nombre
+                c.nombres as cliente_nombre, c.apellidos as cliente_apellidos,
+                i.nombres as instructor_nombre, i.apellidos as instructor_apellidos,
+                disc.nombre as discipline_nombre
             FROM Dieta d
-            JOIN Cliente c ON d.Cliente_id = c.id
-            JOIN Instructor i ON d.Instructor_id = i.id
+            JOIN Usuario c ON d.Cliente_id = c.id
+            JOIN Usuario i ON d.Instructor_id = i.id
             JOIN Discipline disc ON d.Discipline_id = disc.id
             WHERE d.id = %s
         """, (dieta_id,))
@@ -199,8 +204,8 @@ def detalle(dieta_id):
         
         # Verificar permisos (solo el instructor que la creó o el cliente asignado pueden verla)
         if not (
-            (isinstance(current_user, Instructor) and current_user.id == dietas['Instructor_id']) or
-            (isinstance(current_user, Client) and current_user.id == dietas['Cliente_id'])
+            (current_user.is_instructor() and current_user.id == dietas['Usuario_id']) or
+            (current_user.is_client() and current_user.id == dietas['Usuario_id'])
         ):
             flash('No tienes permiso para ver esta dieta', 'danger')
             return redirect(url_for('dieta.index'))
@@ -224,7 +229,7 @@ def detalle(dieta_id):
             dieta=dietas, 
             comidas=comidas,
             imagenes=imagenes,
-            es_instructor=isinstance(current_user, Instructor)
+            es_instructor=current_user.is_instructor()
         )
         
     except Exception as e:
@@ -236,7 +241,7 @@ def detalle(dieta_id):
 @login_required
 def agregar_comida(dieta_id):
     """Agregar comida a una dieta"""
-    if not isinstance(current_user, Instructor):
+    if not current_user.is_instructor():
         flash('Solo los instructores pueden agregar comidas', 'warning')
         return redirect(url_for('dieta.detalle', dieta_id=dieta_id))
     
@@ -245,7 +250,7 @@ def agregar_comida(dieta_id):
         conn = get_db(current_app)
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT * FROM Dieta WHERE id = %s AND Instructor_id = %s",
+            "SELECT * FROM Dieta WHERE id = %s AND Usuario_id = %s",
             (dieta_id, current_user.id)
         )
         dietas = cursor.fetchone()

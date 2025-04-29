@@ -10,7 +10,7 @@
             </a>
             <div class="d-flex justify-content-between align-items-center">
                 <h1>{{ dieta.nombre }}</h1>
-                {% if es_instructor %}
+                {% if current_user.is_instructor() %}
                 <a href="{{ url_for('dieta.agregar_comida', dieta_id=dieta.id) }}" class="btn btn-success">
                     <i class="fas fa-utensils me-2"></i> Agregar Comida
                 </a>
@@ -58,7 +58,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h3>Comidas</h3>
-                        {% if es_instructor %}
+                        {% if current_user.is_instructor() %}
                         <a href="{{ url_for('dieta.agregar_comida', dieta_id=dieta.id) }}" class="btn btn-sm btn-success">
                             <i class="fas fa-plus me-1"></i> Agregar Comida
                         </a>

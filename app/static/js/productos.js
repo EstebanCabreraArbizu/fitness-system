@@ -124,9 +124,8 @@ function saveProducto() {
 	// Instructores seleccionados
 	const instructoresSeleccionados = document.querySelectorAll('#instructoresList input[type="checkbox"]:checked');
 	if (instructoresSeleccionados.length > 0) {
-		instructoresSeleccionados.forEach(checkbox => {
-			formData.append('instructores[]', checkbox.value);
-		});
+		const instructoresArray = Array.from(instructoresSeleccionados).map(cb => cb.value);
+        formData.append('instructores[]', instructoresArray);
 	} else {
 		// Para evitar que instructores[] sea undefined o null
 		formData.append('instructores[]', '');

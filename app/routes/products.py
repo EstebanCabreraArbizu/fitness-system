@@ -17,17 +17,17 @@ def index():
         conn = get_db(current_app)
         cursor = conn.cursor()
         
-        # Verifica si el usuario está autenticado antes de acceder a current_user.id
+        # Verifica si el usuario está autenticado
         if current_user.is_authenticated:
             # Para un instructor, muestra solo sus productos asociados
-            if isinstance(current_user, Instructor):
+            if current_user.is_instructor():
                 cursor.execute("""
                     SELECT p.* FROM Product p 
                     JOIN Instructor_Products ip ON p.id = ip.Product_id
-                    WHERE ip.Instructor_id = %s
+                    WHERE ip.Usuario_id = %s
                 """, (current_user.id,))
             else:
-                # Para clientes o administradores, muestra todos los productos
+                # Para clientes, muestra todos los productos activos
                 cursor.execute("SELECT * FROM Product WHERE status = 1")
         else:
             # Para usuarios no autenticados, muestra productos activos
@@ -47,8 +47,8 @@ def index():
             product['images'] = [row['image_name'] for row in cursor.fetchall()]
 
             cursor.execute(
-                "SELECT Instructor_id FROM Instructor_Products WHERE Product_id = %s", (product['id'],))
-            product['instructores'] = [row['Instructor_id'] for row in cursor.fetchall()]
+                "SELECT Usuario_id FROM Instructor_Products WHERE Product_id = %s", (product['id'],))
+            product['instructores'] = [row['Usuario_id'] for row in cursor.fetchall()]
             
         return render_template('productos/index.html', products=product_list)
     except Exception as e:
@@ -86,8 +86,8 @@ def get_product(id):
         # Consultar instructores asignados
         cursor.execute("""
             SELECT DISTINCT i.id 
-            FROM Instructor i 
-            JOIN Instructor_Products ip ON i.id = ip.Instructor_id 
+            FROM Usuario i 
+            JOIN Instructor_Products ip ON i.id = ip.Usuario_id 
             WHERE ip.Product_id = %s
            """, (id,))
         instructores = [row['id'] for row in cursor.fetchall()]
@@ -230,7 +230,7 @@ def add_product():
         # Insertar instructores
         for instructor_id in instructores:
             cursor.execute(
-                "INSERT INTO Instructor_Products (Instructor_id, Product_id) VALUES (%s, %s)",
+                "INSERT INTO Instructor_Products (Usuario_id, Product_id) VALUES (%s, %s)",
                 (instructor_id, product_id)
             )
         
@@ -250,8 +250,8 @@ def add_product():
         cursor.execute("SELECT image_name FROM Product_images WHERE Product_id = %s", (product_id,))
         new_product['images'] = [row['image_name'] for row in cursor.fetchall()]
         
-        cursor.execute("SELECT Instructor_id FROM Instructor_Products WHERE Product_id = %s", (product_id,))
-        new_product['instructores'] = [row['Instructor_id'] for row in cursor.fetchall()]
+        cursor.execute("SELECT Usuario_id FROM Instructor_Products WHERE Product_id = %s", (product_id,))
+        new_product['instructores'] = [row['Usuario_id'] for row in cursor.fetchall()]
         
         return jsonify({'success': True, 'product_id': product_id, 'product': new_product})
     
@@ -277,10 +277,10 @@ def get_instructores():
         cursor = conn.cursor()
         cursor.execute("""
             SELECT 
-                i.id, i.nombres, i.apellidos, i.imagen, 
-                (SELECT Discipline_id FROM Discipline_Instructor WHERE Instructor_id = i.id LIMIT 1) as Discipline_id
-            FROM Instructor i
-            WHERE i.status = 1
+                u.id, u.nombres, u.apellidos, u.imagen, 
+                (SELECT Discipline_id FROM Discipline_Instructor WHERE Usuario_id = u.id LIMIT 1) as Discipline_id
+            FROM Usuario u
+            WHERE u.status = 1 AND u.Tipo_usuario_id = 2
         """)
         instructores = cursor.fetchall()
         
@@ -411,7 +411,7 @@ def update_product(id):
             instructores = [int(i) for i in request.form.getlist('instructores[]') if i and i.isdigit()]
             for instructor_id in instructores:
                 cursor.execute(
-                    "INSERT INTO Instructor_Products (Instructor_id, Product_id) VALUES (%s, %s)",
+                    "INSERT INTO Instructor_Products (Usuario_id, Product_id) VALUES (%s, %s)",
                     (instructor_id, id)
                 )
         
@@ -431,8 +431,8 @@ def update_product(id):
         cursor.execute("SELECT image_name FROM Product_images WHERE Product_id = %s", (id,))
         updated_product['images'] = [row['image_name'] for row in cursor.fetchall()]
         
-        cursor.execute("SELECT Instructor_id FROM Instructor_Products WHERE Product_id = %s", (id,))
-        updated_product['instructores'] = [row['Instructor_id'] for row in cursor.fetchall()]
+        cursor.execute("SELECT Usuario_id FROM Instructor_Products WHERE Product_id = %s", (id,))
+        updated_product['instructores'] = [row['Usuario_id'] for row in cursor.fetchall()]
         
         return jsonify({'success': True, 'product': updated_product})
     

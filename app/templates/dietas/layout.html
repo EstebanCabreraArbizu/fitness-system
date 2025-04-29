@@ -27,7 +27,8 @@
                         <a class="nav-link {% if request.endpoint.startswith('dieta') %}active{% endif %}" 
                            href="{{ url_for('dieta.index') }}">Dietas</a>
                     </li>
-                    {% if current_user.__class__.__name__ == 'Instructor' %}
+                    
+                    {% if current_user.is_instructor() %}
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint.startswith('client') %}active{% endif %}" 
                            href="{{ url_for('dieta.index') }}">Clientes</a>
