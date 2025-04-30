@@ -181,13 +181,35 @@ def ver(servicio_id):
         flash('Esta sección es solo para instructores', 'warning')
         return redirect(url_for('dieta.index'))
     
-    servicio = Servicio.obtener_por_id(servicio_id, current_user.id)
-    
-    if not servicio:
-        flash('Servicio no encontrado o no tiene permisos para acceder', 'warning')
+    try:
+        current_app.logger.info(f"Solicitando servicio ID: {servicio_id} para instructor ID: {current_user.id}")
+        servicio = Servicio.obtener_por_id(servicio_id, current_user.id)
+        
+        if not servicio:
+            flash('Servicio no encontrado o no tiene permisos para acceder', 'warning')
+            return redirect(url_for('servicios.index'))
+        
+        # Validar explícitamente que horarios esté presente
+        if 'horarios' not in servicio:
+            current_app.logger.warning(f"No se encontraron horarios para el servicio {servicio_id}")
+            servicio['horarios'] = []
+        
+        current_app.logger.info(f"Servicio encontrado: {servicio['nombre']} con {len(servicio['horarios'])} horarios")
+        
+        # Ajustar formato de fecha-hora si es necesario
+        for horario in servicio['horarios']:
+            if not isinstance(horario['hora_inicio'], str):
+                current_app.logger.debug(f"Formateando hora: {horario['hora_inicio']}")
+        
+        # Incluir fecha actual para el formulario de reserva
+        from datetime import datetime
+        now = datetime.now()
+        
+        return render_template('servicios/ver.html', servicio=servicio, now=now)
+    except Exception as e:
+        current_app.logger.error(f"Error al obtener detalles del servicio: {str(e)}")
+        flash(f'Error al cargar el servicio: {str(e)}', 'danger')
         return redirect(url_for('servicios.index'))
-    
-    return render_template('servicios/ver.html', servicio=servicio)
 
 @servicios.route('/instructor/servicios/<int:servicio_id>/editar', methods=['GET', 'POST'])
 @login_required
@@ -492,31 +514,48 @@ def catalogo():
 @servicios.route('/servicios/<int:servicio_id>')
 def detalle(servicio_id):
     """Detalle público de un servicio"""
-    servicio = Servicio.obtener_por_id(servicio_id)
-    
-    if not servicio or servicio['estado'] != 'activo':
-        flash('Servicio no encontrado', 'warning')
-        return redirect(url_for('servicios.catalogo'))
-    
-    # Obtener información del instructor
-    conn = get_db(current_app)
-    cursor = conn.cursor()
-    
     try:
-        cursor.execute("""
-            SELECT u.id, u.nombres, u.apellidos, u.imagen, 
-                   IFNULL((SELECT especialidad FROM Instructor_datos WHERE Usuario_id = u.id LIMIT 1), '') as especialidad,
-                   IFNULL((SELECT anios_experiencia FROM Instructor_datos WHERE Usuario_id = u.id LIMIT 1), 0) as anios_experiencia
-            FROM Usuario u
-            WHERE u.id = %s
-        """, (servicio['instructor_id'],))
+        current_app.logger.info(f"Solicitando detalle público de servicio ID: {servicio_id}")
+        servicio = Servicio.obtener_por_id(servicio_id)
         
-        instructor = cursor.fetchone()
+        if not servicio or servicio['estado'] != 'activo':
+            flash('Servicio no encontrado', 'warning')
+            return redirect(url_for('servicios.catalogo'))
         
-        return render_template('servicios/detalle.html', servicio=servicio, instructor=instructor)
+        # Validar explícitamente que horarios esté presente
+        if 'horarios' not in servicio:
+            current_app.logger.warning(f"No se encontraron horarios para el servicio {servicio_id}")
+            servicio['horarios'] = []
+            
+        current_app.logger.info(f"Servicio público encontrado: {servicio['nombre']} con {len(servicio['horarios'])} horarios")
+        
+        # Obtener información del instructor
+        conn = get_db(current_app)
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute("""
+                SELECT u.id, u.nombres, u.apellidos, u.imagen, 
+                       IFNULL((SELECT especialidad FROM Instructor_datos WHERE Usuario_id = u.id LIMIT 1), '') as especialidad,
+                       IFNULL((SELECT anios_experiencia FROM Instructor_datos WHERE Usuario_id = u.id LIMIT 1), 0) as anios_experiencia
+                FROM Usuario u
+                WHERE u.id = %s
+            """, (servicio['instructor_id'],))
+            
+            instructor = cursor.fetchone()
+            
+            # Incluir fecha actual para el formulario de reserva
+            from datetime import datetime
+            now = datetime.now()
+            
+            return render_template('servicios/detalle.html', servicio=servicio, instructor=instructor, now=now)
+        except Exception as e:
+            current_app.logger.error(f"Error al obtener información del instructor: {str(e)}")
+            flash('Error al cargar los detalles del servicio', 'danger')
+            return redirect(url_for('servicios.catalogo'))
+        finally:
+            cursor.close()
     except Exception as e:
-        current_app.logger.error(f"Error al obtener detalle de servicio: {str(e)}")
-        flash('Error al cargar los detalles del servicio', 'danger')
-        return redirect(url_for('servicios.catalogo'))
-    finally:
-        cursor.close() 
+        current_app.logger.error(f"Error al obtener detalle del servicio: {str(e)}")
+        flash(f'Error al cargar el servicio: {str(e)}', 'danger')
+        return redirect(url_for('servicios.catalogo')) 

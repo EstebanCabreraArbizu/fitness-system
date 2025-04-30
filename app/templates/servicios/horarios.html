@@ -217,7 +217,14 @@
                         <div class="horario-header d-flex justify-content-between align-items-center">
                             <span>{{ horario.dia_semana|capitalize }}</span>
                             <div>
-                                <span class="time-badge"><i class="far fa-clock"></i> {{ horario.hora_inicio.strftime('%H:%M') }} - {{ horario.hora_fin.strftime('%H:%M') }}</span>
+                                <span class="time-badge">
+                                    <i class="far fa-clock"></i>
+                                    {% set hi_h = (horario.hora_inicio.seconds // 3600) %}
+                                    {% set hi_m = ((horario.hora_inicio.seconds % 3600) // 60) %}
+                                    {% set hf_h = (horario.hora_fin.seconds // 3600) %}
+                                    {% set hf_m = ((horario.hora_fin.seconds % 3600) // 60) %}
+                                    {{ '%02d:%02d'|format(hi_h, hi_m) }} - {{ '%02d:%02d'|format(hf_h, hf_m) }}
+                                </span>
                                 <span class="badge bg-primary">{{ horario.cupos_disponibles }} cupo(s)</span>
                             </div>
                         </div>

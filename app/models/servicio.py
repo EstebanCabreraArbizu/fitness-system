@@ -122,6 +122,8 @@ class Servicio:
         cursor = conn.cursor()
         
         try:
+            current_app.logger.debug(f"Obteniendo servicio con ID: {servicio_id}")
+            
             if instructor_id:
                 cursor.execute("""
                     SELECT * FROM Servicio 
@@ -135,21 +137,25 @@ class Servicio:
             if servicio:
                 # Obtener horarios del servicio
                 cursor.execute("""
-                    SELECT * FROM Servicio_Horario
-                    WHERE servicio_id = %s AND estado = 'activo'
+                    SELECT sh.id, sh.servicio_id, sh.dia_semana, sh.hora_inicio, sh.hora_fin, 
+                           sh.cupos_disponibles, sh.estado
+                    FROM Servicio_Horario sh
+                    WHERE sh.servicio_id = %s AND sh.estado = 'activo'
                     ORDER BY CASE
-                        WHEN dia_semana = 'lunes' THEN 1
-                        WHEN dia_semana = 'martes' THEN 2
-                        WHEN dia_semana = 'miércoles' THEN 3
-                        WHEN dia_semana = 'jueves' THEN 4
-                        WHEN dia_semana = 'viernes' THEN 5
-                        WHEN dia_semana = 'sábado' THEN 6
-                        WHEN dia_semana = 'domingo' THEN 7
-                    END, hora_inicio
+                        WHEN sh.dia_semana = 'lunes' THEN 1
+                        WHEN sh.dia_semana = 'martes' THEN 2
+                        WHEN sh.dia_semana = 'miércoles' THEN 3
+                        WHEN sh.dia_semana = 'jueves' THEN 4
+                        WHEN sh.dia_semana = 'viernes' THEN 5
+                        WHEN sh.dia_semana = 'sábado' THEN 6
+                        WHEN sh.dia_semana = 'domingo' THEN 7
+                    END, sh.hora_inicio
                 """, (servicio_id,))
                 
                 horarios = cursor.fetchall()
                 servicio['horarios'] = horarios
+                
+                current_app.logger.debug(f"Servicio {servicio_id} tiene {len(horarios)} horarios")
             
             return servicio
         except Exception as e:

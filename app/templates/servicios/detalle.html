@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Detalles del Servicio{% endblock %}
+{% block title %}{{ servicio.nombre }} - Detalles{% endblock %}
 
 {% block styles %}
 <style>
@@ -46,20 +46,18 @@
         color: var(--secondary);
     }
     
+    .instructor-card {
+        border-radius: 0.75rem;
+        overflow: hidden;
+    }
+    
     .instructor-image {
-        width: 60px;
-        height: 60px;
+        width: 80px;
+        height: 80px;
         border-radius: 50%;
         object-fit: cover;
         border: 3px solid white;
         box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-    }
-    
-    .instructor-info {
-        padding: 1.5rem;
-        border-radius: 0.75rem;
-        background: linear-gradient(to right, #3a7bd5, #00d2ff);
-        color: white;
     }
 </style>
 {% endblock %}
@@ -81,7 +79,7 @@
         <div class="col-12">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ url_for('servicios.index') }}">Servicios</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('servicios.catalogo') }}">Servicios</a></li>
                     <li class="breadcrumb-item active" aria-current="page">{{ servicio.nombre }}</li>
                 </ol>
             </nav>
@@ -114,21 +112,21 @@
                             <span class="badge bg-info service-badge">{{ servicio.duracion }} minutos</span>
                         </div>
                         
-                        <p class="lead">{{ servicio.descripcion }}</p>
+                        <p class="lead mb-4">{{ servicio.descripcion }}</p>
                         
-                        {% if current_user.is_instructor() and servicio.instructor_id == current_user.id %}
-                        <div class="d-flex mt-4">
-                            <a href="{{ url_for('servicios.editar', servicio_id=servicio.id) }}" class="btn btn-primary me-2">
-                                <i class="fas fa-edit me-1"></i> Editar
-                            </a>
-                            <a href="{{ url_for('servicios.horarios', servicio_id=servicio.id) }}" class="btn btn-info me-2">
-                                <i class="fas fa-calendar-alt me-1"></i> Gestionar Horarios
-                            </a>
-                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteServiceModal">
-                                <i class="fas fa-trash-alt me-1"></i> Eliminar
-                            </button>
+                        <!-- Sección del Instructor -->
+                        <div class="card instructor-card bg-light mb-4">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <img src="{{ url_for('static', filename='img/' + instructor.imagen) }}" class="instructor-image me-3" alt="{{ instructor.nombres }}">
+                                    <div>
+                                        <h5 class="mb-1">{{ instructor.nombres }} {{ instructor.apellidos }}</h5>
+                                        <p class="mb-1 text-muted">{{ instructor.especialidad }}</p>
+                                        <p class="mb-0 small">{{ instructor.anios_experiencia }} años de experiencia</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -171,45 +169,24 @@
                             </div>
                         {% endfor %}
                         
-                        {% if not current_user.is_instructor() %}
+                        {% if current_user.is_authenticated and not current_user.is_instructor() %}
                         <div class="d-grid mt-3">
                             <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#reservationModal">
                                 <i class="fas fa-calendar-plus me-1"></i> Reservar Ahora
                             </button>
                         </div>
+                        {% elif not current_user.is_authenticated %}
+                        <div class="d-grid mt-3">
+                            <a href="{{ url_for('users.login') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-sign-in-alt me-1"></i> Inicia sesión para reservar
+                            </a>
+                        </div>
                         {% endif %}
                     {% else %}
                         <div class="text-center py-4">
-                            <p class="text-muted mb-3">No hay horarios disponibles para este servicio.</p>
-                            {% if current_user.is_instructor() and servicio.instructor_id == current_user.id %}
-                            <a href="{{ url_for('servicios.horarios', servicio_id=servicio.id) }}" class="btn btn-primary">
-                                <i class="fas fa-plus-circle me-1"></i> Agregar Horarios
-                            </a>
-                            {% endif %}
+                            <p class="text-muted mb-0">No hay horarios disponibles para este servicio actualmente.</p>
                         </div>
                     {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal de Confirmación de Eliminación -->
-    <div class="modal fade" id="deleteServiceModal" tabindex="-1" aria-labelledby="deleteServiceModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteServiceModalLabel">Confirmar Eliminación</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>¿Estás seguro de que deseas eliminar el servicio <strong>{{ servicio.nombre }}</strong>?</p>
-                    <p class="text-danger">Esta acción no se puede deshacer y también eliminará todos los horarios y reservas asociados.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <form action="{{ url_for('servicios.eliminar', servicio_id=servicio.id) }}" method="post">
-                        <button type="submit" class="btn btn-danger">Eliminar</button>
-                    </form>
                 </div>
             </div>
         </div>
