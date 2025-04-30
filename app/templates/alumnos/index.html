@@ -62,6 +62,18 @@
                                     <small class="text-muted">Metas: {{ alumno.num_metas }}</small>
                                     <small class="text-muted">Dietas: {{ alumno.num_dietas }}</small>
                                 </div>
+                                
+                                {% if alumno.seguimientos %}
+                                <div class="mt-2 text-center">
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-purple" role="progressbar" 
+                                             style="width: {{ alumno.seguimientos }}%;" 
+                                             aria-valuenow="{{ alumno.seguimientos }}" 
+                                             aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <small class="text-muted">Seguimiento: {{ alumno.seguimientos }}%</small>
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                         <div class="card-footer bg-white d-flex justify-content-between">
@@ -93,4 +105,10 @@
         {% endif %}
     </div>
 </div>
+
+<style>
+    .bg-purple {
+        background-color: #6f42c1;
+    }
+</style>
 {% endblock %} 

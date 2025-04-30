@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}Nuevo Seguimiento de Progreso{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Nuevo Seguimiento de Progreso</h1>
+        <a href="{{ url_for('alumnos.detalles_alumno', alumno_id=alumno_id) }}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Volver al alumno
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card border-purple">
+                <div class="card-header bg-purple text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user me-2"></i> {{ alumno.nombres }} {{ alumno.apellidos }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <p><strong>Peso actual:</strong> 
+                                {% if alumno.peso %}{{ alumno.peso }} kg{% else %}No registrado{% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>Altura:</strong> 
+                                {% if alumno.altura %}{{ alumno.altura }} cm{% else %}No registrada{% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>IMC actual:</strong> 
+                                {% if alumno.imc %}{{ alumno.imc }}{% else %}No calculado{% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <form method="POST" action="{{ url_for('alumnos.nuevo_seguimiento', alumno_id=alumno_id) }}" enctype="multipart/form-data">
+        <div class="row">
+            <!-- Información básica -->
+            <div class="col-md-12 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Información básica</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="fecha_seguimiento" class="form-label">Fecha de seguimiento *</label>
+                                <input type="date" class="form-control" id="fecha_seguimiento" name="fecha_seguimiento" required value="{{ today }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="rutina_id" class="form-label">Rutina asociada</label>
+                                <select class="form-select" id="rutina_id" name="rutina_id">
+                                    <option value="">-- Sin rutina asociada --</option>
+                                    {% for rutina in rutinas %}
+                                        <option value="{{ rutina.id }}">{{ rutina.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="dieta_id" class="form-label">Dieta asociada</label>
+                                <select class="form-select" id="dieta_id" name="dieta_id">
+                                    <option value="">-- Sin dieta asociada --</option>
+                                    {% for dieta in dietas %}
+                                        <option value="{{ dieta.id }}">{{ dieta.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="meta_id" class="form-label">Meta asociada</label>
+                                <select class="form-select" id="meta_id" name="meta_id">
+                                    <option value="">-- Sin meta asociada --</option>
+                                    {% for meta in metas %}
+                                        <option value="{{ meta.id }}">{{ meta.descripcion }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="peso_actual" class="form-label">Peso actual (kg)</label>
+                                <input type="number" step="0.1" class="form-control" id="peso_actual" name="peso_actual"
+                                       placeholder="Peso en kg" value="{{ alumno.peso or '' }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="calificacion_instructor" class="form-label">Calificación general (1-10) *</label>
+                                <input type="number" min="1" max="10" class="form-control" id="calificacion_instructor" name="calificacion_instructor" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Progreso de Rutina -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Progreso de Rutina</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="nivel_esfuerzo" class="form-label">Nivel de esfuerzo (1-10)</label>
+                            <input type="number" min="1" max="10" class="form-control" id="nivel_esfuerzo" name="nivel_esfuerzo">
+                            <div class="form-text">Evalúa cuánto se esforzó el alumno</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="rendimiento" class="form-label">Rendimiento (1-10)</label>
+                            <input type="number" min="1" max="10" class="form-control" id="rendimiento" name="rendimiento">
+                            <div class="form-text">Evalúa la calidad del ejercicio realizado</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="ejercicios_completados" class="form-label">Ejercicios completados (%)</label>
+                            <input type="number" min="0" max="100" class="form-control" id="ejercicios_completados" name="ejercicios_completados">
+                            <div class="form-text">Porcentaje de la rutina que completó</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Progreso de Dieta -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">Progreso de Dieta</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="adherencia_dieta" class="form-label">Adherencia a la dieta (%)</label>
+                            <input type="number" min="0" max="100" class="form-control" id="adherencia_dieta" name="adherencia_dieta">
+                            <div class="form-text">¿Qué porcentaje de la dieta siguió?</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="sensacion_hambre" class="form-label">Sensación de hambre (1-10)</label>
+                            <input type="number" min="1" max="10" class="form-control" id="sensacion_hambre" name="sensacion_hambre">
+                            <div class="form-text">1 = Sin hambre, 10 = Mucha hambre</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="energia_diaria" class="form-label">Nivel de energía (1-10)</label>
+                            <input type="number" min="1" max="10" class="form-control" id="energia_diaria" name="energia_diaria">
+                            <div class="form-text">1 = Sin energía, 10 = Muy energético</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Observaciones y logros -->
+            <div class="col-md-12 mb-4">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">Observaciones y Logros</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="logros" class="form-label">Logros destacados</label>
+                                <textarea class="form-control" id="logros" name="logros" rows="3" placeholder="Describe los logros conseguidos en este período"></textarea>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="dificultades" class="form-label">Dificultades encontradas</label>
+                                <textarea class="form-control" id="dificultades" name="dificultades" rows="3" placeholder="Describe los obstáculos o dificultades"></textarea>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="observaciones" class="form-label">Observaciones generales</label>
+                            <textarea class="form-control" id="observaciones" name="observaciones" rows="3" placeholder="Añade cualquier otra observación relevante"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Evidencia fotográfica -->
+            <div class="col-md-12 mb-4">
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">Evidencia fotográfica</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="imagenes" class="form-label">Añadir imágenes (opcional)</label>
+                            <input class="form-control" type="file" id="imagenes" name="imagenes" multiple accept="image/*">
+                            <div class="form-text">Puedes seleccionar varias imágenes a la vez</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="tipo_imagen" class="form-label">Tipo de imagen</label>
+                            <select class="form-select" id="tipo_imagen" name="tipo_imagen">
+                                <option value="progreso">Progreso general</option>
+                                <option value="antes">Foto "antes"</option>
+                                <option value="durante">Foto "durante"</option>
+                                <option value="despues">Foto "después"</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-12 mb-5 text-center">
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('alumnos.detalles_alumno', alumno_id=alumno_id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-save me-1"></i> Guardar Seguimiento
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    .bg-purple {
+        background-color: #6f42c1;
+    }
+    .border-purple {
+        border-color: #6f42c1;
+    }
+</style>
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Ajustar campos según selección de rutina/dieta
+        document.getElementById('rutina_id').addEventListener('change', function() {
+            const rutinaCampos = document.querySelectorAll('#nivel_esfuerzo, #rendimiento, #ejercicios_completados');
+            const isDisabled = this.value === '';
+            
+            rutinaCampos.forEach(campo => {
+                campo.disabled = isDisabled;
+                if (isDisabled) {
+                    campo.value = '';
+                }
+            });
+        });
+        
+        document.getElementById('dieta_id').addEventListener('change', function() {
+            const dietaCampos = document.querySelectorAll('#adherencia_dieta, #sensacion_hambre, #energia_diaria');
+            const isDisabled = this.value === '';
+            
+            dietaCampos.forEach(campo => {
+                campo.disabled = isDisabled;
+                if (isDisabled) {
+                    campo.value = '';
+                }
+            });
+        });
+        
+        // Ejecutar una vez al cargar para configurar el estado inicial
+        document.getElementById('rutina_id').dispatchEvent(new Event('change'));
+        document.getElementById('dieta_id').dispatchEvent(new Event('change'));
+    });
+</script>
+{% endblock %}
+{% endblock %} 

@@ -423,15 +423,34 @@ def lista_ejercicios():
         conn = get_db(current_app)
         cursor = conn.cursor()
         
-        cursor.execute("""
+        # Obtener el criterio de ordenamiento de la URL
+        sort_by = request.args.get('sort_by', 'id')  # Por defecto ordenar por ID
+        order = request.args.get('order', 'asc')     # Por defecto orden ascendente
+        
+        # Validar los criterios de ordenamiento
+        valid_sort_fields = ['id', 'nombre', 'series', 'repeticiones', 'tiempo_descanso']
+        if sort_by not in valid_sort_fields:
+            sort_by = 'id'
+        
+        # Validar el orden
+        if order not in ['asc', 'desc']:
+            order = 'asc'
+            
+        # Construir la consulta SQL con ordenamiento
+        sql_query = f"""
             SELECT * FROM Ejercicio
-            ORDER BY nombre
-        """)
+            ORDER BY {sort_by} {order}
+        """
+        
+        cursor.execute(sql_query)
         
         ejercicios = cursor.fetchall()
         cursor.close()
         
-        return render_template('rutinas/ejercicios.html', ejercicios=ejercicios)
+        return render_template('rutinas/ejercicios.html', 
+                              ejercicios=ejercicios, 
+                              current_sort=sort_by,
+                              current_order=order)
         
     except Exception as e:
         current_app.logger.error(f"Error al listar ejercicios: {str(e)}")

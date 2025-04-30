@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block title %}Detalle de Seguimiento{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Detalle de Seguimiento</h1>
+        <a href="{{ url_for('alumnos.detalles_alumno', alumno_id=seguimiento.Usuario_id) }}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Volver al alumno
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Header del seguimiento -->
+    <div class="card mb-4 border-purple">
+        <div class="card-header bg-purple text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Seguimiento del {{ seguimiento.fecha_seguimiento.strftime('%d/%m/%Y') }}</h5>
+            <span class="badge {% if seguimiento.calificacion_instructor >= 8 %}bg-success{% elif seguimiento.calificacion_instructor >= 5 %}bg-warning text-dark{% else %}bg-danger{% endif %} fs-6">
+                Calificación: {{ seguimiento.calificacion_instructor }}/10
+            </span>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-2">
+                        <strong><i class="fas fa-user me-1"></i> Alumno:</strong> 
+                        {{ seguimiento.alumno_nombre }} {{ seguimiento.alumno_apellido }}
+                    </p>
+                    <p class="mb-2">
+                        <strong><i class="fas fa-user-tie me-1"></i> Instructor:</strong>
+                        {{ seguimiento.instructor_nombre }} {{ seguimiento.instructor_apellido }}
+                    </p>
+                    
+                    {% if seguimiento.rutina_nombre %}
+                    <p class="mb-2">
+                        <strong><i class="fas fa-dumbbell me-1"></i> Rutina:</strong>
+                        {{ seguimiento.rutina_nombre }}
+                    </p>
+                    {% endif %}
+                    
+                    {% if seguimiento.dieta_nombre %}
+                    <p class="mb-2">
+                        <strong><i class="fas fa-utensils me-1"></i> Dieta:</strong>
+                        {{ seguimiento.dieta_nombre }}
+                    </p>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    {% if seguimiento.meta_descripcion %}
+                    <p class="mb-2">
+                        <strong><i class="fas fa-flag-checkered me-1"></i> Meta:</strong>
+                        {{ seguimiento.meta_descripcion }}
+                    </p>
+                    {% endif %}
+                    
+                    {% if seguimiento.peso_actual %}
+                    <p class="mb-2">
+                        <strong><i class="fas fa-weight me-1"></i> Peso registrado:</strong>
+                        {{ seguimiento.peso_actual }} kg
+                        {% if seguimiento.imc_actual %}
+                        (IMC: {{ seguimiento.imc_actual }})
+                        {% endif %}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Progreso de rutina -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-dumbbell me-2"></i>Progreso de Rutina</h5>
+                </div>
+                <div class="card-body">
+                    {% if seguimiento.nivel_esfuerzo or seguimiento.rendimiento or seguimiento.ejercicios_completados %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span>Nivel de esfuerzo:</span>
+                                <span class="badge bg-primary">{{ seguimiento.nivel_esfuerzo }}/10</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-primary" role="progressbar" 
+                                     style="width: {{ (seguimiento.nivel_esfuerzo or 0) * 10 }}%" 
+                                     aria-valuenow="{{ seguimiento.nivel_esfuerzo }}" aria-valuemin="0" aria-valuemax="10"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span>Rendimiento:</span>
+                                <span class="badge bg-success">{{ seguimiento.rendimiento }}/10</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: {{ (seguimiento.rendimiento or 0) * 10 }}%" 
+                                     aria-valuenow="{{ seguimiento.rendimiento }}" aria-valuemin="0" aria-valuemax="10"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span>Ejercicios completados:</span>
+                                <span class="badge bg-info">{{ seguimiento.ejercicios_completados }}%</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-info" role="progressbar" 
+                                     style="width: {{ seguimiento.ejercicios_completados or 0 }}%" 
+                                     aria-valuenow="{{ seguimiento.ejercicios_completados }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <p class="text-muted mb-0">No se registró progreso de rutina</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Progreso de dieta -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-utensils me-2"></i>Progreso de Dieta</h5>
+                </div>
+                <div class="card-body">
+                    {% if seguimiento.adherencia_dieta or seguimiento.sensacion_hambre or seguimiento.energia_diaria %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span>Adherencia a la dieta:</span>
+                                <span class="badge bg-primary">{{ seguimiento.adherencia_dieta }}%</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar bg-primary" role="progressbar" 
+                                     style="width: {{ seguimiento.adherencia_dieta or 0 }}%" 
+                                     aria-valuenow="{{ seguimiento.adherencia_dieta }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span>Sensación de hambre:</span>
+                                <span class="badge {% if seguimiento.sensacion_hambre <= 5 %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ seguimiento.sensacion_hambre }}/10
+                                </span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar {% if seguimiento.sensacion_hambre <= 5 %}bg-success{% else %}bg-danger{% endif %}" 
+                                     role="progressbar" 
+                                     style="width: {{ (seguimiento.sensacion_hambre or 0) * 10 }}%" 
+                                     aria-valuenow="{{ seguimiento.sensacion_hambre }}" aria-valuemin="0" aria-valuemax="10"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span>Nivel de energía:</span>
+                                <span class="badge {% if seguimiento.energia_diaria >= 6 %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                                    {{ seguimiento.energia_diaria }}/10
+                                </span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar {% if seguimiento.energia_diaria >= 6 %}bg-success{% else %}bg-warning{% endif %}" 
+                                     role="progressbar" 
+                                     style="width: {{ (seguimiento.energia_diaria or 0) * 10 }}%" 
+                                     aria-valuenow="{{ seguimiento.energia_diaria }}" aria-valuemin="0" aria-valuemax="10"></div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <p class="text-muted mb-0">No se registró progreso de dieta</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Observaciones y logros -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Observaciones y Logros</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% if seguimiento.logros or seguimiento.dificultades or seguimiento.observaciones %}
+                    <div class="col-md-4 mb-3">
+                        <h6 class="border-bottom pb-2 mb-3">Logros destacados</h6>
+                        {% if seguimiento.logros %}
+                            <p>{{ seguimiento.logros }}</p>
+                        {% else %}
+                            <p class="text-muted">No se registraron logros</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <h6 class="border-bottom pb-2 mb-3">Dificultades encontradas</h6>
+                        {% if seguimiento.dificultades %}
+                            <p>{{ seguimiento.dificultades }}</p>
+                        {% else %}
+                            <p class="text-muted">No se registraron dificultades</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <h6 class="border-bottom pb-2 mb-3">Observaciones generales</h6>
+                        {% if seguimiento.observaciones %}
+                            <p>{{ seguimiento.observaciones }}</p>
+                        {% else %}
+                            <p class="text-muted">No se registraron observaciones</p>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="col-12 text-center py-3">
+                        <p class="text-muted mb-0">No se registraron observaciones</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Imágenes del seguimiento -->
+    {% if imagenes %}
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0"><i class="fas fa-images me-2"></i>Evidencia fotográfica</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for imagen in imagenes %}
+                <div class="col-md-3 mb-3">
+                    <div class="card h-100">
+                        <img src="{{ url_for('static', filename='uploads/seguimiento/' + imagen.nombre_imagen) }}" 
+                             class="card-img-top" alt="Imagen de progreso" style="height: 200px; object-fit: cover;">
+                        <div class="card-footer">
+                            <p class="mb-0 text-center">
+                                <span class="badge {% if imagen.tipo == 'antes' %}bg-danger{% elif imagen.tipo == 'durante' %}bg-warning text-dark{% elif imagen.tipo == 'despues' %}bg-success{% else %}bg-info{% endif %}">
+                                    {{ imagen.tipo|capitalize }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .bg-purple {
+        background-color: #6f42c1;
+    }
+    .border-purple {
+        border-color: #6f42c1;
+    }
+</style>
+{% endblock %} 

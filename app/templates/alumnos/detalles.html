@@ -77,64 +77,124 @@
                     </a>
                 </div>
             </div>
-        </div>
-        
-        <!-- Secciones de Rutinas, Metas y Dietas -->
-        <div class="col-md-8">
-            <!-- Acciones rápidas -->
-            <div class="row mb-4">
-                <div class="col-md-4">
-                    <a href="{{ url_for('rutinas.nueva_rutina', alumno_id=alumno.id) }}" class="btn btn-success w-100 h-100 py-3">
-                        <i class="fas fa-dumbbell fa-2x mb-2"></i><br>
-                        Crear Nueva Rutina
-                    </a>
-                </div>
-                <div class="col-md-4">
-                    <a href="{{ url_for('rutinas.nueva_meta', alumno_id=alumno.id) }}" class="btn btn-info text-white w-100 h-100 py-3">
-                        <i class="fas fa-flag-checkered fa-2x mb-2"></i><br>
-                        Crear Nueva Meta
-                    </a>
-                </div>
-                <div class="col-md-4">
-                    <a href="{{ url_for('dieta.nueva_dieta') }}" class="btn btn-warning text-dark w-100 h-100 py-3">
-                        <i class="fas fa-utensils fa-2x mb-2"></i><br>
-                        Crear Nueva Dieta
-                    </a>
-                </div>
-            </div>
-
+            
             <!-- Historial de medidas -->
             <div class="card mb-4">
                 <div class="card-header bg-light">
                     <h5 class="mb-0">Historial de Medidas</h5>
                 </div>
                 <div class="card-body p-0">
-                    {% if medidas %}
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Fecha</th>
-                                        <th>Peso (kg)</th>
-                                        <th>Altura (cm)</th>
-                                        <th>IMC</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for medida in medidas %}
-                                        <tr>
-                                            <td>{{ medida.fecha_medicion.strftime('%d/%m/%Y') }}</td>
-                                            <td>{{ medida.peso }}</td>
-                                            <td>{{ medida.altura }}</td>
-                                            <td>{{ medida.imc }}</td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Peso</th>
+                                    <th>IMC</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for medida in medidas %}
+                                <tr>
+                                    <td>{{ medida.fecha_medicion.strftime('%d/%m/%Y') }}</td>
+                                    <td>{{ medida.peso }} kg</td>
+                                    <td>{{ medida.imc }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Secciones de Rutinas, Metas y Dietas -->
+        <div class="col-md-8">
+            <!-- Acciones rápidas -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <a href="{{ url_for('rutinas.nueva_rutina', alumno_id=alumno.id) }}" class="btn btn-success w-100 h-100 py-3">
+                        <i class="fas fa-dumbbell fa-2x mb-2"></i><br>
+                        Crear Rutina
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{{ url_for('rutinas.nueva_meta', alumno_id=alumno.id) }}" class="btn btn-info text-white w-100 h-100 py-3">
+                        <i class="fas fa-flag-checkered fa-2x mb-2"></i><br>
+                        Crear Meta
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{{ url_for('dieta.nueva_dieta') }}" class="btn btn-warning text-dark w-100 h-100 py-3">
+                        <i class="fas fa-utensils fa-2x mb-2"></i><br>
+                        Crear Dieta
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{{ url_for('alumnos.nuevo_seguimiento', alumno_id=alumno.id) }}" class="btn btn-purple text-white w-100 h-100 py-3">
+                        <i class="fas fa-chart-line fa-2x mb-2"></i><br>
+                        Seguimiento
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Seguimiento de Progreso -->
+            <div class="card mb-4">
+                <div class="card-header bg-purple text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Seguimiento de Progreso</h5>
+                    <a href="{{ url_for('alumnos.nuevo_seguimiento', alumno_id=alumno.id) }}" class="btn btn-sm btn-light">
+                        <i class="fas fa-plus"></i> Nuevo
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if seguimientos %}
+                        <div class="list-group list-group-flush">
+                            {% for seguimiento in seguimientos %}
+                                <a href="{{ url_for('alumnos.detalle_seguimiento', seguimiento_id=seguimiento.id) }}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ seguimiento.fecha_seguimiento.strftime('%d/%m/%Y') }}</h6>
+                                        <span class="badge {% if seguimiento.calificacion_instructor >= 8 %}bg-success{% elif seguimiento.calificacion_instructor >= 5 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                            {{ seguimiento.calificacion_instructor }}/10
+                                        </span>
+                                    </div>
+                                    <div class="row mt-2">
+                                        <div class="col-md-4">
+                                            <small class="text-muted">Rutina: 
+                                                {% if seguimiento.rendimiento %}
+                                                    <span class="text-success">{{ seguimiento.rendimiento }}/10</span>
+                                                {% else %}
+                                                    <span class="text-muted">N/A</span>
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <small class="text-muted">Dieta: 
+                                                {% if seguimiento.adherencia_dieta %}
+                                                    <span class="text-success">{{ seguimiento.adherencia_dieta }}%</span>
+                                                {% else %}
+                                                    <span class="text-muted">N/A</span>
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <small class="text-muted">Progreso: 
+                                                {% if seguimiento.peso_actual %}
+                                                    <span class="text-success">{{ seguimiento.peso_actual }} kg</span>
+                                                {% else %}
+                                                    <span class="text-muted">N/A</span>
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </a>
+                            {% endfor %}
                         </div>
                     {% else %}
-                        <div class="text-center py-3">
-                            <p class="mb-0">No hay medidas registradas</p>
+                        <div class="text-center py-4">
+                            <p class="text-muted mb-0">No hay registros de seguimiento</p>
+                            <a href="{{ url_for('alumnos.nuevo_seguimiento', alumno_id=alumno.id) }}" class="btn btn-sm btn-purple mt-2">
+                                <i class="fas fa-plus"></i> Crear primer seguimiento
+                            </a>
                         </div>
                     {% endif %}
                 </div>
@@ -203,16 +263,19 @@
                         </div>
                     {% else %}
                         <div class="text-center py-3">
-                            <p class="mb-0">No hay metas establecidas</p>
+                            <p class="mb-0">No hay metas asignadas</p>
                         </div>
                     {% endif %}
                 </div>
             </div>
             
             <!-- Dietas -->
-            <div class="card">
+            <div class="card mb-4">
                 <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Dietas</h5>
+                    <a href="{{ url_for('dieta.index') }}" class="btn btn-sm btn-dark">
+                        Ver todas
+                    </a>
                 </div>
                 <div class="card-body p-0">
                     {% if dietas %}
@@ -224,7 +287,11 @@
                                         <small>{{ dieta.fecha_registro.strftime('%d/%m/%Y') }}</small>
                                     </div>
                                     <p class="mb-1 text-truncate">{{ dieta.descripcion }}</p>
-                                    <small>Disciplina: {{ dieta.discipline_nombre }}</small>
+                                    <div class="mt-1 d-flex justify-content-between">
+                                        <small>Tipo: {{ dieta.tipo_dieta }}</small>
+                                        <small>Meta: {{ dieta.meta_calorias }} kcal</small>
+                                        <small>Disciplina: {{ dieta.discipline_nombre }}</small>
+                                    </div>
                                 </a>
                             {% endfor %}
                         </div>
@@ -238,4 +305,20 @@
         </div>
     </div>
 </div>
+
+<style>
+    .bg-purple {
+        background-color: #6f42c1;
+    }
+    .btn-purple {
+        background-color: #6f42c1;
+        border-color: #6f42c1;
+        color: white;
+    }
+    .btn-purple:hover {
+        background-color: #5e35b1;
+        border-color: #5e35b1;
+        color: white;
+    }
+</style>
 {% endblock %} 
