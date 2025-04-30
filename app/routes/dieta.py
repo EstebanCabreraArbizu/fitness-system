@@ -88,7 +88,7 @@ def nueva_dieta():
                 SELECT d.*
                 FROM Discipline d
                 JOIN Discipline_Instructor di ON d.id = di.Discipline_id
-                WHERE di.Instructor_id = %s
+                WHERE di.Usuario_id = %s
             """, (current_user.id,))
             disciplinas = cursor.fetchall()
             
