@@ -166,11 +166,6 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('alumnos.asignar_alumno') }}">
-                                <i class="fas fa-user-plus me-1"></i> Agregar Alumno
-                            </a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link {% if request.path.startswith('/dietas') %}active{% endif %}" href="{{ url_for('dieta.index') }}">
                                 <i class="fas fa-utensils me-1"></i> Dietas
                             </a>
@@ -185,15 +180,16 @@
                             </ul>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.path.startswith('/instructor/servicios') %}active{% endif %}" href="{{ url_for('servicios.index') }}">
-                                <i class="fas fa-concierge-bell me-1"></i> Servicios
-                            </a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link {% if request.path.startswith('/products') %}active{% endif %}" href="{{ url_for('product.index') }}">
                                 <i class="fas fa-shopping-bag me-1"></i> Productos
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path.startswith('/instructor/servicios') %}active{% endif %}" href="{{ url_for('servicios.index') }}">
+                                <i class="fas fa-concierge-bell me-1"></i> Servicios
+                            </a>
+                        </li>
+
                         {% endif %}
                         
                         {% if current_user.is_client() %}

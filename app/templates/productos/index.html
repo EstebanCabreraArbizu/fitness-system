@@ -1,308 +1,918 @@
-<!DOCTYPE html>
-<html lang="es">
+{% extends "layout.html" %}
 
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Gestión de Productos Fitness</title>
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-	<link rel="stylesheet" href="{{url_for('static', filename='css/styles.css')}}">
-</head>
+{% block title %}Gestión de Productos Fitness{% endblock %}
 
-<body>
-	<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-		<div class="container">
-			<a class="navbar-brand" href="../index.html">FitTrainer</a>
-			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-				<span class="navbar-toggler-icon"></span>
-			</button>
-			<div class="collapse navbar-collapse" id="navbarNav">
-				<ul class="navbar-nav ms-auto">
-					<li class="nav-item">
-						<a class="nav-link" href="../clientes/index.html">Clientes</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="../instructores/index.html">Instructores</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link active" href="index.html">Productos</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="../disciplinas/index.html">Disciplinas</a>
-					</li>
-				</ul>
-			</div>
-		</div>
-	</nav>
+{% block styles %}
+<style>
+	.product-card {
+		height: 100%;
+		transition: transform 0.3s;
+	}
+	
+	.product-card:hover {
+		transform: translateY(-5px);
+	}
+	
+	.product-image {
+		height: 180px;
+		object-fit: cover;
+	}
+	
+	.modal-image-preview {
+		width: 80px;
+		height: 80px;
+		object-fit: cover;
+		margin-right: 10px;
+		border-radius: 4px;
+	}
+	
+	.carousel-item img {
+		height: 300px;
+		object-fit: contain;
+	}
+	
+	.instructor-checkbox {
+		margin-right: 10px;
+	}
+	
+	.instructor-label {
+		display: flex;
+		align-items: center;
+		margin-bottom: 10px;
+	}
+	
+	.instructor-avatar {
+		width: 40px;
+		height: 40px;
+		border-radius: 50%;
+		margin-right: 10px;
+		object-fit: cover;
+	}
+</style>
+{% endblock %}
 
-	<div class="container mt-4">
-		<div class="d-flex justify-content-between align-items-center mb-4">
-			<h1>Productos Vitamínicos Fitness</h1>
-			<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productoModal">
-				<i class="bi bi-plus-lg"></i> Nuevo Producto
-			</button>
-		</div>
+{% block content %}
+<div class="container mt-4">
+	<div class="d-flex justify-content-between align-items-center mb-4">
+		<h1>Productos Vitamínicos Fitness</h1>
+		<button class="btn btn-primary" id="btnNuevoProducto">
+			<i class="fas fa-plus-lg"></i> Nuevo Producto
+		</button>
+	</div>
 
-		<div class="card shadow-sm">
-			<div class="card-body">
-				<div class="row mb-3">
-					<div class="col-md-4">
-						<input type="text" id="searchProducto" class="form-control" placeholder="Buscar producto...">
-					</div>
-					<div class="col-md-2">
-						<select id="filterStatus" class="form-select">
-							<option value="">Todos</option>
-							<option value="1">Activo</option>
-							<option value="0">Inactivo</option>
-						</select>
-					</div>
-					<div class="col-md-2">
-						<button class="btn btn-sm btn-outline-secondary" onclick="clearAllFilters()">Limpiar filtros</button>
-					</div>
+	<!-- Alertas -->
+	<div id="alertContainer" class="mb-3">
+		<!-- Aquí se mostrarán las alertas dinámicamente -->
+	</div>
+
+	<div class="card shadow-sm">
+		<div class="card-body">
+			<div class="row mb-3">
+				<div class="col-md-4">
+					<input type="text" id="searchProducto" class="form-control" placeholder="Buscar producto...">
 				</div>
+				<div class="col-md-2">
+					<select id="filterStatus" class="form-select">
+						<option value="">Todos</option>
+						<option value="1">Activo</option>
+						<option value="0">Inactivo</option>
+					</select>
+				</div>
+				<div class="col-md-2">
+					<button class="btn btn-sm btn-outline-secondary" onclick="clearAllFilters()">Limpiar filtros</button>
+				</div>
+			</div>
 
-				<div class="row" id="productosGrid">
+			<div class="row" id="productosGrid">
+				<!-- Se llenará con JavaScript -->
+				<div class="col-12 text-center py-5">
+					<div class="spinner-border text-primary" role="status">
+						<span class="visually-hidden">Cargando...</span>
+					</div>
+					<p class="mt-2">Cargando productos...</p>
+				</div>
+			</div>
+
+			<nav aria-label="Paginación de productos">
+				<ul class="pagination justify-content-center" id="productosPagination">
 					<!-- Se llenará con JavaScript -->
-				</div>
-
-				<nav aria-label="Paginación de productos">
-					<ul class="pagination justify-content-center" id="productosPagination">
-						<!-- Se llenará con JavaScript -->
-					</ul>
-				</nav>
-			</div>
+				</ul>
+			</nav>
 		</div>
 	</div>
+</div>
 
-	<!-- Modal para Crear/Editar Producto -->
-	<div class="modal fade" id="productoModal" tabindex="-1" aria-hidden="true">
-		<div class="modal-dialog modal-lg">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h5 class="modal-title" id="modalTitle">Nuevo Producto</h5>
-					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-				</div>
-				<div class="modal-body">
-					<form id="productoForm">
-						<input type="hidden" id="productoId">
-						<div class="row mb-3">
-							<div class="col-md-8">
-								<label for="title" class="form-label">Título</label>
-								<input type="text" class="form-control" id="title" required>
-							</div>
-							<div class="col-md-4">
-								<label for="category" class="form-label">Categoría</label>
-								<input type="number" class="form-control" id="category">
-							</div>
-						</div>
-						<div class="mb-3">
-							<label for="description" class="form-label">Descripción</label>
-							<textarea class="form-control" id="description" rows="3"></textarea>
-						</div>
-						<div class="row mb-3">
-							<div class="col-md-6">
-								<label for="marca" class="form-label">Marca</label>
-								<input type="text" class="form-control" id="marca" required>
-							</div>
-							<div class="col-md-6">
-								<label for="palabras_claves" class="form-label">Palabras Clave</label>
-								<input type="text" class="form-control" id="palabras_claves" required>
-							</div>
-						</div>
-						<div class="row mb-3">
-							<div class="col-md-3">
-								<label for="price" class="form-label">Precio de Venta Actual ($)</label>
-								<input type="number" step="0.01" class="form-control" id="price">
-							</div>
-							<div class="col-md-3">
-								<label for="descuento" class="form-label">Precio a descontar ($)</label>
-								<input type="number" step="0.01" class="form-control" id="descuento">
-							</div>
-							<div class="col-md-3">
-								<label for="previous_price" class="form-label">Precio Anterior ($)</label>
-								<input type="number" step="0.01" class="form-control" id="previous_price">
-							</div>
-							<div class="col-md-3">
-								<label for="purchase_price" class="form-label">Precio de Compra del producto ($)</label>
-								<input type="number" step="0.01" class="form-control" id="purchase_price">
-							</div>
-						</div>
-						<div class="row mb-3">
-							<div class="col-md-4">
-								<label for="fecha_inicio" class="form-label">Fecha Inicio</label>
-								<input type="date" class="form-control" id="fecha_inicio">
-							</div>
-							<div class="col-md-4">
-								<label for="fecha_fin" class="form-label">Fecha Fin</label>
-								<input type="date" class="form-control" id="fecha_fin">
-							</div>
-							<div class="col-md-4">
-								<label for="status" class="form-label">Estado</label>
-								<select class="form-select" id="status" required>
-									<option value="1">Activo</option>
-									<option value="0">Inactivo</option>
-								</select>
-							</div>
-						</div>
-						<!-- <div class="row mb-3">
-							<div class="col-md-6">
-								<label for="profesor" class="form-label">Profesor</label>
-								<input type="text" class="form-control" id="profesor" required>
-							</div>
-							<div class="col-md-6">
-								<label for="profesor_foto" class="form-label">Foto del Profesor</label>
-								<input type="file" class="form-control" id="profesor_foto">
-							</div>
-						</div> -->
-						<div class="row mb-3">
-							<div class="col-md-4">
-								<div class="form-check">
-									<input class="form-check-input" type="checkbox" id="relevant" value="1">
-									<label class="form-check-label" for="relevant">Relevante</label>
-								</div>
-							</div>
-							<div class="col-md-4">
-								<div class="form-check">
-									<input class="form-check-input" type="checkbox" id="outstanding" value="1" checked>
-									<label class="form-check-label" for="outstanding">Destacado</label>
-								</div>
-							</div>
-						</div>
-						<div class="mb-3">
-							<label class="form-label">Imágenes del Producto</label>
-							<input type="file" class="form-control mb-2" id="productImages" multiple>
-							<div id="imagePreviewContainer" class="row">
-								<!-- Se llenará con JavaScript -->
-							</div>
-						</div>
-						<div class="mb-3">
-							<label class="form-label">Asignar a Instructores</label>
-							<div id="instructoresList" class="row">
-								<!-- Se llenará con JavaScript -->
-							</div>
-						</div>
-					</form>
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-					<button type="button" class="btn btn-primary" id="saveProducto">Guardar</button>
-				</div>
+<!-- Modal para Crear/Editar Producto -->
+<div class="modal fade" id="productoModal" tabindex="-1" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="modalTitle">Nuevo Producto</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 			</div>
-		</div>
-	</div>
-
-	<!-- Modal para Ver Detalles del Producto -->
-	<div class="modal fade" id="viewProductoModal" tabindex="-1" aria-hidden="true">
-		<div class="modal-dialog modal-lg">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h5 class="modal-title">Detalles del Producto</h5>
-					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-				</div>
-				<div class="modal-body">
-					<div class="row">
-						<div class="col-md-6">
-							<div id="productoImageCarousel" class="carousel slide" data-bs-ride="carousel">
-								<div class="carousel-inner" id="productoImagenes">
-									<!-- Se llenará con JavaScript -->
-								</div>
-								<button class="carousel-control-prev" type="button"
-									data-bs-target="#productoImageCarousel" data-bs-slide="prev">
-									<span class="carousel-control-prev-icon" aria-hidden="true"></span>
-									<span class="visually-hidden">Anterior</span>
-								</button>
-								<button class="carousel-control-next" type="button"
-									data-bs-target="#productoImageCarousel" data-bs-slide="next">
-									<span class="carousel-control-next-icon" aria-hidden="true"></span>
-									<span class="visually-hidden">Siguiente</span>
-								</button>
-							</div>
-						</div>
-						<div class="col-md-6">
-							<h3 id="productoTitle"></h3>
-							<p class="badge bg-primary" id="productoMarca"></p>
-							<p class="badge bg-success" id="productoStatus"></p>
-
-							<div class="d-flex align-items-center mt-3">
-								<h4 id="productoPrecio" class="me-2"></h4>
-								<span id="productoDescuento" class="text-decoration-line-through text-muted"></span>
-							</div>
-
-							<p class="mt-3" id="productoDescripcion"></p>
-
-							<div class="mt-3">
-								<p><strong>Palabras clave:</strong> <span id="productoPalabrasClave"></span></p>
-								<p><strong>Disponible:</strong> <span id="productoFechas"></span></p>
-							</div>
-						</div>
-					</div>
-					<hr>
-					<div class="row mt-3">
-						<!-- <div class="col-md-4 text-center">
-							<img id="productoProfesorFoto"
-								src="{{ url_for('static', filename='img/producto-default.png') }}"
-								class="img-fluid rounded-circle" alt="Foto de profesor"
-								style="width: 100px; height: 100px; object-fit: cover;">
-							<p class="mt-2"><strong>Profesor:</strong> <span id="productoProfesor"></span></p>
-						</div> -->
+			<div class="modal-body">
+				<form id="productoForm">
+					<input type="hidden" id="productoId">
+					<div class="row mb-3">
 						<div class="col-md-8">
-							<h5>Instructores Asignados</h5>
-							<div id="productoInstructores" class="row">
-								<!-- Se llenará con JavaScript -->
+							<label for="title" class="form-label">Título</label>
+							<input type="text" class="form-control" id="title" required>
+						</div>
+						<div class="col-md-4">
+							<label for="category" class="form-label">Categoría</label>
+							<input type="number" class="form-control" id="category">
+						</div>
+					</div>
+					<div class="mb-3">
+						<label for="description" class="form-label">Descripción</label>
+						<textarea class="form-control" id="description" rows="3"></textarea>
+					</div>
+					<div class="row mb-3">
+						<div class="col-md-6">
+							<label for="marca" class="form-label">Marca</label>
+							<input type="text" class="form-control" id="marca" required>
+						</div>
+						<div class="col-md-6">
+							<label for="palabras_claves" class="form-label">Palabras Clave</label>
+							<input type="text" class="form-control" id="palabras_claves" required>
+						</div>
+					</div>
+					<div class="row mb-3">
+						<div class="col-md-3">
+							<label for="price" class="form-label">Precio de Venta Actual ($)</label>
+							<input type="number" step="0.01" class="form-control" id="price">
+						</div>
+						<div class="col-md-3">
+							<label for="descuento" class="form-label">Precio a descontar ($)</label>
+							<input type="number" step="0.01" class="form-control" id="descuento">
+						</div>
+						<div class="col-md-3">
+							<label for="previous_price" class="form-label">Precio Anterior ($)</label>
+							<input type="number" step="0.01" class="form-control" id="previous_price">
+						</div>
+						<div class="col-md-3">
+							<label for="purchase_price" class="form-label">Precio de Compra del producto ($)</label>
+							<input type="number" step="0.01" class="form-control" id="purchase_price">
+						</div>
+					</div>
+					<div class="row mb-3">
+						<div class="col-md-4">
+							<label for="fecha_inicio" class="form-label">Fecha Inicio</label>
+							<input type="date" class="form-control" id="fecha_inicio">
+						</div>
+						<div class="col-md-4">
+							<label for="fecha_fin" class="form-label">Fecha Fin</label>
+							<input type="date" class="form-control" id="fecha_fin">
+						</div>
+						<div class="col-md-4">
+							<label for="status" class="form-label">Estado</label>
+							<select class="form-select" id="status" required>
+								<option value="1">Activo</option>
+								<option value="0">Inactivo</option>
+							</select>
+						</div>
+					</div>
+					<div class="row mb-3">
+						<div class="col-md-4">
+							<div class="form-check">
+								<input class="form-check-input" type="checkbox" id="relevant" value="1">
+								<label class="form-check-label" for="relevant">Relevante</label>
+							</div>
+						</div>
+						<div class="col-md-4">
+							<div class="form-check">
+								<input class="form-check-input" type="checkbox" id="outstanding" value="1" checked>
+								<label class="form-check-label" for="outstanding">Destacado</label>
 							</div>
 						</div>
 					</div>
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-				</div>
+					<div class="mb-3">
+						<label class="form-label">Imágenes del Producto</label>
+						<input type="file" class="form-control mb-2" id="productImages" multiple>
+						<div id="imagePreviewContainer" class="row">
+							<!-- Se llenará con JavaScript -->
+						</div>
+					</div>
+					<div class="mb-3">
+						<label class="form-label">Asignar a Instructores</label>
+						<div id="instructoresList" class="row">
+							<!-- Se llenará con JavaScript -->
+						</div>
+					</div>
+				</form>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+				<button type="button" class="btn btn-primary" id="saveProducto">Guardar</button>
 			</div>
 		</div>
 	</div>
+</div>
 
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-	<script src="{{url_for('static', filename = 'js/productos.js')}}"></script>
-	<script>
-		const URLS = {
-			instructores: "{{ url_for('product.get_instructores') }}",
-			producto: function(id) { return "{{ url_for('product.get_product', id=0) }}".replace('0', id); },
-			addProducto: "{{ url_for('product.add_product') }}",
-			updateProducto: function(id) { return "{{ url_for('product.update_product', id=0) }}".replace('0', id); },
-			deleteProducto: function(id) { return "{{ url_for('product.delete_product', id=0) }}".replace('0', id); }
+<!-- Modal para Ver Detalles del Producto -->
+<div class="modal fade" id="viewProductoModal" tabindex="-1" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">Detalles del Producto</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<div class="row">
+					<div class="col-md-6">
+						<div id="productoImageCarousel" class="carousel slide" data-bs-ride="carousel">
+							<div class="carousel-inner" id="productoImagenes">
+								<!-- Se llenará con JavaScript -->
+							</div>
+							<button class="carousel-control-prev" type="button"
+								data-bs-target="#productoImageCarousel" data-bs-slide="prev">
+								<span class="carousel-control-prev-icon" aria-hidden="true"></span>
+								<span class="visually-hidden">Anterior</span>
+							</button>
+							<button class="carousel-control-next" type="button"
+								data-bs-target="#productoImageCarousel" data-bs-slide="next">
+								<span class="carousel-control-next-icon" aria-hidden="true"></span>
+								<span class="visually-hidden">Siguiente</span>
+							</button>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<h3 id="productoTitle"></h3>
+						<p class="badge bg-primary" id="productoMarca"></p>
+						<p class="badge bg-success" id="productoStatus"></p>
+
+						<div class="d-flex align-items-center mt-3">
+							<h4 id="productoPrecio" class="me-2"></h4>
+							<span id="productoDescuento" class="text-decoration-line-through text-muted"></span>
+						</div>
+
+						<p class="mt-3" id="productoDescripcion"></p>
+
+						<div class="mt-3">
+							<p><strong>Palabras clave:</strong> <span id="productoPalabrasClave"></span></p>
+							<p><strong>Disponible:</strong> <span id="productoFechas"></span></p>
+						</div>
+					</div>
+				</div>
+				<hr>
+				<div class="row mt-3">
+					<div class="col-12">
+						<h5>Instructores Asignados</h5>
+						<div id="viewInstructores" class="row">
+							<!-- Se llenará con JavaScript -->
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+				<button type="button" class="btn btn-primary" id="editProductoBtn">Editar</button>
+				<button type="button" class="btn btn-danger" id="deleteProductoBtn">Eliminar</button>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+	// Variables globales
+	let allProducts = [];
+	let currentPage = 1;
+	let totalPages = 1;
+	let itemsPerPage = 8;
+	let editMode = false;
+	let editProductId = null;
+	let allInstructors = [];
+	
+	// Inicialización
+	document.addEventListener('DOMContentLoaded', function() {
+		// Cargar productos
+		loadProducts();
+		
+		// Cargar instructores
+		loadInstructors();
+		
+		// Event listeners
+		document.getElementById('saveProducto').addEventListener('click', saveProducto);
+		document.getElementById('searchProducto').addEventListener('input', filterProducts);
+		document.getElementById('filterStatus').addEventListener('change', filterProducts);
+		document.getElementById('btnNuevoProducto').addEventListener('click', () => {
+			resetForm();
+			new bootstrap.Modal(document.getElementById('productoModal')).show();
+		});
+		
+		// Preview de imágenes
+		document.getElementById('productImages').addEventListener('change', function(e) {
+			const files = e.target.files;
+			const previewContainer = document.getElementById('imagePreviewContainer');
+			previewContainer.innerHTML = '';
+			
+			for (let i = 0; i < files.length; i++) {
+				const file = files[i];
+				const reader = new FileReader();
+				
+				reader.onload = function(e) {
+					const col = document.createElement('div');
+					col.className = 'col-3 mb-2';
+					
+					const img = document.createElement('img');
+					img.src = e.target.result;
+					img.className = 'img-fluid modal-image-preview';
+					
+					col.appendChild(img);
+					previewContainer.appendChild(col);
+				}
+				
+				reader.readAsDataURL(file);
+			}
+		});
+	});
+	
+	// Función para cargar productos
+	function loadProducts() {
+		// Mostrar el indicador de carga
+		const grid = document.getElementById('productosGrid');
+		grid.innerHTML = `
+			<div class="col-12 text-center py-5">
+				<div class="spinner-border text-primary" role="status">
+					<span class="visually-hidden">Cargando...</span>
+				</div>
+				<p class="mt-2">Cargando productos...</p>
+			</div>
+		`;
+		
+		console.log('Iniciando petición a /products/all');
+		fetch('/products/all')
+			.then(response => {
+				console.log('Respuesta recibida:', response.status, response.statusText);
+				if (!response.ok) {
+					throw new Error('Error en la respuesta del servidor: ' + response.status + ' ' + response.statusText);
+				}
+				return response.json();
+			})
+			.then(data => {
+				console.log('Datos recibidos:', data);
+				if (data.success) {
+					allProducts = data.products || [];
+					console.log('Productos cargados:', allProducts.length);
+					renderProducts();
+				} else {
+					console.error('Error al cargar productos:', data.error);
+					showAlert('Error al cargar productos: ' + data.error, 'danger');
+					// Usar productos de muestra o vacío si hay error
+					allProducts = [];
+					renderProducts();
+				}
+			})
+			.catch(error => {
+				console.error('Error al conectar con el servidor:', error);
+				showAlert('Error al conectar con el servidor. Por favor, intente de nuevo más tarde. Error: ' + error.message, 'danger');
+				// Usar productos de muestra o vacío si hay error
+				allProducts = [];
+				renderProducts();
+			});
+	}
+	
+	// Función para cargar instructores
+	function loadInstructors() {
+		fetch('/products/instructors/all')
+			.then(response => {
+				if (!response.ok) {
+					throw new Error('Error en la respuesta del servidor: ' + response.status);
+				}
+				return response.json();
+			})
+			.then(data => {
+				if (data.success) {
+					allInstructors = data.instructors || [];
+					console.log('Instructores cargados:', allInstructors.length);
+				} else {
+					console.error('Error al cargar instructores:', data.error);
+					showAlert('Error al cargar instructores: ' + data.error, 'warning');
+					allInstructors = [];
+				}
+				renderInstructorsList();
+			})
+			.catch(error => {
+				console.error('Error al cargar instructores:', error);
+				showAlert('No se pudieron cargar los instructores. Se usarán datos de respaldo.', 'warning');
+				// Usar datos de respaldo mínimos para que la aplicación siga funcionando
+				allInstructors = [];
+				renderInstructorsList();
+			});
+	}
+	
+	// Funciones para manejo de productos
+	function renderProducts() {
+		const grid = document.getElementById('productosGrid');
+		const pagination = document.getElementById('productosPagination');
+		
+		// Limpiar grid
+		grid.innerHTML = '';
+		
+		// Si no hay productos
+		if (allProducts.length === 0) {
+			grid.innerHTML = '<div class="col-12 text-center py-5"><p>No hay productos para mostrar</p></div>';
+			pagination.innerHTML = '';
+			return;
 		}
-	</script>
-	<script>
-		const productos = {{ products| tojson | safe}};
-		const instructores = [];
-
-		document.addEventListener('DOMContentLoaded', function () {
-			fetch(URLS.instructores)
-				.then(response => {
-					if (!response.ok) {
-						throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
+		
+		// Calcular páginas
+		totalPages = Math.ceil(allProducts.length / itemsPerPage);
+		
+		// Filtrar por página
+		const start = (currentPage - 1) * itemsPerPage;
+		const end = start + itemsPerPage;
+		const productsToShow = allProducts.slice(start, end);
+		
+		// Renderizar productos
+		productsToShow.forEach(product => {
+			const productCard = document.createElement('div');
+			productCard.className = 'col-md-3 mb-4';
+			
+			const statusClass = product.status == 1 ? 'success' : 'danger';
+			const statusText = product.status == 1 ? 'Activo' : 'Inactivo';
+			
+			// Obtener la primera imagen o usar una por defecto
+			const imageSrc = product.images && product.images.length > 0 
+				? `/static/img/${product.images[0]}` 
+				: '/static/img/producto-default.png';
+			
+			productCard.innerHTML = `
+				<div class="card product-card">
+					<img src="${imageSrc}" class="card-img-top product-image" alt="${product.title}">
+					<div class="card-body">
+						<h5 class="card-title">${product.title}</h5>
+						<p class="card-text text-truncate">${product.description || ''}</p>
+						<div class="d-flex justify-content-between">
+							<span class="badge bg-primary">$${product.price}</span>
+							<span class="badge bg-${statusClass}">${statusText}</span>
+						</div>
+					</div>
+					<div class="card-footer">
+						<button class="btn btn-sm btn-outline-primary w-100" onclick="viewProduct(${product.id})">
+							Ver detalles
+						</button>
+					</div>
+				</div>
+			`;
+			
+			grid.appendChild(productCard);
+		});
+		
+		// Renderizar paginación
+		renderPagination();
+	}
+	
+	function renderPagination() {
+		const pagination = document.getElementById('productosPagination');
+		pagination.innerHTML = '';
+		
+		if (totalPages <= 1) return;
+		
+		// Botón anterior
+		const prevLi = document.createElement('li');
+		prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+		prevLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Anterior</a>`;
+		pagination.appendChild(prevLi);
+		
+		// Números de página
+		for (let i = 1; i <= totalPages; i++) {
+			const pageLi = document.createElement('li');
+			pageLi.className = `page-item ${currentPage === i ? 'active' : ''}`;
+			pageLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${i})">${i}</a>`;
+			pagination.appendChild(pageLi);
+		}
+		
+		// Botón siguiente
+		const nextLi = document.createElement('li');
+		nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+		nextLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Siguiente</a>`;
+		pagination.appendChild(nextLi);
+	}
+	
+	function changePage(page) {
+		if (page < 1 || page > totalPages) return;
+		currentPage = page;
+		renderProducts();
+	}
+	
+	function filterProducts() {
+		const searchTerm = document.getElementById('searchProducto').value.toLowerCase();
+		const statusFilter = document.getElementById('filterStatus').value;
+		
+		// Filtrar productos
+		// Implementar lógica de filtrado aquí
+		
+		// Resetear paginación
+		currentPage = 1;
+		renderProducts();
+	}
+	
+	function clearAllFilters() {
+		document.getElementById('searchProducto').value = '';
+		document.getElementById('filterStatus').value = '';
+		filterProducts();
+	}
+	
+	function renderInstructorsList() {
+		const container = document.getElementById('instructoresList');
+		if (!container) return;
+		
+		container.innerHTML = '';
+		
+		if (!allInstructors || allInstructors.length === 0) {
+			container.innerHTML = `
+				<div class="col-12">
+					<div class="alert alert-info">
+						<i class="fas fa-info-circle me-2"></i>
+						No hay instructores disponibles. Puede agregar el producto sin asignar instructores.
+					</div>
+				</div>
+			`;
+			return;
+		}
+		
+		allInstructors.forEach(instructor => {
+			const col = document.createElement('div');
+			col.className = 'col-md-6';
+			
+			// Imagen de perfil
+			const avatarSrc = instructor.avatar 
+				? `/static/img/avatars/${instructor.avatar}` 
+				: '/static/img/default-avatar.png';
+			
+			col.innerHTML = `
+				<div class="instructor-label">
+					<input type="checkbox" class="form-check-input instructor-checkbox" 
+						   id="instructor_${instructor.id}" name="instructores[]" value="${instructor.id}">
+					<img src="${avatarSrc}" class="instructor-avatar">
+					<label for="instructor_${instructor.id}">${instructor.nombre} ${instructor.apellido}</label>
+				</div>
+			`;
+			
+			container.appendChild(col);
+		});
+	}
+	
+	function viewProduct(id) {
+		fetch(`/products/product/${id}`)
+			.then(response => {
+				if (!response.ok) {
+					throw new Error('Error en la respuesta del servidor: ' + response.status);
+				}
+				return response.json();
+			})
+			.then(product => {
+				// Llenar datos del modal
+				document.getElementById('productoTitle').textContent = product.title;
+				document.getElementById('productoMarca').textContent = product.marca;
+				document.getElementById('productoStatus').textContent = product.status == 1 ? 'Activo' : 'Inactivo';
+				document.getElementById('productoStatus').className = `badge bg-${product.status == 1 ? 'success' : 'danger'}`;
+				document.getElementById('productoPrecio').textContent = `$${product.price}`;
+				document.getElementById('productoDescuento').textContent = product.descuento > 0 ? `$${product.descuento}` : '';
+				document.getElementById('productoDescripcion').textContent = product.description || 'Sin descripción';
+				document.getElementById('productoPalabrasClave').textContent = product.palabras_claves || 'No especificadas';
+				
+				// Fechas
+				let fechasTexto = 'Siempre disponible';
+				if (product.fecha_inicio && product.fecha_fin) {
+					const inicio = new Date(product.fecha_inicio).toLocaleDateString();
+					const fin = new Date(product.fecha_fin).toLocaleDateString();
+					fechasTexto = `Del ${inicio} al ${fin}`;
+				}
+				document.getElementById('productoFechas').textContent = fechasTexto;
+				
+				// Imágenes
+				const carouselInner = document.getElementById('productoImagenes');
+				carouselInner.innerHTML = '';
+				
+				if (product.images && product.images.length > 0) {
+					product.images.forEach((image, index) => {
+						const div = document.createElement('div');
+						div.className = `carousel-item ${index === 0 ? 'active' : ''}`;
+						div.innerHTML = `<img src="/static/img/${image}" class="d-block w-100" alt="${product.title}">`;
+						carouselInner.appendChild(div);
+					});
+				} else {
+					carouselInner.innerHTML = `
+						<div class="carousel-item active">
+							<img src="/static/img/producto-default.png" class="d-block w-100" alt="Sin imagen">
+						</div>
+					`;
+				}
+				
+				// Instructores
+				const instructoresContainer = document.getElementById('viewInstructores');
+				instructoresContainer.innerHTML = '';
+				
+				if (product.instructores && product.instructores.length > 0) {
+					product.instructores.forEach(instructorId => {
+						const instructor = allInstructors.find(i => i.id === instructorId);
+						if (instructor) {
+							const col = document.createElement('div');
+							col.className = 'col-md-4 mb-3';
+							
+							const avatarSrc = instructor.avatar 
+								? `/static/img/avatars/${instructor.avatar}` 
+								: '/static/img/default-avatar.png';
+							
+							col.innerHTML = `
+								<div class="d-flex align-items-center">
+									<img src="${avatarSrc}" class="instructor-avatar">
+									<span>${instructor.nombre} ${instructor.apellido}</span>
+								</div>
+							`;
+							
+							instructoresContainer.appendChild(col);
+						}
+					});
+				} else {
+					instructoresContainer.innerHTML = '<div class="col-12"><p>No hay instructores asignados</p></div>';
+				}
+				
+				// Configurar botones
+				document.getElementById('editProductoBtn').onclick = () => editProduct(product.id);
+				document.getElementById('deleteProductoBtn').onclick = () => deleteProduct(product.id);
+				
+				// Mostrar modal
+				new bootstrap.Modal(document.getElementById('viewProductoModal')).show();
+			})
+			.catch(error => {
+				console.error('Error:', error);
+				showAlert('Error al cargar detalles del producto', 'danger');
+			});
+	}
+	
+	function showAlert(message, type = 'info') {
+		const alertContainer = document.getElementById('alertContainer');
+		
+		// Crear el elemento de alerta
+		const alertDiv = document.createElement('div');
+		alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+		alertDiv.innerHTML = `
+			${message}
+			<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+		`;
+		
+		// Agregar al contenedor y establecer tiempo de desaparición
+		alertContainer.appendChild(alertDiv);
+		
+		// Automáticamente quitar después de 5 segundos (excepto errores importantes)
+		if (type !== 'danger') {
+			setTimeout(() => {
+				alertDiv.classList.remove('show');
+				setTimeout(() => alertDiv.remove(), 150);
+			}, 5000);
+		}
+	}
+	
+	// Función para guardar un producto (nuevo o editado)
+	function saveProducto() {
+		// Validación básica del formulario
+		const title = document.getElementById('title').value.trim();
+		const marca = document.getElementById('marca').value.trim();
+		const palabras_claves = document.getElementById('palabras_claves').value.trim();
+		
+		if (!title || !marca || !palabras_claves) {
+			showAlert('Los campos Título, Marca y Palabras Clave son obligatorios', 'warning');
+			return;
+		}
+		
+		// Obtener datos del formulario
+		const formData = new FormData();
+		
+		// Campos básicos
+		formData.append('title', title);
+		formData.append('category', document.getElementById('category').value || '');
+		formData.append('description', document.getElementById('description').value || '');
+		formData.append('marca', marca);
+		formData.append('palabras_claves', palabras_claves);
+		
+		// Campos numéricos
+		formData.append('price', document.getElementById('price').value || 0);
+		formData.append('descuento', document.getElementById('descuento').value || 0);
+		formData.append('previous_price', document.getElementById('previous_price').value || 0);
+		formData.append('purchase_price', document.getElementById('purchase_price').value || 0);
+		
+		// Fechas
+		formData.append('fecha_inicio', document.getElementById('fecha_inicio').value || '');
+		formData.append('fecha_fin', document.getElementById('fecha_fin').value || '');
+		
+		// Status y flags
+		formData.append('status', document.getElementById('status').value);
+		formData.append('relevant', document.getElementById('relevant').checked ? '1' : '0');
+		formData.append('outstanding', document.getElementById('outstanding').checked ? '1' : '0');
+		
+		// Imágenes
+		const imageFiles = document.getElementById('productImages').files;
+		for (let i = 0; i < imageFiles.length; i++) {
+			formData.append('productImages', imageFiles[i]);
+		}
+		
+		// Instructores
+		const instructoresChecks = document.querySelectorAll('input[name="instructores[]"]:checked');
+		instructoresChecks.forEach(check => {
+			formData.append('instructores[]', check.value);
+		});
+		
+		// Mostrar indicador de carga
+		const saveBtn = document.getElementById('saveProducto');
+		const originalText = saveBtn.textContent;
+		saveBtn.disabled = true;
+		saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
+		
+		// Determinar si es nuevo o edición
+		if (editMode && editProductId) {
+			// Actualizar producto existente
+			fetch(`/products/update_product/${editProductId}`, {
+				method: 'POST',
+				body: formData
+			})
+			.then(response => {
+				if (!response.ok) {
+					throw new Error('Error en la respuesta del servidor: ' + response.status);
+				}
+				return response.json();
+			})
+			.then(data => {
+				if (data.success) {
+					showAlert('Producto actualizado correctamente', 'success');
+					// Actualizar el producto en la lista
+					const index = allProducts.findIndex(p => p.id === editProductId);
+					if (index !== -1) {
+						allProducts[index] = data.product;
 					}
-					return response.json();
-				})
-				.then(data => {
-					instructores.length = 0;
-					data.forEach(instructor => instructores.push(instructor));
-					renderProductosGrid();
-					renderInstructoresList();
-				})
-				.catch(error => {
-					console.error('Error al cargar instructores:', error);
-					// Mostrar un mensaje al usuario
-					showNotification('Error al cargar los instructores. Por favor, recargue la página.', 'danger');
-					// Aún así renderizar productos
-					renderProductosGrid();
-				});
-			// Asignar eventos a botones
-			document.getElementById('saveProducto').addEventListener('click', saveProducto);
-			document.getElementById('productImages').addEventListener('change', previewProductImages);
-			// document.getElementById('profesor_foto').addEventListener('change', previewProfesorFoto);
-		})
-	</script>
-</body>
-
-</html>
+					renderProducts();
+					bootstrap.Modal.getInstance(document.getElementById('productoModal')).hide();
+				} else {
+					showAlert('Error al actualizar producto: ' + data.error, 'danger');
+				}
+			})
+			.catch(error => {
+				console.error('Error:', error);
+				showAlert('Error al conectar con el servidor. Por favor, inténtelo de nuevo.', 'danger');
+			})
+			.finally(() => {
+				// Restaurar botón
+				saveBtn.disabled = false;
+				saveBtn.textContent = originalText;
+			});
+		} else {
+			// Crear nuevo producto
+			fetch('/products/add_product', {
+				method: 'POST',
+				body: formData
+			})
+			.then(response => {
+				if (!response.ok) {
+					throw new Error('Error en la respuesta del servidor: ' + response.status);
+				}
+				return response.json();
+			})
+			.then(data => {
+				if (data.success) {
+					showAlert('Producto creado correctamente', 'success');
+					// Añadir el nuevo producto a la lista
+					allProducts.unshift(data.product);
+					renderProducts();
+					bootstrap.Modal.getInstance(document.getElementById('productoModal')).hide();
+					resetForm();
+				} else {
+					showAlert('Error al crear producto: ' + data.error, 'danger');
+				}
+			})
+			.catch(error => {
+				console.error('Error:', error);
+				showAlert('Error al conectar con el servidor. Por favor, inténtelo de nuevo.', 'danger');
+			})
+			.finally(() => {
+				// Restaurar botón
+				saveBtn.disabled = false;
+				saveBtn.textContent = originalText;
+			});
+		}
+	}
+	
+	// Función para editar un producto
+	function editProduct(id) {
+		// Cerrar el modal de detalles
+		bootstrap.Modal.getInstance(document.getElementById('viewProductoModal')).hide();
+		
+		// Buscar el producto en la lista
+		const product = allProducts.find(p => p.id === id);
+		if (!product) {
+			showAlert('Producto no encontrado', 'danger');
+			return;
+		}
+		
+		// Cambiar a modo edición
+		editMode = true;
+		editProductId = id;
+		document.getElementById('modalTitle').textContent = 'Editar Producto';
+		
+		// Llenar formulario con datos del producto
+		document.getElementById('productoId').value = product.id;
+		document.getElementById('title').value = product.title || '';
+		document.getElementById('category').value = product.category || '';
+		document.getElementById('description').value = product.description || '';
+		document.getElementById('marca').value = product.marca || '';
+		document.getElementById('palabras_claves').value = product.palabras_claves || '';
+		
+		// Campos numéricos
+		document.getElementById('price').value = product.price || 0;
+		document.getElementById('descuento').value = product.descuento || 0;
+		document.getElementById('previous_price').value = product.previous_price || 0;
+		document.getElementById('purchase_price').value = product.purchase_price || 0;
+		
+		// Fechas
+		document.getElementById('fecha_inicio').value = product.fecha_inicio ? product.fecha_inicio.split('T')[0] : '';
+		document.getElementById('fecha_fin').value = product.fecha_fin ? product.fecha_fin.split('T')[0] : '';
+		
+		// Status y flags
+		document.getElementById('status').value = product.status;
+		document.getElementById('relevant').checked = product.relevant == 1;
+		document.getElementById('outstanding').checked = product.outstanding == 1;
+		
+		// Previsualizar imágenes existentes
+		const previewContainer = document.getElementById('imagePreviewContainer');
+		previewContainer.innerHTML = '';
+		
+		if (product.images && product.images.length > 0) {
+			product.images.forEach(image => {
+				const col = document.createElement('div');
+				col.className = 'col-3 mb-2';
+				
+				col.innerHTML = `
+					<img src="/static/img/${image}" class="img-fluid modal-image-preview" alt="${product.title}">
+					<div class="text-center text-muted small">Existente</div>
+				`;
+				
+				previewContainer.appendChild(col);
+			});
+		}
+		
+		// Marcar instructores asignados
+		const instructorCheckboxes = document.querySelectorAll('input[name="instructores[]"]');
+		instructorCheckboxes.forEach(checkbox => {
+			checkbox.checked = product.instructores && product.instructores.includes(parseInt(checkbox.value));
+		});
+		
+		// Mostrar modal
+		new bootstrap.Modal(document.getElementById('productoModal')).show();
+	}
+	
+	// Función para eliminar un producto
+	function deleteProduct(id) {
+		if (confirm('¿Está seguro de eliminar este producto? Esta acción no se puede deshacer.')) {
+			fetch(`/products/delete_product/${id}`, {
+				method: 'POST'
+			})
+			.then(response => {
+				if (!response.ok) {
+					throw new Error('Error en la respuesta del servidor: ' + response.status);
+				}
+				return response.json();
+			})
+			.then(data => {
+				if (data.success) {
+					showAlert('Producto eliminado correctamente', 'success');
+					// Eliminar el producto de la lista
+					allProducts = allProducts.filter(p => p.id !== id);
+					renderProducts();
+					// Cerrar modal de detalles si está abierto
+					const detailsModal = bootstrap.Modal.getInstance(document.getElementById('viewProductoModal'));
+					if (detailsModal) {
+						detailsModal.hide();
+					}
+				} else {
+					showAlert('Error al eliminar producto: ' + data.error, 'danger');
+				}
+			})
+			.catch(error => {
+				console.error('Error:', error);
+				showAlert('Error al conectar con el servidor', 'danger');
+			});
+		}
+	}
+	
+	// Función para resetear el formulario
+	function resetForm() {
+		document.getElementById('productoForm').reset();
+		document.getElementById('productoId').value = '';
+		document.getElementById('imagePreviewContainer').innerHTML = '';
+		
+		// Desmarcar todos los instructores
+		const instructorCheckboxes = document.querySelectorAll('input[name="instructores[]"]');
+		instructorCheckboxes.forEach(checkbox => {
+			checkbox.checked = false;
+		});
+		
+		// Resetear modo edición
+		editMode = false;
+		editProductId = null;
+		document.getElementById('modalTitle').textContent = 'Nuevo Producto';
+	}
+</script>
+{% endblock %}

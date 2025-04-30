@@ -38,6 +38,7 @@ login_manager.login_message_category = 'info'
 from app.models.client import Client
 from app.models.instructor import Instructor
 from app.models.user import User
+from app.models.product import Product
 # Modificar la función load_user y eliminar load_client y load_instructor
 
 @login_manager.user_loader

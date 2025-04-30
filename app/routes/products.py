@@ -4,6 +4,7 @@ from werkzeug.utils import secure_filename
 from app.db import get_db
 from app.models.client import Client
 from app.models.instructor import Instructor
+from app.models.product import Product
 import os
 import time
 products = Blueprint('product', __name__, template_folder='app/templates')
@@ -11,127 +12,70 @@ products = Blueprint('product', __name__, template_folder='app/templates')
 
 @products.route('/')
 def index():
-    conn = None
-    cursor = None
     try:
-        conn = get_db(current_app)
-        cursor = conn.cursor()
+        # Verificar si el usuario está autenticado y es instructor
+        user_id = current_user.id if current_user.is_authenticated and current_user.is_instructor() else None
         
-        # Verifica si el usuario está autenticado
-        if current_user.is_authenticated:
-            # Para un instructor, muestra solo sus productos asociados
-            if current_user.is_instructor():
-                cursor.execute("""
-                    SELECT p.* FROM Product p 
-                    JOIN Instructor_Products ip ON p.id = ip.Product_id
-                    WHERE ip.Usuario_id = %s
-                """, (current_user.id,))
-            else:
-                # Para clientes, muestra todos los productos activos
-                cursor.execute("SELECT * FROM Product WHERE status = 1")
-        else:
-            # Para usuarios no autenticados, muestra productos activos
-            cursor.execute("SELECT * FROM Product WHERE status = 1")
-            
-        product_list = cursor.fetchall()
+        # Usar el modelo Product para obtener los productos
+        product_list = Product.get_all(user_id=user_id)
         
-        # Procesar la lista de productos
-        for product in product_list:
-            if product['fecha_inicio']:
-                product['fecha_inicio'] = product['fecha_inicio'].isoformat()
-            if product['fecha_fin']:
-                product['fecha_fin'] = product['fecha_fin'].isoformat()
-                
-            cursor.execute(
-                "SELECT image_name FROM Product_images WHERE Product_id = %s", (product['id'],))
-            product['images'] = [row['image_name'] for row in cursor.fetchall()]
-
-            cursor.execute(
-                "SELECT Usuario_id FROM Instructor_Products WHERE Product_id = %s", (product['id'],))
-            product['instructores'] = [row['Usuario_id'] for row in cursor.fetchall()]
-            
         return render_template('productos/index.html', products=product_list)
     except Exception as e:
         current_app.logger.error(f'Error al cargar productos: {str(e)}')
         return render_template('productos/index.html', products=[], error="Error al cargar los productos")
-    finally:
-        if cursor:
-            cursor.close()
+
+
+@products.route('/all')
+def get_all_products():
+    """Obtiene todos los productos para cargar en la interfaz"""
+    try:
+        # Verificar si el usuario está autenticado y es instructor
+        user_id = current_user.id if current_user.is_authenticated and current_user.is_instructor() else None
+        
+        # Usar el modelo Product para obtener los productos
+        products_processed = Product.get_all(user_id=user_id)
+        
+        return jsonify({"success": True, "products": products_processed})
+    except Exception as e:
+        current_app.logger.error(f'Error al cargar productos: {str(e)}')
+        return jsonify({"success": False, "error": str(e)})
+
+
+@products.route('/instructors/all')
+def get_all_instructors():
+    """Obtiene todos los instructores para asignar a productos"""
+    try:
+        # Usar el modelo Product para obtener los instructores
+        instructors = Product.get_all_instructors()
+        
+        return jsonify({"success": True, "instructors": instructors})
+    except Exception as e:
+        current_app.logger.error(f'Error al cargar instructores: {str(e)}')
+        return jsonify({"success": False, "error": str(e)})
 
 
 @products.route('/product/<int:id>')
 def get_product(id):
-    cursor = None
     try:
-        conn = get_db(current_app)
-        cursor = conn.cursor()
-        # Obtener datos básicos del usuario
-        cursor.execute("""
-            SELECT *
-            FROM Product
-            WHERE id = %s
-        """, (id,))
-
-        product = cursor.fetchone()
-
-        if not product:
+        # Usar el modelo Product para obtener un producto específico
+        product_dict = Product.get_by_id(id)
+        
+        if not product_dict:
             return jsonify({'error': 'Publicación no encontrada'}), 404
-        # Convertir a diccionario
-
-        # Consultar imágenes asociadas
-        cursor.execute(
-            "SELECT image_name FROM Product_images WHERE Product_id = %s", (id,))
-        images = [row['image_name'] for row in cursor.fetchall()]
-
-        # Consultar instructores asignados
-        cursor.execute("""
-            SELECT DISTINCT i.id 
-            FROM Usuario i 
-            JOIN Instructor_Products ip ON i.id = ip.Usuario_id 
-            WHERE ip.Product_id = %s
-           """, (id,))
-        instructores = [row['id'] for row in cursor.fetchall()]
-
-        product_dict = {
-            'id': product['id'],
-            'title': product['title'],
-            'category': product['category'],
-            'description': product['description'],
-            'marca': product['marca'],
-            'purchase_price': product['purchase_price'],
-            'price': product['price'],
-            'descuento': product['descuento'],
-            'previous_price': product['previous_price'],
-            'fecha_inicio': product['fecha_inicio'].isoformat() if product['fecha_inicio'] else None,
-            'fecha_fin': product['fecha_fin'].isoformat() if product['fecha_fin'] else None,
-            'status': product['status'],
-            'palabras_claves': product['palabras_claves'],
-            'relevant': product['relevant'],
-            'outstanding': product['outstanding'],
-            'images': images,
-            'instructores': instructores
-        }
-
+        
         return jsonify(product_dict)
-
+    
     except Exception as e:
-        print(f"Error: {str(e)}")
+        current_app.logger.error(f"Error al obtener producto #{id}: {str(e)}")
         return jsonify({'error': 'Error al obtener datos de la publicación'}), 500
-
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            cursor.close()
 
 
 @products.route('/add_product', methods=['POST'])
 def add_product():
-    cursor = None
     try:
         # Verificaciones detalladas para ayudar en la depuración
-        print("Form data received:", request.form)
-        print("Files received:", request.files)
+        current_app.logger.info("Form data received: %s", request.form)
+        current_app.logger.info("Files received: %s", request.files)
 
         # Validar campos obligatorios
         required_fields = ['title', 'marca', 'palabras_claves']
@@ -144,205 +88,114 @@ def add_product():
                 'error': f'Campos obligatorios faltantes: {", ".join(missing_fields)}'
             }), 400
 
-        # Extraer datos del formulario (con validación)
-        title = request.form['title'].strip()
-        category = request.form.get('category', '').strip() or None
-        description = request.form.get('description', '').strip() or None
-        marca = request.form['marca'].strip()
-
-        # Convertir valores numéricos con manejo de errores
-        try:
-            purchase_price = float(request.form.get('purchase_price') or 0)
-            price = float(request.form.get('price') or 0)
-            descuento = float(request.form.get('descuento') or 0)
-            previous_price = float(request.form.get('previous_price') or 0)
-        except ValueError as e:
-            return jsonify({'success': False, 'error': f'Error en valor numérico: {str(e)}'}), 400
-
-        # Otros campos
-        fecha_inicio = request.form.get('fecha_inicio') or None
-        fecha_fin = request.form.get('fecha_fin') or None
-        status = int(request.form.get('status') or 1)
-        palabras_claves = request.form['palabras_claves'].strip()
-
-        # Checkboxes
-        relevant = int(request.form.get('relevant') == '1')
-        outstanding = int(request.form.get('outstanding') == '1')
-
-        # Procesar imágenes del producto
-        image_names = []
-        if 'productImages' in request.files:
-            # Depuración para ver qué estamos recibiendo
-            print("Archivos recibidos:", request.files.getlist('productImages'))
-            print("Cantidad de archivos:", len(request.files.getlist('productImages')))
-            imagenes = request.files.getlist('productImages')
-            for i, imagen in enumerate(imagenes):
-                print(f"Procesando imagen {i+1}: {imagen.filename}")
-                if imagen.filename:
-                    filename = secure_filename(imagen.filename)
-                    # Asegurarse de que el nombre de archivo sea único
-                    base, extension = os.path.splitext(filename)
-                    unique_filename = f"{base}_{int(time.time())}_{i}{extension}"
-                    imagen.save(f'app/static/img/{filename}')
-                    image_names.append(filename)
-                    try:
-                        imagen.save(f'app/static/img/{unique_filename}')
-                        image_names.append(unique_filename)
-                        print(f"Imagen guardada: {unique_filename}")
-                    except Exception as e:
-                        print(f"Error al guardar imagen: {str(e)}")
+        # Preparar datos del producto
+        product_data = {
+            'title': request.form['title'].strip(),
+            'category': request.form.get('category', '').strip() or None,
+            'description': request.form.get('description', '').strip() or None,
+            'marca': request.form['marca'].strip(),
+            'purchase_price': float(request.form.get('purchase_price') or 0),
+            'price': float(request.form.get('price') or 0),
+            'descuento': float(request.form.get('descuento') or 0),
+            'previous_price': float(request.form.get('previous_price') or 0),
+            'fecha_inicio': request.form.get('fecha_inicio') or None,
+            'fecha_fin': request.form.get('fecha_fin') or None,
+            'status': int(request.form.get('status') or 1),
+            'palabras_claves': request.form['palabras_claves'].strip(),
+            'relevant': int(request.form.get('relevant') == '1'),
+            'outstanding': int(request.form.get('outstanding') == '1')
+        }
 
         # Instructores
-        instructores = []
         if 'instructores[]' in request.form:
-            instructores = [int(i) for i in request.form.getlist('instructores[]') if i and i.isdigit()]
+            product_data['instructores'] = [int(i) for i in request.form.getlist('instructores[]') if i and i.isdigit()]
         
-        # Operaciones en la base de datos
-        conn = get_db(current_app)
-        cursor = conn.cursor()
-        # Insertar producto
-        cursor.execute(
-            """
-            INSERT INTO Product (
-                title, category, description, marca, purchase_price, price, descuento,
-                previous_price, fecha_inicio, fecha_fin, status, palabras_claves, relevant, outstanding, date
-            )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
-            """,
-            (
-                title, category, description, marca, purchase_price, price, descuento,
-                previous_price, fecha_inicio, fecha_fin, status, palabras_claves, relevant, outstanding
-            )
-        )
-        conn.commit()
+        # Imágenes del producto
+        image_files = None
+        if 'productImages' in request.files:
+            image_files = request.files.getlist('productImages')
         
-        # Obtener ID insertado
-        cursor.execute("SELECT LAST_INSERT_ID() as id")
-        product_id = cursor.fetchone()['id']
+        # Crear producto usando el modelo
+        product_id = Product.create(product_data, image_files)
         
-        # Insertar imágenes
-        for img in image_names:
-            cursor.execute(
-                "INSERT INTO Product_images (image_name, color_id, Product_id) VALUES (%s, %s, %s)",
-                (img, 0, product_id)
-            )
+        if not product_id:
+            return jsonify({'success': False, 'error': 'Error al crear el producto'}), 500
         
-        # Insertar instructores
-        for instructor_id in instructores:
-            cursor.execute(
-                "INSERT INTO Instructor_Products (Usuario_id, Product_id) VALUES (%s, %s)",
-                (instructor_id, product_id)
-            )
-        
-        conn.commit()
-        
-        # Consultar el producto recién creado
-        cursor.execute("SELECT * FROM Product WHERE id = %s", (product_id,))
-        new_product = cursor.fetchone()
-        
-        # Convertir fechas para la respuesta JSON
-        if new_product['fecha_inicio']:
-            new_product['fecha_inicio'] = new_product['fecha_inicio'].isoformat()
-        if new_product['fecha_fin']:
-            new_product['fecha_fin'] = new_product['fecha_fin'].isoformat()
-        
-        # Consultar imágenes e instructores
-        cursor.execute("SELECT image_name FROM Product_images WHERE Product_id = %s", (product_id,))
-        new_product['images'] = [row['image_name'] for row in cursor.fetchall()]
-        
-        cursor.execute("SELECT Usuario_id FROM Instructor_Products WHERE Product_id = %s", (product_id,))
-        new_product['instructores'] = [row['Usuario_id'] for row in cursor.fetchall()]
+        # Obtener el producto recién creado
+        new_product = Product.get_by_id(product_id)
         
         return jsonify({'success': True, 'product_id': product_id, 'product': new_product})
     
     except Exception as e:
-        if conn:
-            conn.rollback()
         import traceback
-        print(f"Error al crear producto: {str(e)}")
-        print(traceback.format_exc())
+        current_app.logger.error(f"Error al crear producto: {str(e)}")
+        current_app.logger.error(traceback.format_exc())
         return jsonify({'success': False, 'error': str(e)}), 500
-    
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
+
 
 @products.route('/instructores')
 def get_instructores():
-    cursor = None
     try:
-        conn = get_db(current_app)
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT 
-                u.id, u.nombres, u.apellidos, u.imagen, 
-                (SELECT Discipline_id FROM Discipline_Instructor WHERE Usuario_id = u.id LIMIT 1) as Discipline_id
-            FROM Usuario u
-            WHERE u.status = 1 AND u.Tipo_usuario_id = 2
-        """)
-        instructores = cursor.fetchall()
+        # Usar el modelo Product para obtener los instructores
+        instructores = Product.get_all_instructors()
         
-        #JSON
         result = []
         for instructor in instructores:
+            # Intentar obtener Discipline_id
+            conn = get_db(current_app)
+            cursor = conn.cursor()
+            try:
+                cursor.execute("""
+                    SELECT Discipline_id FROM Discipline_Instructor 
+                    WHERE Usuario_id = %s LIMIT 1
+                """, (instructor['id'],))
+                discipline_row = cursor.fetchone()
+                discipline_id = discipline_row['Discipline_id'] if discipline_row else None
+            except Exception as e:
+                current_app.logger.error(f"Error al obtener disciplina: {str(e)}")
+                discipline_id = None
+            finally:
+                cursor.close()
+            
+            # Crear objeto con el formato esperado por el frontend
             result.append({
                 'id': instructor['id'],
-                'nombres': instructor['nombres'],
-                'apellidos': instructor['apellidos'],
-                'imagen': instructor['imagen'],
-                'Discipline_id': instructor['Discipline_id']
+                'nombres': instructor['nombre'],
+                'apellidos': instructor['apellido'],
+                'imagen': instructor['avatar'],
+                'Discipline_id': discipline_id
             })
+        
         return jsonify(result)
     except Exception as e:
-        print(f"Error al obtener instructores: {str(e)}")
+        current_app.logger.error(f"Error al obtener instructores: {str(e)}")
         return jsonify([]), 500
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
 
 @products.route('/delete_product/<int:id>', methods=['POST'])
 def delete_product(id):
-    cursor = None
     try:
-        conn = get_db(current_app)
-        cursor = conn.cursor()
-        # Primero eliminar registros relacionados
-        cursor.execute("DELETE FROM Product_images WHERE Product_id = %s", (id,))
-        cursor.execute("DELETE FROM Instructor_Products WHERE Product_id = %s", (id,))
+        # Usar el modelo Product para eliminar un producto
+        success = Product.delete(id)
         
-        # Luego eliminar el producto
-        cursor.execute("DELETE FROM Product WHERE id = %s", (id,))
-        conn.commit()
-        
-        return jsonify({'success': True})
+        if success:
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'error': 'No se pudo eliminar el producto'})
     
     except Exception as e:
-        conn.rollback()
-        print(f"Error al eliminar producto: {str(e)}")
+        current_app.logger.error(f"Error al eliminar producto: {str(e)}")
         return jsonify({'success': False, 'error': str(e)})
-    
-    finally:
-        if cursor:
-            cursor.close()
 
 @products.route('/update_product/<int:id>', methods=['POST'])
 def update_product(id):
-    cursor = None
     try:
         # Verificar si el producto existe
-        conn = get_db(current_app)
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM Product WHERE id = %s", (id,))
-        existing_product = cursor.fetchone()
+        product = Product.get_by_id(id)
         
-        if not existing_product:
+        if not product:
             return jsonify({'success': False, 'error': 'Producto no encontrado'}), 404
         
-        
+        # Validar campos obligatorios
         required_fields = ['title', 'marca', 'palabras_claves']
         missing_fields = [field for field in required_fields if field not in request.form or not request.form[field].strip()]
         
@@ -352,100 +205,46 @@ def update_product(id):
                 'error': f'Campos obligatorios faltantes: {", ".join(missing_fields)}'
             }), 400
         
-        # Extraer datos del formulario
-        title = request.form['title'].strip()
-        category = request.form.get('category', '').strip() or None
-        description = request.form.get('description', '').strip() or None
-        marca = request.form['marca'].strip()
-        
-        # Convertir valores numéricos
-        try:
-            purchase_price = float(request.form.get('purchase_price') or 0)
-            price = float(request.form.get('price') or 0)
-            descuento = float(request.form.get('descuento') or 0)
-            previous_price = float(request.form.get('previous_price') or 0)
-        except ValueError as e:
-            return jsonify({'success': False, 'error': f'Error en valor numérico: {str(e)}'}), 400
-        
-        # Otros campos
-        fecha_inicio = request.form.get('fecha_inicio') or None
-        fecha_fin = request.form.get('fecha_fin') or None
-        status = int(request.form.get('status') or 1)
-        palabras_claves = request.form['palabras_claves'].strip()
-        
-        # Checkboxes
-        relevant = int(request.form.get('relevant') == '1')
-        outstanding = int(request.form.get('outstanding') == '1')
-        
-        # Actualizar el producto en la base de datos
-        cursor.execute("""
-            UPDATE Product SET
-                title = %s, category = %s, description = %s, marca = %s,
-                purchase_price = %s, price = %s, descuento = %s, previous_price = %s,
-                fecha_inicio = %s, fecha_fin = %s, status = %s, palabras_claves = %s, 
-                relevant = %s, outstanding = %s
-            WHERE id = %s
-        """, (
-            title, category, description, marca, purchase_price, price, descuento,
-            previous_price, fecha_inicio, fecha_fin, status, palabras_claves, relevant, outstanding, id
-        ))
-        
-        # Procesar imágenes del producto (solo si se envían nuevas)
-        if 'productImages' in request.files:
-            imagenes = request.files.getlist('productImages')
-            for imagen in imagenes:
-                if imagen.filename:
-                    filename = secure_filename(imagen.filename)
-                    imagen.save(f'app/static/img/{filename}')
-                    cursor.execute(
-                        "INSERT INTO Product_images (image_name, color_id, Product_id) VALUES (%s, %s, %s)",
-                        (filename, 0, id)
-                    )
-        
-        # Procesar instructores
-        # Primero eliminar las relaciones existentes
-        cursor.execute("DELETE FROM Instructor_Products WHERE Product_id = %s", (id,))
-        
-        # Luego agregar las nuevas
+        # Preparar datos del producto
+        product_data = {
+            'title': request.form['title'].strip(),
+            'category': request.form.get('category', '').strip() or None,
+            'description': request.form.get('description', '').strip() or None,
+            'marca': request.form['marca'].strip(),
+            'purchase_price': float(request.form.get('purchase_price') or 0),
+            'price': float(request.form.get('price') or 0),
+            'descuento': float(request.form.get('descuento') or 0),
+            'previous_price': float(request.form.get('previous_price') or 0),
+            'fecha_inicio': request.form.get('fecha_inicio') or None,
+            'fecha_fin': request.form.get('fecha_fin') or None,
+            'status': int(request.form.get('status') or 1),
+            'palabras_claves': request.form['palabras_claves'].strip(),
+            'relevant': int(request.form.get('relevant') == '1'),
+            'outstanding': int(request.form.get('outstanding') == '1')
+        }
+
+        # Instructores
         if 'instructores[]' in request.form:
-            instructores = [int(i) for i in request.form.getlist('instructores[]') if i and i.isdigit()]
-            for instructor_id in instructores:
-                cursor.execute(
-                    "INSERT INTO Instructor_Products (Usuario_id, Product_id) VALUES (%s, %s)",
-                    (instructor_id, id)
-                )
+            product_data['instructores'] = [int(i) for i in request.form.getlist('instructores[]') if i and i.isdigit()]
         
-        conn.commit()
+        # Imágenes del producto
+        image_files = None
+        if 'productImages' in request.files:
+            image_files = request.files.getlist('productImages')
+        
+        # Actualizar producto usando el modelo
+        success = Product.update(id, product_data, image_files)
+        
+        if not success:
+            return jsonify({'success': False, 'error': 'Error al actualizar el producto'}), 500
         
         # Obtener el producto actualizado
-        cursor.execute("SELECT * FROM Product WHERE id = %s", (id,))
-        updated_product = cursor.fetchone()
-        
-        # Convertir fechas para JSON
-        if updated_product['fecha_inicio']:
-            updated_product['fecha_inicio'] = updated_product['fecha_inicio'].isoformat()
-        if updated_product['fecha_fin']:
-            updated_product['fecha_fin'] = updated_product['fecha_fin'].isoformat()
-        
-        # Consultar imágenes e instructores
-        cursor.execute("SELECT image_name FROM Product_images WHERE Product_id = %s", (id,))
-        updated_product['images'] = [row['image_name'] for row in cursor.fetchall()]
-        
-        cursor.execute("SELECT Usuario_id FROM Instructor_Products WHERE Product_id = %s", (id,))
-        updated_product['instructores'] = [row['Usuario_id'] for row in cursor.fetchall()]
+        updated_product = Product.get_by_id(id)
         
         return jsonify({'success': True, 'product': updated_product})
     
     except Exception as e:
-        if conn:
-            conn.rollback()
         import traceback
-        print(f"Error al actualizar producto: {str(e)}")
-        print(traceback.format_exc())
+        current_app.logger.error(f"Error al actualizar producto: {str(e)}")
+        current_app.logger.error(traceback.format_exc())
         return jsonify({'success': False, 'error': str(e)}), 500
-    
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
