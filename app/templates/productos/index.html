@@ -265,7 +265,7 @@
 	<script src="{{url_for('static', filename = 'js/productos.js')}}"></script>
 	<script>
 		const URLS = {
-			instructores: "{{ url_for('product.get_instructores') }}",
+			instructores: "/products/instructores",
 			producto: function(id) { return "{{ url_for('product.get_product', id=0) }}".replace('0', id); },
 			addProducto: "{{ url_for('product.add_product') }}",
 			updateProducto: function(id) { return "{{ url_for('product.update_product', id=0) }}".replace('0', id); },

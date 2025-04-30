@@ -56,6 +56,7 @@ def login():
 
     try:
         # Usar la función unificada de autenticación
+        print(hash_password(password))
         user = authenticate_user(email, password)
 
         if user:

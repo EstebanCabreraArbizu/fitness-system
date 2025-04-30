@@ -6,8 +6,7 @@ from app.db import get_db
 class User(UserMixin):
     def __init__(self, id, nombres, apellidos, celular, email, contrasenia, 
                  status, imagen, tipo_usuario_id, fecha_registro=None, direccion=None, 
-                 tipo_cliente=None, nivel_actividad=None, peso=None, altura=None, 
-                 fecha_pago=None, certificaciones=None, especialidad=None):
+                 tipo_cliente=None, nivel_actividad=None, peso=None, altura=None, certificaciones=None, especialidad=None):
         self.id = id
         self.nombres = nombres
         self.apellidos = apellidos
@@ -24,7 +23,6 @@ class User(UserMixin):
         self.nivel_actividad = nivel_actividad
         self.peso = peso
         self.altura = altura
-        self.fecha_pago = fecha_pago
         # Instructor attributes
         self.certificaciones = certificaciones
         self.especialidad = especialidad
@@ -112,9 +110,11 @@ class User(UserMixin):
                 u.Tipo_usuario_id,
                 IFNULL((SELECT direccion FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as direccion,
                 IFNULL((SELECT tipo_cliente FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as tipo_cliente,
-                IFNULL((SELECT peso FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as peso,
-                IFNULL((SELECT altura FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as altura,
-                IFNULL((SELECT fecha_pago FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as fecha_pago
+                IFNULL((SELECT nivel_actividad FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as nivel_actividad,
+                IFNULL((SELECT peso FROM Historial_Medidas WHERE Usuario_id = u.id ORDER BY fecha_medicion DESC LIMIT 1), NULL) as peso,
+                IFNULL((SELECT altura FROM Historial_Medidas WHERE Usuario_id = u.id ORDER BY fecha_medicion DESC LIMIT 1), NULL) as altura,
+                IFNULL((SELECT certificaciones FROM Instructor_datos WHERE Usuario_id = u.id), NULL) as certificaciones,
+                IFNULL((SELECT especialidad FROM Instructor_datos WHERE Usuario_id = u.id), NULL) as especialidad
             FROM Usuario u
             WHERE u.email = %s AND u.status = 1
             """, (email,))
@@ -133,10 +133,12 @@ class User(UserMixin):
                     tipo_usuario_id=user_data['Tipo_usuario_id'],
                     direccion=user_data['direccion'],
                     tipo_cliente=user_data['tipo_cliente'],
+                    nivel_actividad=user_data['nivel_actividad'],
                     peso=user_data['peso'],
                     altura=user_data['altura'],
-                    fecha_pago=user_data['fecha_pago'],
-                    fecha_registro=user_data['fecha_registro']
+                    fecha_registro=user_data['fecha_registro'],
+                    certificaciones=user_data['certificaciones'],
+                    especialidad=user_data['especialidad']
                 )
             return None
         finally:

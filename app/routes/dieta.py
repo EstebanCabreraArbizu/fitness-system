@@ -27,7 +27,7 @@ def index():
                 FROM Dieta d
                 JOIN Usuario ins ON d.Instructor_id = ins.id
                 JOIN Discipline disc ON d.Discipline_id = disc.id
-                WHERE d.Cliente_id = %s
+                WHERE d.Client_id = %s
                 ORDER BY d.fecha_registro DESC
             """, (current_user.id,))
         elif current_user.is_instructor():
@@ -38,7 +38,7 @@ def index():
                        cli.apellidos as cliente_apellidos,
                        disc.nombre as discipline_nombre
                 FROM Dieta d
-                JOIN Usuario cli ON d.Cliente_id = cli.id
+                JOIN Usuario cli ON d.Client_id = cli.id
                 JOIN Discipline disc ON d.Discipline_id = disc.id
                 WHERE d.Instructor_id = %s
                 ORDER BY d.fecha_registro DESC
@@ -72,11 +72,11 @@ def nueva_dieta():
             
             # Obtener clientes asignados al instructor
             cursor.execute("""
-                SELECT u.*, cd.direccion, cd.tipo_cliente, cd.peso, cd.altura, cd.fecha_pago 
+                SELECT u.*, cd.direccion, cd.tipo_cliente
                 FROM Usuario u
                 JOIN Cliente_datos cd ON u.id = cd.Usuario_id
-                JOIN Cliente_Instructor ci ON u.id = ci.Usuario_id
-                WHERE ci.Usuario_2_id = %s AND u.status = 1 AND u.Tipo_usuario_id = 1
+                JOIN Cliente_Instructor ci ON u.id = ci.Client_id
+                WHERE ci.Instructor_id = %s AND u.status = 1 AND u.Tipo_usuario_id = 1
             """, (current_user.id,))
             clientes = cursor.fetchall()
             
@@ -85,7 +85,7 @@ def nueva_dieta():
                 SELECT d.*
                 FROM Discipline d
                 JOIN Discipline_Instructor di ON d.id = di.Discipline_id
-                WHERE di.Instructor_id = %s
+                WHERE di.Usuario_id = %s
             """, (current_user.id,))
             disciplinas = cursor.fetchall()
             
@@ -130,7 +130,7 @@ def nueva_dieta():
                 tipo_dieta, nombre, descripcion, fecha_inicio, fecha_fin, 
                 duracion_dieta, edad, alergias, enfermedad_cronica, 
                 alergia_medicamento, dias_semana, meta_calorias, status, 
-                Cliente_id, Instructor_id, Discipline_id
+                Client_id, Instructor_id, Discipline_id
             ) VALUES (
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
             )
@@ -190,7 +190,7 @@ def detalle(dieta_id):
                 i.nombres as instructor_nombre, i.apellidos as instructor_apellidos,
                 disc.nombre as discipline_nombre
             FROM Dieta d
-            JOIN Usuario c ON d.Cliente_id = c.id
+            JOIN Usuario c ON d.Client_id = c.id
             JOIN Usuario i ON d.Instructor_id = i.id
             JOIN Discipline disc ON d.Discipline_id = disc.id
             WHERE d.id = %s
@@ -204,8 +204,8 @@ def detalle(dieta_id):
         
         # Verificar permisos (solo el instructor que la creó o el cliente asignado pueden verla)
         if not (
-            (current_user.is_instructor() and current_user.id == dietas['Usuario_id']) or
-            (current_user.is_client() and current_user.id == dietas['Usuario_id'])
+            (current_user.is_instructor() and current_user.id == dietas['Instructor_id']) or
+            (current_user.is_client() and current_user.id == dietas['Client_id'])
         ):
             flash('No tienes permiso para ver esta dieta', 'danger')
             return redirect(url_for('dieta.index'))
@@ -250,7 +250,7 @@ def agregar_comida(dieta_id):
         conn = get_db(current_app)
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT * FROM Dieta WHERE id = %s AND Usuario_id = %s",
+            "SELECT * FROM Dieta WHERE id = %s AND Instructor_id = %s",
             (dieta_id, current_user.id)
         )
         dietas = cursor.fetchone()

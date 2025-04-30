@@ -1,12 +1,12 @@
 -- Created by Vertabelo (http://vertabelo.com)
--- Last modification date: 2025-04-29 13:40:37.807
+-- Last modification date: 2025-04-30 11:46:20.408
 
 -- tables
 -- Table: Cliente_Instructor
 CREATE TABLE Cliente_Instructor (
     id int  NOT NULL AUTO_INCREMENT,
-    Usuario_id int  NOT NULL,
-    Usuario_2_id int  NOT NULL,
+    Client_id int  NOT NULL,
+    Instructor_id int  NOT NULL,
     CONSTRAINT Cliente_Instructor_pk PRIMARY KEY (id)
 );
 
@@ -57,7 +57,8 @@ CREATE TABLE Dieta (
     meta_calorias int(100)  NOT NULL,
     status int  NOT NULL,
     Discipline_id int  NOT NULL,
-    Usuario_id int  NOT NULL,
+    Client_id int  NOT NULL,
+    Instructor_id int  NOT NULL,
     CONSTRAINT Dieta_pk PRIMARY KEY (id)
 );
 
@@ -199,8 +200,8 @@ CREATE TABLE Rutina (
 -- Table: Tipo_usuario
 CREATE TABLE Tipo_usuario (
     id int  NOT NULL AUTO_INCREMENT,
-    nombre int  NOT NULL,
-    descripcion int  NOT NULL,
+    nombre varchar(50)  NOT NULL,
+    descripcion text  NOT NULL,
     CONSTRAINT Tipo_usuario_pk PRIMARY KEY (id)
 );
 
@@ -221,11 +222,11 @@ CREATE TABLE Usuario (
 
 -- foreign keys
 -- Reference: Cliente_Instructor_Usuario (table: Cliente_Instructor)
-ALTER TABLE Cliente_Instructor ADD CONSTRAINT Cliente_Instructor_Usuario FOREIGN KEY Cliente_Instructor_Usuario (Usuario_id)
+ALTER TABLE Cliente_Instructor ADD CONSTRAINT Cliente_Instructor_Usuario FOREIGN KEY Cliente_Instructor_Usuario (Client_id)
     REFERENCES Usuario (id);
 
 -- Reference: Cliente_Instructor_Usuario_2 (table: Cliente_Instructor)
-ALTER TABLE Cliente_Instructor ADD CONSTRAINT Cliente_Instructor_Usuario_2 FOREIGN KEY Cliente_Instructor_Usuario_2 (Usuario_2_id)
+ALTER TABLE Cliente_Instructor ADD CONSTRAINT Cliente_Instructor_Usuario_2 FOREIGN KEY Cliente_Instructor_Usuario_2 (Instructor_id)
     REFERENCES Usuario (id);
 
 -- Reference: Cliente_datos_Usuario (table: Cliente_datos)
@@ -241,7 +242,11 @@ ALTER TABLE Dieta ADD CONSTRAINT Dieta_Discipline FOREIGN KEY Dieta_Discipline (
     REFERENCES Discipline (id);
 
 -- Reference: Dieta_Usuario (table: Dieta)
-ALTER TABLE Dieta ADD CONSTRAINT Dieta_Usuario FOREIGN KEY Dieta_Usuario (Usuario_id)
+ALTER TABLE Dieta ADD CONSTRAINT Dieta_Usuario FOREIGN KEY Dieta_Usuario (Client_id)
+    REFERENCES Usuario (id);
+
+-- Reference: Dieta_Usuario_2 (table: Dieta)
+ALTER TABLE Dieta ADD CONSTRAINT Dieta_Usuario_2 FOREIGN KEY Dieta_Usuario_2 (Instructor_id)
     REFERENCES Usuario (id);
 
 -- Reference: Dieta_images_Dieta (table: Dieta_images)

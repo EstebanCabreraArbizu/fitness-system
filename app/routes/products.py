@@ -266,8 +266,6 @@ def add_product():
     finally:
         if cursor:
             cursor.close()
-        if conn:
-            conn.close()
 
 @products.route('/instructores')
 def get_instructores():
@@ -301,8 +299,6 @@ def get_instructores():
     finally:
         if cursor:
             cursor.close()
-        if conn:
-            conn.close()
 
 @products.route('/delete_product/<int:id>', methods=['POST'])
 def delete_product(id):
@@ -447,5 +443,3 @@ def update_product(id):
     finally:
         if cursor:
             cursor.close()
-        if conn:
-            conn.close()
