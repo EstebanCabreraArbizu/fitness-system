@@ -1,0 +1,313 @@
+{% extends "layout.html" %}
+
+{% block title %}Gestionar Horarios{% endblock %}
+
+{% block styles %}
+<style>
+    .service-info {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .service-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .section-title {
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 5px;
+        margin-bottom: 20px;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .horario-item {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        background-color: white;
+        transition: all 0.3s ease;
+    }
+    
+    .horario-item:hover {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .horario-header {
+        background-color: #f1f1f1;
+        padding: 10px 15px;
+        border-radius: 8px 8px 0 0;
+        font-weight: bold;
+    }
+    
+    .horario-body {
+        padding: 15px;
+    }
+    
+    .horario-footer {
+        padding: 10px 15px;
+        border-top: 1px solid #ddd;
+        display: flex;
+        justify-content: flex-end;
+    }
+    
+    .form-section {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .time-badge {
+        background-color: #e9ecef;
+        padding: 5px 10px;
+        border-radius: 15px;
+        margin-right: 10px;
+        font-size: 0.9rem;
+    }
+    
+    .time-badge i {
+        margin-right: 5px;
+        color: #6c757d;
+    }
+    
+    .dias-semana {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-bottom: 15px;
+    }
+    
+    .dia-badge {
+        padding: 3px 10px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        background-color: #e9ecef;
+        color: #495057;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .dia-badge.active {
+        background-color: #007bff;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="flash-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Gestionar Horarios</h2>
+        <div>
+            <a href="{{ url_for('servicios.ver', servicio_id=servicio.id) }}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-arrow-left"></i> Volver al Servicio
+            </a>
+            <a href="{{ url_for('servicios.index') }}" class="btn btn-outline-primary">
+                <i class="fas fa-th-large"></i> Todos los Servicios
+            </a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="service-info">
+                <img src="{{ url_for('static', filename='img/servicios/' + servicio.imagen) }}" alt="{{ servicio.nombre }}" class="service-image">
+                <h4>{{ servicio.nombre }}</h4>
+                <p class="text-muted">{{ servicio.descripcion|truncate(100) }}</p>
+                
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="fw-bold">${{ "%.2f"|format(servicio.precio) }}</span>
+                    <span><i class="far fa-clock"></i> {{ servicio.duracion }} min</span>
+                </div>
+                
+                <div class="mb-3">
+                    <span class="badge bg-primary">{{ servicio.categoria }}</span>
+                    <span class="badge bg-info">{{ servicio.modalidad }}</span>
+                    <span class="badge bg-warning text-dark">{{ servicio.nivel }}</span>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> Recuerda que los horarios no pueden exceder los 60 minutos de duración.
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-8">
+            <div class="form-section mb-4">
+                <h4 class="section-title">Añadir Nuevo Horario</h4>
+                
+                <form method="POST" id="nuevoHorarioForm">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="dia_semana" class="form-label">Día de la semana</label>
+                            <select class="form-select" id="dia_semana" name="dia_semana" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="lunes">Lunes</option>
+                                <option value="martes">Martes</option>
+                                <option value="miércoles">Miércoles</option>
+                                <option value="jueves">Jueves</option>
+                                <option value="viernes">Viernes</option>
+                                <option value="sábado">Sábado</option>
+                                <option value="domingo">Domingo</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="cupos" class="form-label">Cupos disponibles</label>
+                            <input type="number" class="form-control" id="cupos" name="cupos" min="1" value="1" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="hora_inicio" class="form-label">Hora de inicio</label>
+                            <input type="time" class="form-control" id="hora_inicio" name="hora_inicio" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="hora_fin" class="form-label">Hora de fin</label>
+                            <input type="time" class="form-control" id="hora_fin" name="hora_fin" required>
+                            <div class="invalid-feedback">La duración debe ser menor a 60 minutos</div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i> Agregar Horario
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <h4 class="section-title">Horarios Actuales</h4>
+            
+            <div class="dias-semana mb-3">
+                <span class="dia-badge active" data-dia="todos">Todos</span>
+                <span class="dia-badge" data-dia="lunes">Lunes</span>
+                <span class="dia-badge" data-dia="martes">Martes</span>
+                <span class="dia-badge" data-dia="miércoles">Miércoles</span>
+                <span class="dia-badge" data-dia="jueves">Jueves</span>
+                <span class="dia-badge" data-dia="viernes">Viernes</span>
+                <span class="dia-badge" data-dia="sábado">Sábado</span>
+                <span class="dia-badge" data-dia="domingo">Domingo</span>
+            </div>
+            
+            {% if servicio.horarios %}
+                <div id="horarios-list">
+                    {% for horario in servicio.horarios %}
+                    <div class="horario-item" data-dia="{{ horario.dia_semana }}">
+                        <div class="horario-header d-flex justify-content-between align-items-center">
+                            <span>{{ horario.dia_semana|capitalize }}</span>
+                            <div>
+                                <span class="time-badge"><i class="far fa-clock"></i> {{ horario.hora_inicio.strftime('%H:%M') }} - {{ horario.hora_fin.strftime('%H:%M') }}</span>
+                                <span class="badge bg-primary">{{ horario.cupos_disponibles }} cupo(s)</span>
+                            </div>
+                        </div>
+                        <div class="horario-footer">
+                            <form method="POST" action="{{ url_for('servicios.eliminar_horario', horario_id=horario.id) }}">
+                                <input type="hidden" name="servicio_id" value="{{ servicio.id }}">
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro de eliminar este horario?');">
+                                    <i class="fas fa-trash-alt"></i> Eliminar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-secondary">
+                    <i class="fas fa-calendar-times me-2"></i> No hay horarios disponibles para este servicio.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Validación de duración máxima 60 minutos
+    const horaInicioInput = document.getElementById('hora_inicio');
+    const horaFinInput = document.getElementById('hora_fin');
+    const form = document.getElementById('nuevoHorarioForm');
+    
+    function validarDuracion() {
+        if (horaInicioInput.value && horaFinInput.value) {
+            const inicio = new Date(`2000-01-01T${horaInicioInput.value}`);
+            const fin = new Date(`2000-01-01T${horaFinInput.value}`);
+            
+            // Si fin es antes que inicio, ajustar a siguiente día
+            let duracionMs = fin - inicio;
+            if (duracionMs < 0) {
+                duracionMs += 24 * 60 * 60 * 1000; // Añadir un día
+            }
+            
+            const duracionMinutos = duracionMs / (1000 * 60);
+            
+            if (duracionMinutos > 60) {
+                horaFinInput.classList.add('is-invalid');
+                return false;
+            } else {
+                horaFinInput.classList.remove('is-invalid');
+                return true;
+            }
+        }
+        return true;
+    }
+    
+    horaInicioInput.addEventListener('change', validarDuracion);
+    horaFinInput.addEventListener('change', validarDuracion);
+    
+    form.addEventListener('submit', function(e) {
+        if (!validarDuracion()) {
+            e.preventDefault();
+            alert('La duración del horario debe ser menor a 60 minutos.');
+        }
+    });
+    
+    // Filtrado de horarios por día
+    const diasBadges = document.querySelectorAll('.dia-badge');
+    const horariosList = document.getElementById('horarios-list');
+    
+    if (diasBadges.length && horariosList) {
+        diasBadges.forEach(badge => {
+            badge.addEventListener('click', function() {
+                // Desactivar todos los badges
+                diasBadges.forEach(b => b.classList.remove('active'));
+                
+                // Activar el badge actual
+                this.classList.add('active');
+                
+                const diaSemana = this.getAttribute('data-dia');
+                const horarios = horariosList.querySelectorAll('.horario-item');
+                
+                horarios.forEach(horario => {
+                    if (diaSemana === 'todos' || horario.getAttribute('data-dia') === diaSemana) {
+                        horario.style.display = 'block';
+                    } else {
+                        horario.style.display = 'none';
+                    }
+                });
+            });
+        });
+    }
+});
+</script>
+{% endblock %} 

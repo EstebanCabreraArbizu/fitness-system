@@ -35,7 +35,14 @@ class User(UserMixin):
         return self._is_authenticated
     
     def get_id(self):
-        return f"u_{self.id}"
+        """Retorna el identificador único del usuario para Flask-Login"""
+        if self.id is None:
+            return None
+        try:
+            return f"u_{self.id}"
+        except Exception as e:
+            current_app.logger.error(f"Error en get_id: {str(e)}")
+            return None
     
     def set_nombre(self, nombres):
         self.nombres = nombres
@@ -63,13 +70,13 @@ class User(UserMixin):
             cur.execute("""
             SELECT
                 u.*,
-                IFNULL((SELECT direccion FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as direccion,
-                IFNULL((SELECT tipo_cliente FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as tipo_cliente,
-                IFNULL((SELECT nivel_actividad FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as nivel_actividad,
+                IFNULL((SELECT direccion FROM Cliente_datos WHERE Usuario_id = u.id LIMIT 1), NULL) as direccion,
+                IFNULL((SELECT tipo_cliente FROM Cliente_datos WHERE Usuario_id = u.id LIMIT 1), NULL) as tipo_cliente,
+                IFNULL((SELECT nivel_actividad FROM Cliente_datos WHERE Usuario_id = u.id LIMIT 1), NULL) as nivel_actividad,
                 IFNULL((SELECT peso FROM Historial_Medidas WHERE Usuario_id = u.id ORDER BY fecha_medicion DESC LIMIT 1), NULL) as peso,
                 IFNULL((SELECT altura FROM Historial_Medidas WHERE Usuario_id = u.id ORDER BY fecha_medicion DESC LIMIT 1), NULL) as altura,
-                IFNULL((SELECT certificaciones FROM Instructor_datos WHERE Usuario_id = u.id), NULL) as certificaciones,
-                IFNULL((SELECT especialidad FROM Instructor_datos WHERE Usuario_id = u.id), NULL) as especialidad
+                IFNULL((SELECT certificaciones FROM Instructor_datos WHERE Usuario_id = u.id LIMIT 1), NULL) as certificaciones,
+                IFNULL((SELECT especialidad FROM Instructor_datos WHERE Usuario_id = u.id LIMIT 1), NULL) as especialidad
             FROM Usuario u
             WHERE u.id = %s
             """, (user_id,))
@@ -110,11 +117,14 @@ class User(UserMixin):
                 u.id, u.nombres, u.apellidos, u.celular, u.email, 
                 u.contrasenia, u.status, u.imagen, u.fecha_registro,
                 u.Tipo_usuario_id,
-                IFNULL((SELECT direccion FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as direccion,
-                IFNULL((SELECT tipo_cliente FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as tipo_cliente,
-                IFNULL((SELECT peso FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as peso,
-                IFNULL((SELECT altura FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as altura,
-                IFNULL((SELECT fecha_pago FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as fecha_pago
+                IFNULL((SELECT direccion FROM Cliente_datos WHERE Usuario_id = u.id LIMIT 1), NULL) as direccion,
+                IFNULL((SELECT tipo_cliente FROM Cliente_datos WHERE Usuario_id = u.id LIMIT 1), NULL) as tipo_cliente,
+                IFNULL((SELECT nivel_actividad FROM Cliente_datos WHERE Usuario_id = u.id LIMIT 1), NULL) as nivel_actividad,
+                IFNULL((SELECT peso FROM Historial_Medidas WHERE Usuario_id = u.id ORDER BY fecha_medicion DESC LIMIT 1), NULL) as peso,
+                IFNULL((SELECT altura FROM Historial_Medidas WHERE Usuario_id = u.id ORDER BY fecha_medicion DESC LIMIT 1), NULL) as altura,
+                IFNULL((SELECT fecha_pago FROM Cliente_datos WHERE Usuario_id = u.id LIMIT 1), NULL) as fecha_pago,
+                IFNULL((SELECT certificaciones FROM Instructor_datos WHERE Usuario_id = u.id LIMIT 1), NULL) as certificaciones,
+                IFNULL((SELECT especialidad FROM Instructor_datos WHERE Usuario_id = u.id LIMIT 1), NULL) as especialidad
             FROM Usuario u
             WHERE u.email = %s AND u.status = 1
             """, (email,))
@@ -133,11 +143,17 @@ class User(UserMixin):
                     tipo_usuario_id=user_data['Tipo_usuario_id'],
                     direccion=user_data['direccion'],
                     tipo_cliente=user_data['tipo_cliente'],
+                    nivel_actividad=user_data['nivel_actividad'],
                     peso=user_data['peso'],
                     altura=user_data['altura'],
                     fecha_pago=user_data['fecha_pago'],
-                    fecha_registro=user_data['fecha_registro']
+                    fecha_registro=user_data['fecha_registro'],
+                    certificaciones=user_data.get('certificaciones'),
+                    especialidad=user_data.get('especialidad')
                 )
+            return None
+        except Exception as e:
+            current_app.logger.error(f"Error en User.get_by_email: {str(e)}")
             return None
         finally:
             cur.close()

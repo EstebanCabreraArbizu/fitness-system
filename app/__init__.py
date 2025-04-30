@@ -44,17 +44,22 @@ from app.models.user import User
 def load_user(user_id):
     """Carga el usuario desde la sesión."""
     if not user_id:
+        current_app.logger.warning("load_user llamado con user_id vacío o None")
         return None
         
     try:
         # Extraer el ID real (sin prefijo)
-        if user_id.startswith('u_'):
+        if isinstance(user_id, str) and user_id.startswith('u_'):
             real_id = user_id[2:]  # Remover prefijo 'u_'
-            return User.get_by_id(real_id)
+            user = User.get_by_id(real_id)
+            if user is None:
+                current_app.logger.warning(f"No se encontró usuario con ID: {real_id}")
+            return user
         else:
+            current_app.logger.warning(f"ID de usuario con formato incorrecto: {user_id}")
             return None
     except Exception as e:
-        current_app.logger.error(f"Error in load_user: {str(e)}")
+        current_app.logger.error(f"Error en load_user: {str(e)}")
         return None
 
 # Import routes after app initialization
@@ -63,6 +68,7 @@ from app.routes.products import products
 from app.routes.dieta import dieta
 from app.routes.alumnos import alumnos
 from app.routes.rutinas import rutinas
+from app.routes.servicios import servicios
 
 # Register blueprints
 app.register_blueprint(users)
@@ -70,3 +76,4 @@ app.register_blueprint(products, url_prefix='/products')
 app.register_blueprint(dieta, url_prefix='/dietas')
 app.register_blueprint(alumnos, url_prefix='/alumnos')
 app.register_blueprint(rutinas, url_prefix='/rutinas')
+app.register_blueprint(servicios, url_prefix='/servicios')

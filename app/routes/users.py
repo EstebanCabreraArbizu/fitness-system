@@ -54,21 +54,63 @@ def login():
         return render_template('users/login.html')
 
     try:
-        # Usar la función unificada de autenticación
-        user = authenticate_user(email, password)
-
-        if user:
-            login_user(user, remember=True, duration=timedelta(days=7))
-            flash(f'¡Bienvenido {user.get_nombre()}!', 'success')
-            return redirect_based_on_role(user)
-        else:
+        # Obtener el usuario primero para verificar que existe
+        conn = get_db(current_app)
+        cursor = conn.cursor()
+        
+        # Verificar si el usuario existe
+        cursor.execute("""
+            SELECT id, email, contrasenia, Tipo_usuario_id, status FROM Usuario WHERE email = %s
+        """, (email,))
+        
+        user_data = cursor.fetchone()
+        cursor.close()
+        
+        if not user_data:
+            current_app.logger.warning(f"Intento de login con usuario inexistente: {email}")
             time.sleep(0.5)  # Delay para prevenir enumeración
-            flash('Usuario no encontrado o contraseña incorrecta', 'danger')
+            flash('Usuario no encontrado o cuenta desactivada', 'danger')
+            return render_template('users/login.html')
+        
+        if user_data['status'] != 1:
+            current_app.logger.warning(f"Intento de login con cuenta desactivada: {email}")
+            time.sleep(0.5)
+            flash('Esta cuenta está desactivada', 'danger')
+            return render_template('users/login.html')
+            
+        # Verificar contraseña
+        hashed_password = hash_password(password)
+        if hashed_password != user_data['contrasenia']:
+            current_app.logger.warning(f"Intento de login con contraseña incorrecta: {email}")
+            time.sleep(0.5)  # Delay para prevenir ataques
+            flash('Contraseña incorrecta', 'danger')
+            return render_template('users/login.html')
+        
+        # Registrar datos básicos del usuario que intenta iniciar sesión    
+        current_app.logger.info(f"Login exitoso para usuario: {email} (ID: {user_data['id']}, Tipo: {user_data['Tipo_usuario_id']})")
+        
+        # Si llegamos aquí, la autenticación es correcta, usamos la función completa para cargar todos los datos
+        try:
+            user = authenticate_user(email, password)
+            
+            if user:
+                login_user(user, remember=True, duration=timedelta(days=7))
+                flash(f'¡Bienvenido {user.get_nombre()}!', 'success')
+                return redirect_based_on_role(user)
+            else:
+                # Este caso no debería ocurrir normalmente
+                current_app.logger.error(f"Error cargando datos completos del usuario: {email}. Usuario existe pero authenticate_user devolvió None")
+                flash('Error al cargar datos de usuario. Por favor intente más tarde.', 'danger')
+                return render_template('users/login.html')
+                
+        except Exception as auth_error:
+            current_app.logger.error(f"Error en authenticate_user para {email}: {str(auth_error)}")
+            flash('Error al procesar datos de usuario. Por favor intente más tarde.', 'danger')
             return render_template('users/login.html')
 
     except Exception as e:
+        current_app.logger.error(f"Error general de login: {str(e)}")
         flash('Error al iniciar sesión. Por favor intente más tarde.', 'danger')
-        current_app.logger.error(f"Error de login: {str(e)}")
         return render_template('users/login.html')
 
 def authenticate_user(email, password):
@@ -80,13 +122,14 @@ def authenticate_user(email, password):
         # Buscar usuario en tabla Usuario con datos específicos del tipo
         cursor.execute("""
             SELECT u.*,
-                IFNULL((SELECT direccion FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as direccion,
-                IFNULL((SELECT tipo_cliente FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as tipo_cliente,
-                IFNULL((SELECT nivel_actividad FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as nivel_actividad,
+                IFNULL((SELECT direccion FROM Cliente_datos WHERE Usuario_id = u.id LIMIT 1), NULL) as direccion,
+                IFNULL((SELECT tipo_cliente FROM Cliente_datos WHERE Usuario_id = u.id LIMIT 1), NULL) as tipo_cliente,
+                IFNULL((SELECT nivel_actividad FROM Cliente_datos WHERE Usuario_id = u.id LIMIT 1), NULL) as nivel_actividad,
                 IFNULL((SELECT peso FROM Historial_Medidas WHERE Usuario_id = u.id ORDER BY fecha_medicion DESC LIMIT 1), NULL) as peso,
                 IFNULL((SELECT altura FROM Historial_Medidas WHERE Usuario_id = u.id ORDER BY fecha_medicion DESC LIMIT 1), NULL) as altura,
-                IFNULL((SELECT certificaciones FROM Instructor_datos WHERE Usuario_id = u.id), NULL) as certificaciones,
-                IFNULL((SELECT especialidad FROM Instructor_datos WHERE Usuario_id = u.id), NULL) as especialidad
+                IFNULL((SELECT certificaciones FROM Instructor_datos WHERE Usuario_id = u.id LIMIT 1), NULL) as certificaciones,
+                IFNULL((SELECT especialidad FROM Instructor_datos WHERE Usuario_id = u.id LIMIT 1), NULL) as especialidad,
+                IFNULL((SELECT fecha_pago FROM Cliente_datos WHERE Usuario_id = u.id LIMIT 1), NULL) as fecha_pago
             FROM Usuario u
             WHERE u.email = %s AND u.status = 1
         """, (email,))
@@ -115,6 +158,7 @@ def authenticate_user(email, password):
                     peso=user_data['peso'],
                     altura=user_data['altura'],
                     fecha_registro=user_data['fecha_registro'],
+                    fecha_pago=user_data.get('fecha_pago'),
                     certificaciones=user_data['certificaciones'],
                     especialidad=user_data['especialidad']
                 )
@@ -122,6 +166,7 @@ def authenticate_user(email, password):
     except Exception as e:
         current_app.logger.error(f"Error autenticando usuario: {str(e)}")
         return None
+
 def redirect_based_on_role(user):
     """Redirecciona al usuario según su tipo"""
     if not user.is_authenticated:
@@ -343,22 +388,29 @@ def profile(user_id):
         conn = get_db(current_app)
         cursor = conn.cursor()
 
-        # Obtener datos del perfil de usuario unificado
+        # Obtener datos del perfil de usuario unificado con LIMIT 1 en todas las subconsultas
         cursor.execute("""
             SELECT u.*,
-                IFNULL((SELECT direccion FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as direccion,
-                IFNULL((SELECT nivel_actividad FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as nivel_actividad,
-                IFNULL((SELECT tipo_cliente FROM Cliente_datos WHERE Usuario_id = u.id), NULL) as tipo_cliente,
+                IFNULL((SELECT direccion FROM Cliente_datos WHERE Usuario_id = u.id LIMIT 1), NULL) as direccion,
+                IFNULL((SELECT nivel_actividad FROM Cliente_datos WHERE Usuario_id = u.id LIMIT 1), NULL) as nivel_actividad,
+                IFNULL((SELECT tipo_cliente FROM Cliente_datos WHERE Usuario_id = u.id LIMIT 1), NULL) as tipo_cliente,
                 IFNULL((SELECT peso FROM Historial_Medidas WHERE Usuario_id = u.id ORDER BY fecha_medicion DESC LIMIT 1), NULL) as peso,
                 IFNULL((SELECT altura FROM Historial_Medidas WHERE Usuario_id = u.id ORDER BY fecha_medicion DESC LIMIT 1), NULL) as altura,
-                IFNULL((SELECT certificaciones FROM Instructor_datos WHERE Usuario_id = u.id), NULL) as certificaciones,
-                IFNULL((SELECT especialidad FROM Instructor_datos WHERE Usuario_id = u.id), NULL) as especialidad
+                IFNULL((SELECT certificaciones FROM Instructor_datos WHERE Usuario_id = u.id LIMIT 1), NULL) as certificaciones,
+                IFNULL((SELECT especialidad FROM Instructor_datos WHERE Usuario_id = u.id LIMIT 1), NULL) as especialidad,
+                IFNULL((SELECT estudios FROM Instructor_datos WHERE Usuario_id = u.id LIMIT 1), NULL) as estudios,
+                IFNULL((SELECT anios_experiencia FROM Instructor_datos WHERE Usuario_id = u.id LIMIT 1), NULL) as anios_experiencia
             FROM Usuario u
             WHERE u.id = %s
         """, (user_id,))
         
         user_data = cursor.fetchone()
         cursor.close()
+        
+        if not user_data:
+            flash('Usuario no encontrado', 'danger')
+            return redirect(url_for('dieta.index'))
+            
         user_type = "Instructor" if user_data['Tipo_usuario_id'] == 2 else "Cliente"
 
         if request.method == 'GET':
@@ -369,6 +421,11 @@ def profile(user_id):
         apellidos = request.form.get('apellidos', '').strip()
         celular = request.form.get('telefono', '').strip()
         direccion = request.form.get('direccion', '').strip()
+        
+        # Validar datos
+        if not nombres or not apellidos or not celular:
+            flash('Los campos marcados con * son obligatorios', 'warning')
+            return render_template('users/profile.html', user=user_data, user_type=user_type)
         
         # Procesar imagen
         imagen = user_data['imagen']  # Valor predeterminado
@@ -381,75 +438,117 @@ def profile(user_id):
                 imagen = new_imagen
 
         # Iniciar transacción
+        conn = get_db(current_app)
         cursor = conn.cursor()
         
-        # Actualizar datos básicos en tabla Usuario
-        cursor.execute("""
-            UPDATE Usuario SET
-                nombres = %s, apellidos = %s, celular = %s, imagen = %s
-            WHERE id = %s
-        """, (nombres, apellidos, celular, imagen, user_id))
-
-        # Actualizar datos específicos según tipo de usuario
-        if user_type == "Cliente":
-            peso = request.form.get('peso', 0)
-            altura = request.form.get('altura', 0)
-            tipo_cliente = request.form.get('tipo_cliente', 'regular')
-            nivel_actividad = request.form.get('nivel_actividad', 'intermedio')
-            
-            # Convertir peso y altura a valores numéricos
-            try:
-                peso = float(peso) if peso else 0
-                altura = float(altura) if altura else 0
-            except ValueError:
-                peso = 0
-                altura = 0
-                
-            # Actualizar o insertar datos cliente
+        try:
+            # Actualizar datos básicos en tabla Usuario
             cursor.execute("""
-                INSERT INTO Cliente_datos (Usuario_id, direccion, tipo_cliente, nivel_actividad)
-                VALUES (%s, %s, %s, %s)
-                ON DUPLICATE KEY UPDATE 
-                    direccion = VALUES(direccion),
-                    tipo_cliente = VALUES(tipo_cliente),
-                    nivel_actividad = VALUES(nivel_actividad)
-            """, (user_id, direccion, tipo_cliente, nivel_actividad))
-            
-            # Registrar nuevas medidas si cambian
-            if (peso != user_data.get('peso', 0) or altura != user_data.get('altura', 0)) and (peso > 0 and altura > 0):
-                imc = round(peso / ((altura / 100) ** 2), 2)
-                cursor.execute("""
-                    INSERT INTO Historial_Medidas (Usuario_id, peso, altura, imc)
-                    VALUES (%s, %s, %s, %s)
-                """, (user_id, peso, altura, imc))
+                UPDATE Usuario SET
+                    nombres = %s, apellidos = %s, celular = %s, imagen = %s
+                WHERE id = %s
+            """, (nombres, apellidos, celular, imagen, user_id))
+
+            # Actualizar datos específicos según tipo de usuario
+            if user_type == "Cliente":
+                peso = request.form.get('peso', 0)
+                altura = request.form.get('altura', 0)
+                tipo_cliente = request.form.get('tipo_cliente', 'regular')
+                nivel_actividad = request.form.get('nivel_actividad', 'intermedio')
                 
-        elif user_type == "Instructor":
-            certificaciones = request.form.get('certificaciones', '')
-            especialidad = request.form.get('especialidad', '')
-            anios_experiencia = request.form.get('anios_experiencia', 0)
-            estudios = request.form.get('estudios', '')
-            
-            try:
-                anios_experiencia = int(anios_experiencia) if anios_experiencia else 0
-            except ValueError:
-                anios_experiencia = 0
-            
-            # Actualizar o insertar datos instructor
-            cursor.execute("""
-                INSERT INTO Instructor_datos (Usuario_id, certificaciones, especialidad, anios_experiencia, estudios)
-                VALUES (%s, %s, %s, %s, %s)
-                ON DUPLICATE KEY UPDATE 
-                    certificaciones = VALUES(certificaciones),
-                    especialidad = VALUES(especialidad),
-                    anios_experiencia = VALUES(anios_experiencia),
-                    estudios = VALUES(estudios)
-            """, (user_id, certificaciones, especialidad, anios_experiencia, estudios))
+                # Convertir peso y altura a valores numéricos
+                try:
+                    peso = float(peso) if peso else 0
+                    altura = float(altura) if altura else 0
+                except ValueError:
+                    peso = 0
+                    altura = 0
+                    
+                # Verificar si ya existe registro en Cliente_datos
+                cursor.execute("SELECT id FROM Cliente_datos WHERE Usuario_id = %s LIMIT 1", (user_id,))
+                cliente_datos = cursor.fetchone()
+                
+                if cliente_datos:
+                    # Actualizar registro existente
+                    cursor.execute("""
+                        UPDATE Cliente_datos SET
+                            direccion = %s, tipo_cliente = %s, nivel_actividad = %s
+                        WHERE Usuario_id = %s
+                    """, (direccion, tipo_cliente, nivel_actividad, user_id))
+                else:
+                    # Crear nuevo registro
+                    cursor.execute("""
+                        INSERT INTO Cliente_datos (Usuario_id, direccion, tipo_cliente, nivel_actividad)
+                        VALUES (%s, %s, %s, %s)
+                    """, (user_id, direccion, tipo_cliente, nivel_actividad))
+                
+                # Registrar nuevas medidas si cambian
+                if (peso != user_data.get('peso', 0) or altura != user_data.get('altura', 0)) and (peso > 0 and altura > 0):
+                    imc = round(peso / ((altura / 100) ** 2), 2)
+                    cursor.execute("""
+                        INSERT INTO Historial_Medidas (Usuario_id, peso, altura, imc)
+                        VALUES (%s, %s, %s, %s)
+                    """, (user_id, peso, altura, imc))
+                    
+            elif user_type == "Instructor":
+                certificaciones = request.form.get('certificaciones', '')
+                especialidad = request.form.get('especialidad', '')
+                estudios = request.form.get('estudios', '')
+                
+                # Validar anios_experiencia
+                try:
+                    anios_experiencia = int(request.form.get('anios_experiencia', 0))
+                    if anios_experiencia < 0:
+                        anios_experiencia = 0
+                except ValueError:
+                    anios_experiencia = 0
+                
+                # Verificar si ya existe registro en Instructor_datos
+                cursor.execute("SELECT id FROM Instructor_datos WHERE Usuario_id = %s LIMIT 1", (user_id,))
+                instructor_datos = cursor.fetchone()
+                
+                if instructor_datos:
+                    # Actualizar registro existente
+                    cursor.execute("""
+                        UPDATE Instructor_datos SET
+                            certificaciones = %s, especialidad = %s, anios_experiencia = %s, estudios = %s
+                        WHERE Usuario_id = %s
+                    """, (certificaciones, especialidad, anios_experiencia, estudios, user_id))
+                else:
+                    # Crear nuevo registro
+                    cursor.execute("""
+                        INSERT INTO Instructor_datos (Usuario_id, certificaciones, especialidad, anios_experiencia, estudios)
+                        VALUES (%s, %s, %s, %s, %s)
+                    """, (user_id, certificaciones, especialidad, anios_experiencia, estudios))
 
-        conn.commit()
-        cursor.close()
-
-        flash('Perfil actualizado correctamente', 'success')
-        return redirect(url_for('users.profile', user_id=user_id))
+            conn.commit()
+            
+            # Actualizar el objeto usuario en la sesión actual
+            if current_user.id == user_id:
+                current_user.nombres = nombres
+                current_user.apellidos = apellidos
+                current_user.celular = celular
+                current_user.imagen = imagen
+                if user_type == "Cliente":
+                    current_user.direccion = direccion
+                    current_user.tipo_cliente = tipo_cliente
+                    current_user.nivel_actividad = nivel_actividad
+                    if peso > 0:
+                        current_user.peso = peso
+                    if altura > 0:
+                        current_user.altura = altura
+                elif user_type == "Instructor":
+                    current_user.certificaciones = certificaciones
+                    current_user.especialidad = especialidad
+            
+            flash('Perfil actualizado correctamente', 'success')
+            return redirect(url_for('users.profile', user_id=user_id))
+            
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            cursor.close()
 
     except Exception as e:
         current_app.logger.error(f"Error al actualizar perfil: {str(e)}")
@@ -531,6 +630,108 @@ def logout():
     logout_user()
     flash('Has cerrado sesión exitosamente', 'info')
     return redirect(url_for('users.login'))
+
+@users.route('/instructor_profile', methods=['GET'])
+@login_required
+def instructor_profile():
+    """Vista detallada del perfil del instructor"""
+    if not current_user.is_instructor():
+        flash('Esta página es solo para instructores', 'warning')
+        return redirect(url_for('dieta.index'))
+    
+    try:
+        user_id = current_user.id
+        conn = get_db(current_app)
+        cursor = conn.cursor()
+        
+        # Obtener datos del instructor
+        cursor.execute("""
+            SELECT u.*,
+                   id.certificaciones, id.estudios, id.anios_experiencia, id.especialidad
+            FROM Usuario u
+            LEFT JOIN Instructor_datos id ON u.id = id.Usuario_id
+            WHERE u.id = %s
+        """, (user_id,))
+        
+        instructor_data = cursor.fetchone()
+        
+        # Obtener disciplinas del instructor
+        cursor.execute("""
+            SELECT d.*
+            FROM Discipline d
+            JOIN Discipline_Instructor di ON d.id = di.Discipline_id
+            WHERE di.Usuario_id = %s
+        """, (user_id,))
+        
+        disciplinas = cursor.fetchall()
+        
+        # Obtener alumnos asignados
+        cursor.execute("""
+            SELECT u.*, 
+                   cd.nivel_actividad, cd.tipo_cliente,
+                   (SELECT COUNT(*) FROM Rutina WHERE Usuario_id = u.id) as num_rutinas,
+                   (SELECT COUNT(*) FROM Dieta WHERE Usuario_id = u.id) as num_dietas
+            FROM Usuario u
+            JOIN Cliente_datos cd ON u.id = cd.Usuario_id
+            JOIN Cliente_Instructor ci ON u.id = ci.Usuario_id
+            WHERE ci.Usuario_2_id = %s
+            LIMIT 10
+        """, (user_id,))
+        
+        alumnos = cursor.fetchall()
+        
+        # Obtener productos del instructor
+        cursor.execute("""
+            SELECT p.*,
+                   (SELECT image_name FROM Product_images WHERE Product_id = p.id LIMIT 1) as imagen
+            FROM Product p
+            JOIN Instructor_Products ip ON p.id = ip.Product_id
+            WHERE ip.Usuario_id = %s
+            LIMIT 6
+        """, (user_id,))
+        
+        productos = cursor.fetchall()
+        
+        # Obtener servicios del instructor
+        cursor.execute("""
+            SELECT s.*, 
+                   COUNT(DISTINCT sh.id) as total_horarios
+            FROM Servicio s
+            LEFT JOIN Servicio_Horario sh ON s.id = sh.servicio_id
+            WHERE s.instructor_id = %s
+            GROUP BY s.id
+            ORDER BY s.fecha_creacion DESC
+            LIMIT 6
+        """, (user_id,))
+        
+        servicios = cursor.fetchall()
+        
+        # Contar estadísticas
+        cursor.execute("""
+            SELECT 
+                (SELECT COUNT(*) FROM Cliente_Instructor WHERE Usuario_2_id = %s) as total_alumnos,
+                (SELECT COUNT(*) FROM Rutina r JOIN Cliente_Instructor ci ON r.Usuario_id = ci.Usuario_id WHERE ci.Usuario_2_id = %s) as total_rutinas,
+                (SELECT COUNT(*) FROM Dieta d WHERE d.Usuario_2_id = %s) as total_dietas,
+                (SELECT COUNT(*) FROM Instructor_Products WHERE Usuario_id = %s) as total_productos,
+                (SELECT COUNT(*) FROM Servicio WHERE instructor_id = %s) as total_servicios
+        """, (user_id, user_id, user_id, user_id, user_id))
+        
+        stats = cursor.fetchone()
+        
+        cursor.close()
+        
+        return render_template('users/instructor_profile.html', 
+                              instructor=instructor_data,
+                              disciplinas=disciplinas,
+                              alumnos=alumnos,
+                              productos=productos,
+                              servicios=servicios,
+                              stats=stats)
+                              
+    except Exception as e:
+        current_app.logger.error(f"Error al mostrar perfil de instructor: {str(e)}")
+        flash(f'Error al cargar el perfil: {str(e)}', 'danger')
+        return redirect(url_for('alumnos.index'))
 
 @users.route('/debug_session')
 def debug_session():

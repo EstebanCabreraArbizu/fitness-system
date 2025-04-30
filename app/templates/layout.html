@@ -185,6 +185,11 @@
                             </ul>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link {% if request.path.startswith('/instructor/servicios') %}active{% endif %}" href="{{ url_for('servicios.index') }}">
+                                <i class="fas fa-concierge-bell me-1"></i> Servicios
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link {% if request.path.startswith('/products') %}active{% endif %}" href="{{ url_for('product.index') }}">
                                 <i class="fas fa-shopping-bag me-1"></i> Productos
                             </a>
@@ -200,6 +205,11 @@
                         <li class="nav-item">
                             <a class="nav-link {% if request.path.startswith('/rutinas') %}active{% endif %}" href="{{ url_for('rutinas.index', alumno_id=current_user.id) }}">
                                 <i class="fas fa-dumbbell me-1"></i> Mis Rutinas
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path.startswith('/servicios') %}active{% endif %}" href="{{ url_for('servicios.catalogo') }}">
+                                <i class="fas fa-concierge-bell me-1"></i> Servicios
                             </a>
                         </li>
                         <li class="nav-item">
@@ -223,6 +233,11 @@
                             {{ current_user.nombres }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            {% if current_user.is_instructor() %}
+                            <li><a class="dropdown-item" href="{{ url_for('users.instructor_profile') }}">
+                                <i class="fas fa-id-badge me-1"></i> Perfil de Instructor
+                            </a></li>
+                            {% endif %}
                             <li><a class="dropdown-item" href="{{ url_for('users.profile', user_id=current_user.id) }}">
                                 <i class="fas fa-user-edit me-1"></i> Mi Perfil
                             </a></li>
@@ -272,10 +287,12 @@
                                 <li><a href="{{ url_for('alumnos.index') }}" class="text-decoration-none text-muted">Mis Alumnos</a></li>
                                 <li><a href="{{ url_for('dieta.index') }}" class="text-decoration-none text-muted">Dietas</a></li>
                                 <li><a href="{{ url_for('rutinas.lista_ejercicios') }}" class="text-decoration-none text-muted">Ejercicios</a></li>
+                                <li><a href="{{ url_for('servicios.index') }}" class="text-decoration-none text-muted">Servicios</a></li>
                                 <li><a href="{{ url_for('product.index') }}" class="text-decoration-none text-muted">Productos</a></li>
                             {% else %}
                                 <li><a href="{{ url_for('dieta.index') }}" class="text-decoration-none text-muted">Mis Dietas</a></li>
                                 <li><a href="{{ url_for('rutinas.index', alumno_id=current_user.id) }}" class="text-decoration-none text-muted">Mis Rutinas</a></li>
+                                <li><a href="{{ url_for('servicios.catalogo') }}" class="text-decoration-none text-muted">Servicios</a></li>
                                 <li><a href="{{ url_for('product.index') }}" class="text-decoration-none text-muted">Tienda</a></li>
                             {% endif %}
                         {% else %}

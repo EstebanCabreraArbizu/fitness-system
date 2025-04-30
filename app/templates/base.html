@@ -166,11 +166,6 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('alumnos.asignar_alumno') }}">
-                                <i class="fas fa-user-plus me-1"></i> Agregar Alumno
-                            </a>
-                        </li>
-                        <li class="nav-item">
                             <a class="nav-link {% if request.path.startswith('/dietas') %}active{% endif %}" href="{{ url_for('dieta.index') }}">
                                 <i class="fas fa-utensils me-1"></i> Dietas
                             </a>
@@ -223,6 +218,11 @@
                             {{ current_user.nombres }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            {% if current_user.is_instructor() %}
+                            <li><a class="dropdown-item" href="{{ url_for('users.instructor_profile') }}">
+                                <i class="fas fa-id-badge me-1"></i> Perfil de Instructor
+                            </a></li>
+                            {% endif %}
                             <li><a class="dropdown-item" href="{{ url_for('users.profile', user_id=current_user.id) }}">
                                 <i class="fas fa-user-edit me-1"></i> Mi Perfil
                             </a></li>

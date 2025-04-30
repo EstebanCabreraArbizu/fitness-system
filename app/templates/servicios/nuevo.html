@@ -1,0 +1,374 @@
+{% extends "layout.html" %}
+
+{% block title %}Nuevo Servicio{% endblock %}
+
+{% block styles %}
+<style>
+    .form-section {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .section-title {
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 5px;
+        margin-bottom: 20px;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .preview-container {
+        width: 100%;
+        height: 200px;
+        background-color: #f1f1f1;
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+    
+    .preview-container img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+    
+    .horario-item {
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        background-color: white;
+    }
+    
+    .delete-horario {
+        cursor: pointer;
+        color: #dc3545;
+    }
+    
+    .required-field::after {
+        content: "*";
+        color: red;
+        margin-left: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="flash-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Nuevo Servicio</h2>
+        <a href="{{ url_for('servicios.index') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+    
+    <form method="POST" enctype="multipart/form-data" id="nuevoServicioForm">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="form-section">
+                    <h4 class="section-title">Información Básica</h4>
+                    
+                    <div class="mb-3">
+                        <label for="nombre" class="form-label required-field">Nombre del Servicio</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" required>
+                        <div class="form-text">Por ejemplo: "Entrenamiento Personalizado", "Clase de Yoga", etc.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="descripcion" class="form-label required-field">Descripción</label>
+                        <textarea class="form-control" id="descripcion" name="descripcion" rows="4" required></textarea>
+                        <div class="form-text">Describe en detalle lo que incluye tu servicio.</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="precio" class="form-label required-field">Precio (MXN)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" step="0.01" min="0" class="form-control" id="precio" name="precio" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="duracion" class="form-label required-field">Duración (minutos)</label>
+                                <input type="number" min="1" max="60" class="form-control" id="duracion" name="duracion" value="60" required>
+                                <div class="form-text">Máximo 60 minutos por sesión.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h4 class="section-title">Detalles del Servicio</h4>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="categoria" class="form-label required-field">Categoría</label>
+                                <select class="form-select" id="categoria" name="categoria" required>
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Entrenamiento">Entrenamiento</option>
+                                    <option value="Nutrición">Nutrición</option>
+                                    <option value="Yoga">Yoga</option>
+                                    <option value="Pilates">Pilates</option>
+                                    <option value="Crossfit">Crossfit</option>
+                                    <option value="Funcional">Funcional</option>
+                                    <option value="Otro">Otro</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="modalidad" class="form-label required-field">Modalidad</label>
+                                <select class="form-select" id="modalidad" name="modalidad" required>
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Presencial">Presencial</option>
+                                    <option value="Virtual">Virtual</option>
+                                    <option value="Híbrido">Híbrido</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="nivel" class="form-label required-field">Nivel</label>
+                                <select class="form-select" id="nivel" name="nivel" required>
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Principiante">Principiante</option>
+                                    <option value="Intermedio">Intermedio</option>
+                                    <option value="Avanzado">Avanzado</option>
+                                    <option value="Todos">Todos los niveles</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h4 class="section-title">Horarios Disponibles</h4>
+                    <p class="text-muted">Puedes agregar horarios ahora o después desde la sección de gestión de horarios.</p>
+                    
+                    <div id="horarios-container">
+                        <!-- Los horarios se añadirán aquí dinámicamente -->
+                    </div>
+                    
+                    <button type="button" class="btn btn-outline-primary w-100" id="agregar-horario">
+                        <i class="fas fa-plus"></i> Agregar Horario
+                    </button>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="form-section">
+                    <h4 class="section-title">Imagen del Servicio</h4>
+                    
+                    <div class="preview-container" id="imagen-preview">
+                        <i class="fas fa-image fa-3x text-muted"></i>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="imagen" class="form-label">Seleccionar Imagen</label>
+                        <input type="file" class="form-control" id="imagen" name="imagen" accept="image/*">
+                        <div class="form-text">Imagen representativa del servicio. Formatos: JPG, PNG, GIF (max 2MB)</div>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-save"></i> Guardar Servicio
+                    </button>
+                    <a href="{{ url_for('servicios.index') }}" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Template para horarios -->
+<template id="horario-template">
+    <div class="horario-item">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Horario #<span class="horario-numero">1</span></h5>
+            <i class="fas fa-times delete-horario" title="Eliminar horario"></i>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Día de la semana</label>
+                    <select class="form-select" name="dia_semana[]" required>
+                        <option value="">Seleccionar...</option>
+                        <option value="lunes">Lunes</option>
+                        <option value="martes">Martes</option>
+                        <option value="miércoles">Miércoles</option>
+                        <option value="jueves">Jueves</option>
+                        <option value="viernes">Viernes</option>
+                        <option value="sábado">Sábado</option>
+                        <option value="domingo">Domingo</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Cupos disponibles</label>
+                    <input type="number" class="form-control" name="cupos[]" min="1" value="1" required>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Hora de inicio</label>
+                    <input type="time" class="form-control hora-inicio" name="hora_inicio[]" required>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Hora de fin</label>
+                    <input type="time" class="form-control hora-fin" name="hora_fin[]" required>
+                    <div class="invalid-feedback">La duración debe ser menor a 60 minutos</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Previsualizar imagen
+    const imagenInput = document.getElementById('imagen');
+    const imagenPreview = document.getElementById('imagen-preview');
+    
+    imagenInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagenPreview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            imagenPreview.innerHTML = `<i class="fas fa-image fa-3x text-muted"></i>`;
+        }
+    });
+    
+    // Gestión de horarios
+    const horariosContainer = document.getElementById('horarios-container');
+    const agregarHorarioBtn = document.getElementById('agregar-horario');
+    const horarioTemplate = document.getElementById('horario-template');
+    
+    let horarioCount = 0;
+    
+    function agregarHorario() {
+        horarioCount++;
+        const clone = document.importNode(horarioTemplate.content, true);
+        clone.querySelector('.horario-numero').textContent = horarioCount;
+        
+        // Manejar eliminación de horario
+        clone.querySelector('.delete-horario').addEventListener('click', function(e) {
+            e.target.closest('.horario-item').remove();
+            actualizarNumerosHorarios();
+        });
+        
+        // Validar duración (menor a 60 minutos)
+        const horaInicio = clone.querySelector('.hora-inicio');
+        const horaFin = clone.querySelector('.hora-fin');
+        
+        function validarDuracion() {
+            if (horaInicio.value && horaFin.value) {
+                const inicio = new Date(`2000-01-01T${horaInicio.value}`);
+                const fin = new Date(`2000-01-01T${horaFin.value}`);
+                
+                // Si fin es antes que inicio, ajustar a siguiente día
+                let duracionMs = fin - inicio;
+                if (duracionMs < 0) {
+                    duracionMs += 24 * 60 * 60 * 1000; // Añadir un día
+                }
+                
+                const duracionMinutos = duracionMs / (1000 * 60);
+                
+                if (duracionMinutos > 60) {
+                    horaFin.classList.add('is-invalid');
+                    return false;
+                } else {
+                    horaFin.classList.remove('is-invalid');
+                    return true;
+                }
+            }
+            return true;
+        }
+        
+        horaInicio.addEventListener('change', validarDuracion);
+        horaFin.addEventListener('change', validarDuracion);
+        
+        horariosContainer.appendChild(clone);
+    }
+    
+    function actualizarNumerosHorarios() {
+        const horarios = horariosContainer.querySelectorAll('.horario-item');
+        horarios.forEach((horario, index) => {
+            horario.querySelector('.horario-numero').textContent = index + 1;
+        });
+        horarioCount = horarios.length;
+    }
+    
+    agregarHorarioBtn.addEventListener('click', agregarHorario);
+    
+    // Validación del formulario
+    const form = document.getElementById('nuevoServicioForm');
+    
+    form.addEventListener('submit', function(e) {
+        // Validar duración de horarios
+        const horasFin = document.querySelectorAll('.hora-fin');
+        let horariosValidos = true;
+        
+        horasFin.forEach(function(horaFin) {
+            const horaInicio = horaFin.closest('.horario-item').querySelector('.hora-inicio');
+            
+            if (horaInicio.value && horaFin.value) {
+                const inicio = new Date(`2000-01-01T${horaInicio.value}`);
+                const fin = new Date(`2000-01-01T${horaFin.value}`);
+                
+                // Si fin es antes que inicio, ajustar a siguiente día
+                let duracionMs = fin - inicio;
+                if (duracionMs < 0) {
+                    duracionMs += 24 * 60 * 60 * 1000; // Añadir un día
+                }
+                
+                const duracionMinutos = duracionMs / (1000 * 60);
+                
+                if (duracionMinutos > 60) {
+                    horaFin.classList.add('is-invalid');
+                    horariosValidos = false;
+                } else {
+                    horaFin.classList.remove('is-invalid');
+                }
+            }
+        });
+        
+        if (!horariosValidos) {
+            e.preventDefault();
+            alert('La duración de los horarios debe ser menor a 60 minutos.');
+        }
+    });
+});
+</script>
+{% endblock %} 
