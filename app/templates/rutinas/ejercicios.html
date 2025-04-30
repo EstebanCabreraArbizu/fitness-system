@@ -1,0 +1,138 @@
+{% extends "layout.html" %}
+
+{% block title %}Catálogo de Ejercicios{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Catálogo de Ejercicios</h1>
+        <div>
+            <a href="{{ url_for('alumnos.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Volver a Alumnos
+            </a>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="row mb-4">
+        <div class="col-md-6 offset-md-3">
+            <div class="d-grid gap-2">
+                <a href="{{ url_for('rutinas.nuevo_ejercicio') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus"></i> Agregar Nuevo Ejercicio
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Ejercicios Disponibles</h5>
+                        <div class="input-group" style="max-width: 300px;">
+                            <input type="text" id="buscarEjercicio" class="form-control" placeholder="Buscar ejercicio...">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if ejercicios %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" id="tabla-ejercicios">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nombre</th>
+                                        <th>Descripción</th>
+                                        <th>Series</th>
+                                        <th>Repeticiones</th>
+                                        <th>Descanso</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ejercicio in ejercicios %}
+                                        <tr>
+                                            <td>{{ ejercicio.id }}</td>
+                                            <td>{{ ejercicio.nombre }}</td>
+                                            <td>
+                                                {% if ejercicio.descripcion %}
+                                                    {{ ejercicio.descripcion|truncate(50) }}
+                                                {% else %}
+                                                    <span class="text-muted">Sin descripción</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ ejercicio.series }}</td>
+                                            <td>{{ ejercicio.repeticiones }}</td>
+                                            <td>{{ ejercicio.tiempo_descanso }}s</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <p class="mb-0">No hay ejercicios en el catálogo</p>
+                            <p class="text-muted">Crea tu primer ejercicio haciendo clic en "Agregar Nuevo Ejercicio"</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Instrucciones para uso -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h5>¿Cómo utilizar el catálogo de ejercicios?</h5>
+                    <p>Los ejercicios que agregues a este catálogo estarán disponibles para todas las rutinas que crees para tus alumnos. Puedes crear tantos ejercicios como necesites y utilizarlos en múltiples rutinas.</p>
+                    <ul>
+                        <li>Agrega ejercicios con nombres claros y descriptivos</li>
+                        <li>Incluye una descripción detallada de cómo realizar el ejercicio</li>
+                        <li>Define un número adecuado de series y repeticiones según el nivel del alumno</li>
+                        <li>Establece un tiempo de descanso apropiado entre series</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Búsqueda en tabla de ejercicios
+        const buscarInput = document.getElementById('buscarEjercicio');
+        const tabla = document.getElementById('tabla-ejercicios');
+        
+        if (buscarInput && tabla) {
+            buscarInput.addEventListener('keyup', function() {
+                const texto = this.value.toLowerCase();
+                const filas = tabla.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+                
+                for (let i = 0; i < filas.length; i++) {
+                    const contenido = filas[i].textContent.toLowerCase();
+                    if (contenido.indexOf(texto) > -1) {
+                        filas[i].style.display = '';
+                    } else {
+                        filas[i].style.display = 'none';
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %} 

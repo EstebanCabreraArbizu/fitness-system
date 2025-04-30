@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Detalles del Alumno{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Detalles del Alumno</h1>
+        <a href="{{ url_for('alumnos.index') }}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Volver a la lista
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="row">
+        <!-- Información del alumno -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Información Personal</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <img src="{{ url_for('static', filename='uploads/' + alumno.imagen) }}" alt="Perfil" class="rounded-circle img-thumbnail" style="width: 120px; height: 120px; object-fit: cover;">
+                    </div>
+                    <h4 class="text-center mb-3">{{ alumno.nombres }} {{ alumno.apellidos }}</h4>
+                    
+                    <div class="mb-2">
+                        <strong><i class="fas fa-envelope"></i> Email:</strong>
+                        <p>{{ alumno.email }}</p>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <strong><i class="fas fa-phone"></i> Teléfono:</strong>
+                        <p>{{ alumno.celular }}</p>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <strong><i class="fas fa-map-marker-alt"></i> Dirección:</strong>
+                        <p>{{ alumno.direccion }}</p>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <strong><i class="fas fa-running"></i> Nivel de actividad:</strong>
+                        <p>{{ alumno.nivel_actividad }}</p>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <strong><i class="fas fa-user-tag"></i> Tipo de cliente:</strong>
+                        <p>{{ alumno.tipo_cliente }}</p>
+                    </div>
+                    
+                    {% if alumno.peso and alumno.altura and alumno.imc %}
+                    <div class="mb-2">
+                        <strong><i class="fas fa-weight"></i> Medidas Actuales:</strong>
+                        <p>
+                            Peso: {{ alumno.peso }} kg<br>
+                            Altura: {{ alumno.altura }} cm<br>
+                            IMC: {{ alumno.imc }}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-white">
+                    <a href="{{ url_for('alumnos.agregar_medida', alumno_id=alumno.id) }}" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-ruler"></i> Agregar Medida
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Secciones de Rutinas, Metas y Dietas -->
+        <div class="col-md-8">
+            <!-- Acciones rápidas -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <a href="{{ url_for('rutinas.nueva_rutina', alumno_id=alumno.id) }}" class="btn btn-success w-100 h-100 py-3">
+                        <i class="fas fa-dumbbell fa-2x mb-2"></i><br>
+                        Crear Nueva Rutina
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{{ url_for('rutinas.nueva_meta', alumno_id=alumno.id) }}" class="btn btn-info text-white w-100 h-100 py-3">
+                        <i class="fas fa-flag-checkered fa-2x mb-2"></i><br>
+                        Crear Nueva Meta
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{{ url_for('dieta.nueva_dieta') }}" class="btn btn-warning text-dark w-100 h-100 py-3">
+                        <i class="fas fa-utensils fa-2x mb-2"></i><br>
+                        Crear Nueva Dieta
+                    </a>
+                </div>
+            </div>
+
+            <!-- Historial de medidas -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Historial de Medidas</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if medidas %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Peso (kg)</th>
+                                        <th>Altura (cm)</th>
+                                        <th>IMC</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for medida in medidas %}
+                                        <tr>
+                                            <td>{{ medida.fecha_medicion.strftime('%d/%m/%Y') }}</td>
+                                            <td>{{ medida.peso }}</td>
+                                            <td>{{ medida.altura }}</td>
+                                            <td>{{ medida.imc }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <p class="mb-0">No hay medidas registradas</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Rutinas -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Rutinas</h5>
+                    <a href="{{ url_for('rutinas.index', alumno_id=alumno.id) }}" class="btn btn-sm btn-light">
+                        Ver todas
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if rutinas %}
+                        <div class="list-group list-group-flush">
+                            {% for rutina in rutinas[:3] %}
+                                <a href="{{ url_for('rutinas.detalle_rutina', rutina_id=rutina.id) }}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ rutina.nombre }}</h6>
+                                        <small>{{ rutina.fecha_creacion.strftime('%d/%m/%Y') }}</small>
+                                    </div>
+                                    <p class="mb-1 text-truncate">{{ rutina.descripcion }}</p>
+                                    <small>{{ rutina.num_ejercicios }} ejercicios</small>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <p class="mb-0">No hay rutinas asignadas</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Metas -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Metas</h5>
+                    <a href="{{ url_for('rutinas.index', alumno_id=alumno.id) }}" class="btn btn-sm btn-light">
+                        Ver todas
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if metas %}
+                        <div class="list-group list-group-flush">
+                            {% for meta in metas[:3] %}
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ meta.descripcion }}</h6>
+                                        <small>
+                                            {% if meta.estado == 'Completada' %}
+                                                <span class="badge bg-success">Completada</span>
+                                            {% elif meta.estado == 'En progreso' %}
+                                                <span class="badge bg-warning text-dark">En progreso</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Pendiente</span>
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                    <p class="mb-1">
+                                        <small>Periodo: {{ meta.fecha_inicio.strftime('%d/%m/%Y') }} - {{ meta.fecha_fin.strftime('%d/%m/%Y') }}</small>
+                                    </p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <p class="mb-0">No hay metas establecidas</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Dietas -->
+            <div class="card">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Dietas</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if dietas %}
+                        <div class="list-group list-group-flush">
+                            {% for dieta in dietas[:3] %}
+                                <a href="{{ url_for('dieta.detalle', dieta_id=dieta.id) }}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ dieta.nombre }}</h6>
+                                        <small>{{ dieta.fecha_registro.strftime('%d/%m/%Y') }}</small>
+                                    </div>
+                                    <p class="mb-1 text-truncate">{{ dieta.descripcion }}</p>
+                                    <small>Disciplina: {{ dieta.discipline_nombre }}</small>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <p class="mb-0">No hay dietas asignadas</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

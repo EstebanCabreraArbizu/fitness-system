@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Asignar Alumno{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Asignar Nuevo Alumno</h5>
+                </div>
+                <div class="card-body">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    {% if clientes %}
+                        <form method="POST" action="{{ url_for('alumnos.asignar_alumno') }}">
+                            <div class="mb-3">
+                                <label for="cliente_id" class="form-label">Selecciona un cliente *</label>
+                                <select class="form-select" id="cliente_id" name="cliente_id" required>
+                                    <option value="">-- Selecciona un cliente --</option>
+                                    {% for cliente in clientes %}
+                                        <option value="{{ cliente.id }}">
+                                            {{ cliente.nombres }} {{ cliente.apellidos }} ({{ cliente.email }}) - Nivel: {{ cliente.nivel_actividad }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between">
+                                <a href="{{ url_for('alumnos.index') }}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left"></i> Volver
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-user-plus"></i> Asignar Alumno
+                                </button>
+                            </div>
+                        </form>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <p class="mb-0">No hay clientes disponibles para asignar. Todos los clientes activos ya están asignados a tu perfil.</p>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for('alumnos.index') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-arrow-left"></i> Volver a mis alumnos
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

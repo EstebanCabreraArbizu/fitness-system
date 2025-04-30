@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}FitSystem - Sistema de Gestión Fitness{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row align-items-center">
+        <div class="col-lg-6 mb-4 mb-lg-0">
+            <h1 class="display-4 fw-bold mb-3">Gestiona tu negocio fitness de forma eficiente</h1>
+            <p class="lead text-muted mb-4">FitSystem te ayuda a administrar tus clientes, rutinas, dietas y productos en un solo lugar. Optimiza tu tiempo y ofrece un mejor servicio.</p>
+            <div class="d-grid gap-2 d-md-flex">
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('users.profile', user_id=current_user.id) }}" class="btn btn-primary btn-lg px-4">
+                        <i class="fas fa-tachometer-alt me-2"></i>Ir a mi Dashboard
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('users.login') }}" class="btn btn-primary btn-lg px-4">
+                        <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                    </a>
+                    <a href="{{ url_for('users.add_user') }}" class="btn btn-outline-primary btn-lg px-4">
+                        <i class="fas fa-user-plus me-2"></i>Registrarse
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <img src="{{ url_for('static', filename='img/hero-image.jpg') }}" alt="FitSystem" class="img-fluid rounded-3 shadow">
+        </div>
+    </div>
+
+    <!-- Características -->
+    <div class="row pt-5 mt-5">
+        <div class="col-12 text-center mb-5">
+            <h2 class="h1 fw-bold">Todo lo que necesitas para tu negocio fitness</h2>
+            <p class="lead text-muted">Herramientas diseñadas para entrenadores y nutricionistas</p>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon bg-primary bg-gradient text-white rounded-circle mb-3 mx-auto" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                    <h3 class="h5">Gestión de Alumnos</h3>
+                    <p class="text-muted">Administra tus clientes, realiza seguimiento de su progreso y mantén un historial de medidas.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon bg-success bg-gradient text-white rounded-circle mb-3 mx-auto" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-dumbbell fa-2x"></i>
+                    </div>
+                    <h3 class="h5">Rutinas Personalizadas</h3>
+                    <p class="text-muted">Crea planes de entrenamiento a medida para cada cliente, con detalle de ejercicios y seguimiento.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon bg-warning bg-gradient text-white rounded-circle mb-3 mx-auto" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-utensils fa-2x"></i>
+                    </div>
+                    <h3 class="h5">Planes de Alimentación</h3>
+                    <p class="text-muted">Diseña dietas personalizadas con control de macronutrientes y adaptadas a cada disciplina.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

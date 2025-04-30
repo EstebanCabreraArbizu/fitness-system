@@ -1,0 +1,160 @@
+{% extends "layout.html" %}
+
+{% block title %}Rutinas y Metas de {{ alumno.nombres }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Rutinas y Metas de {{ alumno.nombres }} {{ alumno.apellidos }}</h1>
+        <div>
+            <a href="{{ url_for('alumnos.detalles_alumno', alumno_id=alumno_id) }}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-user"></i> Perfil del Alumno
+            </a>
+            <a href="{{ url_for('alumnos.index') }}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Volver a Alumnos
+            </a>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Acciones Rápidas -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <a href="{{ url_for('rutinas.nueva_rutina', alumno_id=alumno_id) }}" class="btn btn-success w-100 py-3">
+                <i class="fas fa-dumbbell fa-2x mb-2"></i><br>
+                Crear Nueva Rutina
+            </a>
+        </div>
+        <div class="col-md-6">
+            <a href="{{ url_for('rutinas.nueva_meta', alumno_id=alumno_id) }}" class="btn btn-info text-white w-100 py-3">
+                <i class="fas fa-flag-checkered fa-2x mb-2"></i><br>
+                Crear Nueva Meta
+            </a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Rutinas -->
+        <div class="col-md-7">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Rutinas</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if rutinas %}
+                        <div class="list-group list-group-flush">
+                            {% for rutina in rutinas %}
+                                <div class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between align-items-center">
+                                        <h5 class="mb-1">{{ rutina.nombre }}</h5>
+                                        <small>{{ rutina.fecha_creacion.strftime('%d/%m/%Y') }}</small>
+                                    </div>
+                                    <p class="mb-1">{{ rutina.descripcion }}</p>
+                                    <p class="mb-2">
+                                        <span class="badge bg-secondary">{{ rutina.num_ejercicios }} ejercicios</span>
+                                    </p>
+                                    <div class="d-flex justify-content-end">
+                                        <a href="{{ url_for('rutinas.detalle_rutina', rutina_id=rutina.id) }}" class="btn btn-sm btn-outline-primary me-2">
+                                            <i class="fas fa-eye"></i> Ver Detalles
+                                        </a>
+                                        <a href="{{ url_for('rutinas.editar_rutina', rutina_id=rutina.id) }}" class="btn btn-sm btn-outline-secondary me-2">
+                                            <i class="fas fa-edit"></i> Editar
+                                        </a>
+                                        <form method="POST" action="{{ url_for('rutinas.eliminar_rutina', rutina_id=rutina.id) }}" class="d-inline" 
+                                            onsubmit="return confirm('¿Estás seguro de eliminar esta rutina?');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash-alt"></i> Eliminar
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p class="mb-0">No hay rutinas asignadas a este alumno</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Agregar Ejercicios -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Gestión de Ejercicios</h5>
+                </div>
+                <div class="card-body">
+                    <p>Gestiona el catálogo de ejercicios para asignar a las rutinas.</p>
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('rutinas.lista_ejercicios') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-list"></i> Ver Ejercicios
+                        </a>
+                        <a href="{{ url_for('rutinas.nuevo_ejercicio') }}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Nuevo Ejercicio
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Metas -->
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Objetivos y Metas</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if metas %}
+                        <div class="list-group list-group-flush">
+                            {% for meta in metas %}
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between align-items-center">
+                                        <h5 class="mb-1">{{ meta.descripcion }}</h5>
+                                        <div>
+                                            {% if meta.estado == 'Completada' %}
+                                                <span class="badge bg-success">Completada</span>
+                                            {% elif meta.estado == 'En progreso' %}
+                                                <span class="badge bg-warning text-dark">En progreso</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Pendiente</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <p class="mb-1">
+                                        <strong>Periodo:</strong> {{ meta.fecha_inicio.strftime('%d/%m/%Y') }} - {{ meta.fecha_fin.strftime('%d/%m/%Y') }}
+                                    </p>
+                                    <div class="d-flex justify-content-end mt-2">
+                                        <a href="{{ url_for('rutinas.editar_meta', meta_id=meta.id) }}" class="btn btn-sm btn-outline-secondary me-2">
+                                            <i class="fas fa-edit"></i> Editar
+                                        </a>
+                                        <form method="POST" action="{{ url_for('rutinas.eliminar_meta', meta_id=meta.id) }}" class="d-inline" 
+                                            onsubmit="return confirm('¿Estás seguro de eliminar esta meta?');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash-alt"></i> Eliminar
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p class="mb-0">No hay metas asignadas a este alumno</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

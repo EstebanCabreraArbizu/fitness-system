@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Alumnos{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Mis Alumnos</h1>
+        <a href="{{ url_for('alumnos.asignar_alumno') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Asignar Nuevo Alumno
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Lista de alumnos -->
+    <div class="row">
+        {% if alumnos %}
+            {% for alumno in alumnos %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">{{ alumno.nombres }} {{ alumno.apellidos }}</h5>
+                            {% if alumno.status == 1 %}
+                                <span class="badge bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactivo</span>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <strong>Email:</strong> {{ alumno.email }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>Teléfono:</strong> {{ alumno.celular }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>Nivel de actividad:</strong> {{ alumno.nivel_actividad }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>Tipo de cliente:</strong> {{ alumno.tipo_cliente }}
+                            </div>
+                            
+                            {% if alumno.peso and alumno.altura %}
+                            <div class="mb-2">
+                                <strong>Medidas:</strong> {{ alumno.peso }} kg / {{ alumno.altura }} cm
+                            </div>
+                            {% endif %}
+                            
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between">
+                                    <small class="text-muted">Rutinas: {{ alumno.num_rutinas }}</small>
+                                    <small class="text-muted">Metas: {{ alumno.num_metas }}</small>
+                                    <small class="text-muted">Dietas: {{ alumno.num_dietas }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white d-flex justify-content-between">
+                            <div>
+                                <a href="{{ url_for('alumnos.detalles_alumno', alumno_id=alumno.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i> Ver detalles
+                                </a>
+                                <a href="{{ url_for('rutinas.index', alumno_id=alumno.id) }}" class="btn btn-sm btn-outline-success">
+                                    <i class="fas fa-dumbbell"></i> Rutinas
+                                </a>
+                            </div>
+                            <form method="POST" action="{{ url_for('alumnos.eliminar_alumno', alumno_id=alumno.id) }}" class="d-inline" 
+                                onsubmit="return confirm('¿Estás seguro de eliminar a este alumno de tu lista?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-user-minus"></i> Eliminar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12 text-center py-5">
+                <div class="alert alert-info">
+                    <h4 class="mb-0">No tienes alumnos asignados</h4>
+                    <p class="mt-2">Puedes asignar nuevos alumnos haciendo clic en "Asignar Nuevo Alumno"</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

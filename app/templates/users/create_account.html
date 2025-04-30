@@ -1,0 +1,444 @@
+{% extends "users/layout_create-account.html"%}
+{% block body %}
+
+<div class="flash-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
+
+<div class="register-container">
+    <div class="register-header">
+        <img src="{{ url_for('static', filename='img/logo-fitsystem.png') }}" alt="FitSystem Logo">
+        <h2>Crear tu cuenta</h2>
+        <p class="text-muted">Únete a nuestra comunidad fitness</p>
+    </div>
+
+    <div class="steps-indicator">
+        <div class="step-dot active" data-step="1">1</div>
+        <div class="step-dot" data-step="2">2</div>
+        <div class="step-dot" data-step="3">3</div>
+    </div>
+
+    <form id="registerForm" method="POST" action="{{ url_for('users.add_user') }}" enctype="multipart/form-data">
+        <!-- Paso 1: Datos Básicos -->
+        <div id="step1" class="step active">
+            <div class="social-buttons mb-4">
+                <button type="button" class="btn btn-google w-100 mb-2">
+                    <i class="fab fa-google me-2"></i> Continuar con Google
+                </button>
+                <button type="button" class="btn btn-facebook w-100">
+                    <i class="fab fa-facebook-f me-2"></i> Continuar con Facebook
+                </button>
+            </div>
+
+            <div class="text-center mb-4">
+                <span class="text-muted">O regístrate con tu correo</span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="nombre" name="nombres" placeholder="Nombre" required>
+                <label for="nombre">Nombre</label>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="apellidos" name="apellidos" placeholder="Apellidos" required>
+                <label for="apellidos">Apellidos</label>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input type="email" class="form-control" id="correo" name="correo" placeholder="nombre@ejemplo.com" required>
+                <label for="correo">Correo electrónico</label>
+                <div class="invalid-feedback">
+                    Por favor ingresa un correo electrónico válido.
+                </div>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input type="password" class="form-control" id="contrasenia" name="contrasenia" placeholder="Contraseña" required>
+                <label for="contrasenia">Contraseña</label>
+                <div class="password-feedback">
+                    <ul>
+                        <li id="length">Al menos 8 caracteres</li>
+                        <li id="uppercase">Al menos una letra mayúscula</li>
+                        <li id="lowercase">Al menos una letra minúscula</li>
+                        <li id="number">Al menos un número</li>
+                        <li id="special">Al menos un carácter especial</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="form-floating mb-4">
+                <input type="password" class="form-control" id="confirmContrasenia" name="confirmar_contrasenia" placeholder="Confirmar contraseña" required>
+                <label for="confirmContrasenia">Confirmar contraseña</label>
+                <div class="invalid-feedback" id="passwordMatchFeedback" style="display: none;">
+                    Las contraseñas no coinciden.
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-next w-100" onclick="nextStep()">
+                Siguiente <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+        </div>
+
+        <!-- Paso 2: Datos Personales -->
+        <div id="step2" class="step">
+            <div class="form-floating mb-3">
+                <input type="tel" class="form-control" id="telefono" name="celular" placeholder="Teléfono" required>
+                <label for="telefono">Teléfono / Celular</label>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="direccion" name="direccion" placeholder="Dirección" required>
+                <label for="direccion">Dirección</label>
+            </div>
+
+            <div class="fitness-stats">
+                <div class="form-floating">
+                    <input type="number" class="form-control" id="peso" name="peso" placeholder="Peso (kg)" step="0.01" min="20" max="200">
+                    <label for="peso">Peso (kg)</label>
+                </div>
+                <div class="form-floating">
+                    <input type="number" class="form-control" id="altura" name="altura" placeholder="Altura (cm)" step="0.01" min="100" max="250">
+                    <label for="altura">Altura (cm)</label>
+                </div>
+            </div>
+
+            <div class="d-flex gap-3">
+                <button type="button" class="btn btn-prev w-50" onclick="prevStep()">
+                    <i class="fas fa-arrow-left me-2"></i> Anterior
+                </button>
+                <button type="button" class="btn btn-next w-50" onclick="nextStep()">
+                    Siguiente <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Paso 3: Imagen y Tipo de Usuario -->
+        <div id="step3" class="step">
+            <div class="text-center mb-4">
+                <img id="avatarPreview" src="{{ url_for('static', filename='img/default-user.png') }}" alt="Vista previa del avatar">
+                <div class="upload-btn-wrapper mt-2">
+                    <button class="btn btn-outline-primary">Subir foto de perfil</button>
+                    <input type="file" name="imagen" id="imagen" accept="image/*">
+                </div>
+                <small class="text-muted d-block mt-1">JPG, PNG o GIF. Máx. 5MB.</small>
+            </div>
+
+            <div class="form-floating mb-4">
+                <select class="form-select" id="tipoUsuario" name="tipo_usuario" required>
+                    <option value="" selected disabled>Seleccionar...</option>
+                    <option value="cliente">Cliente</option>
+                    <option value="instructor">Instructor</option>
+                </select>
+                <label for="tipoUsuario">Tipo de usuario</label>
+            </div>
+
+            <div id="clienteOptions" class="mb-4" style="display: none;">
+                <div class="form-floating mb-3">
+                    <select class="form-select" id="tipoCliente" name="tipo_cliente">
+                        <option value="" selected disabled>Seleccionar...</option>
+                        <option value="interno">Interno (Alumno)</option>
+                        <option value="externo">Externo (Temporal)</option>
+                    </select>
+                    <label for="tipoCliente">Tipo de cliente</label>
+                </div>
+            </div>
+
+            <div class="form-check mb-4">
+                <input class="form-check-input" type="checkbox" id="terminos" name="terminos" required>
+                <label class="form-check-label" for="terminos">
+                    Acepto los <a href="#" data-bs-toggle="modal" data-bs-target="#terminosModal">términos y condiciones</a> y la <a href="#" data-bs-toggle="modal" data-bs-target="#privacidadModal">política de privacidad</a>
+                </label>
+            </div>
+
+            <div class="d-flex gap-3">
+                <button type="button" class="btn btn-prev w-50" onclick="prevStep()">
+                    <i class="fas fa-arrow-left me-2"></i> Anterior
+                </button>
+                <button type="submit" class="btn btn-next w-50" id="submitBtn">
+                    Crear Cuenta <i class="fas fa-check ms-2"></i> 
+                </button>
+            </div>
+            
+            <div class="text-center mt-4">
+                <small>¿Ya tienes una cuenta? <a href="{{ url_for('users.login') }}">Inicia sesión aquí</a></small>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Modal de términos y condiciones -->
+<div class="modal fade" id="terminosModal" tabindex="-1" aria-labelledby="terminosModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="terminosModalLabel">Términos y Condiciones</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. Aceptación de los Términos</h6>
+                <p>Al registrarte y utilizar FitSystem, aceptas cumplir con estos términos y condiciones.</p>
+                
+                <h6>2. Uso del Servicio</h6>
+                <p>Nos reservamos el derecho de suspender cuentas que violen estos términos o realicen actividades fraudulentas.</p>
+                
+                <h6>3. Privacidad</h6>
+                <p>Tu información personal será tratada según nuestra política de privacidad.</p>
+                
+                <h6>4. Responsabilidades del Usuario</h6>
+                <p>Como usuario, eres responsable de mantener la confidencialidad de tu cuenta y contraseña.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de política de privacidad -->
+<div class="modal fade" id="privacidadModal" tabindex="-1" aria-labelledby="privacidadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="privacidadModalLabel">Política de Privacidad</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. Información que Recopilamos</h6>
+                <p>Recopilamos información personal como nombre, correo electrónico y datos relacionados con tu estado físico.</p>
+                
+                <h6>2. Uso de la Información</h6>
+                <p>Utilizamos tu información para proporcionar y mejorar nuestros servicios, así como para comunicarnos contigo.</p>
+                
+                <h6>3. Seguridad</h6>
+                <p>Implementamos medidas de seguridad para proteger tu información personal.</p>
+                
+                <h6>4. Cookies</h6>
+                <p>Utilizamos cookies para mejorar tu experiencia de usuario.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mostrar/ocultar opciones de cliente según el tipo de usuario
+        document.getElementById('tipoUsuario').addEventListener('change', function() {
+            const clienteOptions = document.getElementById('clienteOptions');
+            if (this.value === 'cliente') {
+                clienteOptions.style.display = 'block';
+                document.getElementById('tipoCliente').required = true;
+            } else {
+                clienteOptions.style.display = 'none';
+                document.getElementById('tipoCliente').required = false;
+            }
+        });
+
+        // Preview de imagen
+        document.getElementById('imagen').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('avatarPreview').src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Validación de correo en tiempo real
+        document.getElementById('correo').addEventListener('blur', function() {
+            const email = this.value;
+            const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const isValid = regex.test(email);
+            
+            if (!isValid && email) {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+
+        // Validación de contraseña en tiempo real
+        document.getElementById('contrasenia').addEventListener('input', function() {
+            const password = this.value;
+            
+            // Criterios de validación
+            const hasLength = password.length >= 8;
+            const hasUpper = /[A-Z]/.test(password);
+            const hasLower = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSpecial = /[!@#$%^&*()_\-+={}[\]|:;'"<>,.?/]/.test(password);
+            
+            // Actualizar indicadores visuales
+            document.getElementById('length').className = hasLength ? 'valid' : '';
+            document.getElementById('uppercase').className = hasUpper ? 'valid' : '';
+            document.getElementById('lowercase').className = hasLower ? 'valid' : '';
+            document.getElementById('number').className = hasNumber ? 'valid' : '';
+            document.getElementById('special').className = hasSpecial ? 'valid' : '';
+        });
+
+        // Comprobar coincidencia de contraseñas
+        document.getElementById('confirmContrasenia').addEventListener('input', function() {
+            const password = document.getElementById('contrasenia').value;
+            const confirmation = this.value;
+            
+            if (password !== confirmation) {
+                this.classList.add('is-invalid');
+                document.getElementById('passwordMatchFeedback').style.display = 'block';
+            } else {
+                this.classList.remove('is-invalid');
+                document.getElementById('passwordMatchFeedback').style.display = 'none';
+            }
+        });
+    });
+
+    // Navegación entre pasos
+    let currentStep = 1;
+    const totalSteps = 3;
+
+    function updateStepIndicators() {
+        // Actualizar indicadores de paso
+        document.querySelectorAll('.step-dot').forEach(dot => {
+            const stepNum = parseInt(dot.getAttribute('data-step'));
+            
+            if (stepNum < currentStep) {
+                dot.classList.add('completed');
+                dot.classList.remove('active');
+            } else if (stepNum === currentStep) {
+                dot.classList.add('active');
+                dot.classList.remove('completed');
+            } else {
+                dot.classList.remove('active', 'completed');
+            }
+        });
+    }
+
+    function nextStep() {
+        // Validar el paso actual antes de avanzar
+        if (validateCurrentStep()) {
+            if (currentStep < totalSteps) {
+                document.getElementById(`step${currentStep}`).classList.remove('active');
+                currentStep++;
+                document.getElementById(`step${currentStep}`).classList.add('active');
+                updateStepIndicators();
+            }
+        }
+    }
+
+    function prevStep() {
+        if (currentStep > 1) {
+            document.getElementById(`step${currentStep}`).classList.remove('active');
+            currentStep--;
+            document.getElementById(`step${currentStep}`).classList.add('active');
+            updateStepIndicators();
+        }
+    }
+
+    function validateCurrentStep() {
+        let isValid = true;
+        
+        // Validaciones específicas para cada paso
+        if (currentStep === 1) {
+            const nombre = document.getElementById('nombre').value;
+            const email = document.getElementById('correo').value;
+            const password = document.getElementById('contrasenia').value;
+            const confirmPassword = document.getElementById('confirmContrasenia').value;
+            
+            // Validar nombre
+            if (!nombre) {
+                isValid = false;
+                showAlert('Por favor ingrese su nombre', 'warning');
+            }
+            
+            // Validar email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!email || !emailRegex.test(email)) {
+                isValid = false;
+                showAlert('Por favor ingrese un correo electrónico válido', 'warning');
+            }
+            
+            // Validar contraseña
+            const hasLength = password.length >= 8;
+            const hasUpper = /[A-Z]/.test(password);
+            const hasLower = /[a-z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSpecial = /[!@#$%^&*()_\-+={}[\]|:;'"<>,.?/]/.test(password);
+            
+            if (!hasLength || !hasUpper || !hasLower || !hasNumber || !hasSpecial) {
+                isValid = false;
+                showAlert('La contraseña no cumple con los requisitos de seguridad', 'warning');
+            }
+            
+            // Validar coincidencia de contraseñas
+            if (password !== confirmPassword) {
+                isValid = false;
+                showAlert('Las contraseñas no coinciden', 'warning');
+            }
+        }
+        else if (currentStep === 2) {
+            const telefono = document.getElementById('telefono').value;
+            
+            // Validar teléfono
+            if (!telefono) {
+                isValid = false;
+                showAlert('Por favor ingrese su número de teléfono', 'warning');
+            }
+        }
+        
+        return isValid;
+    }
+
+    // Validación final antes de enviar el formulario
+    document.getElementById('registerForm').addEventListener('submit', function(event) {
+        const tipoUsuario = document.getElementById('tipoUsuario').value;
+        const terminos = document.getElementById('terminos').checked;
+        
+        if (!tipoUsuario) {
+            event.preventDefault();
+            showAlert('Por favor seleccione un tipo de usuario', 'warning');
+        }
+        
+        if (!terminos) {
+            event.preventDefault();
+            showAlert('Debe aceptar los términos y condiciones', 'warning');
+        }
+    });
+
+    function showAlert(message, type = 'info') {
+        const alertContainer = document.querySelector('.flash-container');
+        
+        if (!alertContainer) return;
+        
+        const alertElement = document.createElement('div');
+        alertElement.className = `alert alert-${type} alert-dismissible fade show`;
+        alertElement.role = 'alert';
+        alertElement.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        alertContainer.appendChild(alertElement);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            alertElement.classList.remove('show');
+            setTimeout(() => alertElement.remove(), 150);
+        }, 5000);
+    }
+</script>
+{% endblock %}

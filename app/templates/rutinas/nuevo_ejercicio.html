@@ -1,0 +1,108 @@
+{% extends "layout.html" %}
+
+{% block title %}Nuevo Ejercicio{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Crear Nuevo Ejercicio</h1>
+        <a href="{{ url_for('rutinas.lista_ejercicios') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Volver al Catálogo
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Datos del Ejercicio</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('rutinas.nuevo_ejercicio') }}">
+                        <div class="mb-3">
+                            <label for="nombre" class="form-label">Nombre del ejercicio *</label>
+                            <input type="text" class="form-control" id="nombre" name="nombre" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="descripcion" name="descripcion" rows="3" placeholder="Describe cómo realizar correctamente el ejercicio..."></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="series" class="form-label">Series *</label>
+                                    <input type="number" class="form-control" id="series" name="series" min="1" value="3" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="repeticiones" class="form-label">Repeticiones *</label>
+                                    <input type="number" class="form-control" id="repeticiones" name="repeticiones" min="1" value="12" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="tiempo_descanso" class="form-label">Descanso (segundos) *</label>
+                                    <input type="number" class="form-control" id="tiempo_descanso" name="tiempo_descanso" min="0" value="60" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-outline-secondary" onclick="limpiarFormulario()">
+                                <i class="fas fa-eraser"></i> Limpiar
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Guardar Ejercicio
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Consejos</h5>
+                </div>
+                <div class="card-body">
+                    <p>Al crear un ejercicio, ten en cuenta:</p>
+                    <ul>
+                        <li>Usa nombres claros y descriptivos</li>
+                        <li>Incluye todos los detalles necesarios para realizar el ejercicio correctamente</li>
+                        <li>Define valores iniciales adecuados, luego podrás ajustarlos en cada rutina</li>
+                        <li>Considera diferentes niveles de habilidad</li>
+                    </ul>
+                    <p class="text-muted mt-3">Los ejercicios que crees estarán disponibles para todas tus rutinas.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function limpiarFormulario() {
+        document.getElementById('nombre').value = '';
+        document.getElementById('descripcion').value = '';
+        document.getElementById('series').value = '3';
+        document.getElementById('repeticiones').value = '12';
+        document.getElementById('tiempo_descanso').value = '60';
+    }
+</script>
+{% endblock %} 

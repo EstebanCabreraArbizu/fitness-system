@@ -1,0 +1,189 @@
+system\app\templates\layout.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FitSystem{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    
+    <!-- Estilos específicos de página -->
+    {% block styles %}{% endblock %}
+</head>
+<body>
+    <!-- Barra de navegación -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('users.login') }}">
+                <img src="{{ url_for('static', filename='img/logo-fitsystem.png') }}" alt="FitSystem" height="40">
+                FitSystem
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <ul class="navbar-nav me-auto">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('users.profile', user_id=current_user.id) }}">
+                                <i class="fas fa-home me-1"></i> Dashboard
+                            </a>
+                        </li>
+                        
+                        {% if current_user.__class__.__name__ == 'Instructor' %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="alumnosDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-users me-1"></i> Alumnos
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="alumnosDropdown">
+                                <li><a class="dropdown-item" href="{{ url_for('alumnos.index') }}">Mis Alumnos</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('alumnos.asignar_alumno') }}">Asignar Nuevo Alumno</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="rutinasDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-dumbbell me-1"></i> Rutinas
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="rutinasDropdown">
+                                <li><a class="dropdown-item" href="{{ url_for('rutinas.lista_ejercicios') }}">Catálogo de Ejercicios</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('rutinas.nuevo_ejercicio') }}">Nuevo Ejercicio</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="dietsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-utensils me-1"></i> Dietas
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="dietsDropdown">
+                                <li><a class="dropdown-item" href="{{ url_for('dieta.index') }}">Ver dietas</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('dieta.nueva_dieta') }}">Nueva dieta</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('product.index') }}">
+                                <i class="fas fa-shopping-bag me-1"></i> Productos
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% if current_user.__class__.__name__ == 'Client' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('dieta.index') }}">
+                                <i class="fas fa-utensils me-1"></i> Mis dietas
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="miRutinasDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-dumbbell me-1"></i> Mis Rutinas
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="miRutinasDropdown">
+                                <li><a class="dropdown-item" href="#">Ver rutinas activas</a></li>
+                                <li><a class="dropdown-item" href="#">Mis metas</a></li>
+                                <li><a class="dropdown-item" href="#">Historial de medidas</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('product.index') }}">
+                                <i class="fas fa-store me-1"></i> Tienda
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% endif %}
+                </ul>
+                
+                {% if current_user.is_authenticated %}
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            {% if current_user.imagen %}
+                            <img src="{{ url_for('static', filename='img/' + current_user.imagen) }}" class="rounded-circle me-1" style="width: 30px; height: 30px; object-fit: cover;">
+                            {% else %}
+                            <i class="fas fa-user-circle me-1"></i>
+                            {% endif %}
+                            {{ current_user.nombres }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('users.profile', user_id=current_user.id) }}">
+                                <i class="fas fa-user-edit me-1"></i> Mi Perfil
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('users.logout') }}">
+                                <i class="fas fa-sign-out-alt me-1"></i> Cerrar Sesión
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+                {% else %}
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('users.login') }}">
+                            <i class="fas fa-sign-in-alt me-1"></i> Iniciar Sesión
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('users.add_user') }}">
+                            <i class="fas fa-user-plus me-1"></i> Registrarse
+                        </a>
+                    </li>
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido principal -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light py-4 mt-5 border-top">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-3">
+                    <h5>FitSystem</h5>
+                    <p class="text-muted">Tu plataforma de gestión fitness personalizada.</p>
+                </div>
+                <div class="col-lg-4 mb-3">
+                    <h5>Enlaces rápidos</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-decoration-none">Inicio</a></li>
+                        <li><a href="#" class="text-decoration-none">Acerca de nosotros</a></li>
+                        <li><a href="#" class="text-decoration-none">Contacto</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4 mb-3">
+                    <h5>Síguenos</h5>
+                    <div class="social-icons">
+                        <a href="#" class="me-2"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="me-2"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="me-2"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="text-center">
+                <p class="mb-0 text-muted">&copy; 2025 FitSystem. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS con Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Scripts comunes -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- Scripts específicos de página -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>
